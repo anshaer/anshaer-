@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>麥克風使用分析</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+        }
+        #statusBox {
+            width: 400px;
+            height: 120px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            border: 2px solid #ccc;
+            color: green;
+            background-color: white;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        #audioCharts, #waveformCharts {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            width: 80%;
+            margin: 20px auto;
+        }
+        .chart {
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #fff;
+        }
+        .chart canvas {
+            width: 100%;
+            height: 100px;
+        }
+        .frequencies {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>麥克風使用分析</h1>
+
+    <div id="statusBox">OFF AIR</div>
+    <button id="monitorBtn">開始監測</button>
+
+    <div id="audioCharts">
+        <div class="chart">
+            <h3>人聲</h3>
+            <canvas id="voiceChart"></canvas>
+            <div class="frequencies" id="voiceFreq"></div>
+        </div>
+        <div class="chart">
+            <h3>高音</h3>
+            <canvas id="highChart"></canvas>
+            <div class="frequencies" id="highFreq"></div>
+        </div>
+        <div class="chart">
+            <h3>中音</h3>
+            <canvas id="midChart"></canvas>
+            <div class="frequencies" id="midFreq"></div>
+        </div>
+        <div class="chart">
+            <h3>低音</h3>
+            <canvas id="lowChart"></canvas>
+            <div class="frequencies" id="lowFreq"></div>
+        </div>
+    </div>
+
+    <!-- 新增的音軌分析圖 -->
+    <div id="waveformCharts">
+        <div class="chart">
+            <h3>人聲音軌</h3>
+            <canvas id="voiceWaveform"></canvas>
+        </div>
+        <div class="chart">
+            <h3>高音音軌</h3>
+            <canvas id="highWaveform"></canvas>
+        </div>
+        <div class="chart">
+            <h3>中音音軌</h3>
+            <canvas id="midWaveform"></canvas>
+        </div>
+        <div class="chart">
+            <h3>低音音軌</h3>
+            <canvas id="lowWaveform"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const statusBox = document.getElementById('statusBox');
+        const monitorBtn = document.getElementById('monitorBtn');
+
+        let isMonitoring = false;
+        let audioContext, analyser, microphone, dataArray;
+        let waveformInterval;
+
+        // 創建畫布上下文
+        const voiceChart = document.getElementById('voiceChart').getContext('2d');
+        const highChart = document.getElementById('highChart').getContext('2d');
+        const midChart = document.getElementById('midChart').getContext('2d');
+        const lowChart = document.getElementById('lowChart').getContext('2d');
+
+        const voiceFreq = document.getElementById('voiceFreq');
+        const highFreq = document.getElementById('highFreq');
+        const midFreq = document.getElementById('midFreq');
+        const lowFreq = document.getElementById('lowFreq');
+
+        // 新增的音軌畫布上下文
+        const voiceWaveformCtx = document.getElementById('voiceWaveform').getContext('2d');
+        const highWaveformCtx = document.getElementById('highWaveform').getContext('2d');
+        const midWaveformCtx = document.getElementById('midWaveform').getContext('2d');
+        const lowWaveformCtx = document.getElementById('lowWaveform').getContext('2d');
+
+        // 開始監測麥克風
+        monitorBtn.addEventListener('click', () => {
+            if (!isMonitoring) {
+                startMonitoring();
+                monitorBtn.textContent = "停止監測";
+            } else {
+                stopMonitoring();
+                monitorBtn.textContent = "開始監測";
+            }
+        });
+
+        function startMonitoring() {
+            isMonitoring = true;
+
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function(stream) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                    analyser = audioContext.createAnalyser();
+                    microphone = audioContext.createMediaStreamSource(stream);
+                    microphone.connect(analyser);
+
+                    analyser.fftSize = 2048;
+                    const bufferLength = analyser.frequencyBinCount;
+                    dataArray = new Uint8Array(bufferLength);
+
+                    // 創建濾波器和分析器
+                    // 人聲
+                    const voiceFilter = audioContext.createBiquadFilter();
+                    voiceFilter.type = 'bandpass';
+                    voiceFilter.frequency.value = 1542; // 中心頻率
+                    voiceFilter.Q.value = 0.7;
+
+                    // 高音
+                    const highFilter = audioContext.createBiquadFilter();
+                    highFilter.type = 'highpass';
+                    highFilter.frequency.value = 5000;
+
+                    // 中音
+                    const midFilter = audioContext.createBiquadFilter();
+                    midFilter.type = 'bandpass';
+                    midFilter.frequency.value = 2650;
+                    midFilter.Q.value = 0.7;
+
+                    // 低音
+                    const lowFilter = audioContext.createBiquadFilter();
+                    lowFilter.type = 'lowpass';
+                    lowFilter.frequency.value = 300;
+
+                    // 分析器
+                    const voiceAnalyser = audioContext.createAnalyser();
+                    const highAnalyser = audioContext.createAnalyser();
+                    const midAnalyser = audioContext.createAnalyser();
+                    const lowAnalyser = audioContext.createAnalyser();
+
+                    voiceAnalyser.fftSize = 2048;
+                    highAnalyser.fftSize = 2048;
+                    midAnalyser.fftSize = 2048;
+                    lowAnalyser.fftSize = 2048;
+
+                    // 連接濾波器和分析器
+                    microphone.connect(voiceFilter);
+                    voiceFilter.connect(voiceAnalyser);
+
+                    microphone.connect(highFilter);
+                    highFilter.connect(highAnalyser);
+
+                    microphone.connect(midFilter);
+                    midFilter.connect(midAnalyser);
+
+                    microphone.connect(lowFilter);
+                    lowFilter.connect(lowAnalyser);
+
+                    // 音軌資料
+                    let voiceAmplitudeArray = [];
+                    let highAmplitudeArray = [];
+                    let midAmplitudeArray = [];
+                    let lowAmplitudeArray = [];
+
+                    const maxDataPoints = 100; // 10秒 / 0.1秒間隔
+
+                    // 實時更新音訊狀態和頻譜
+                    function update() {
+                        analyser.getByteFrequencyData(dataArray);
+
+                        const volume = Math.max(...dataArray); // 簡單判斷音量
+                        if (volume > 10) {
+                            statusBox.textContent = "ON AIR";
+                            statusBox.style.backgroundColor = "red";
+                            statusBox.style.color = "white";
+                        } else {
+                            statusBox.textContent = "OFF AIR";
+                            statusBox.style.backgroundColor = "white";
+                            statusBox.style.color = "green";
+                        }
+
+                        // 繪製頻譜圖
+                        drawChart(voiceChart, dataArray.slice(0, 50), '#FF6347', voiceFreq, 85, 3000);
+                        drawChart(highChart, dataArray.slice(51, 101), '#4682B4', highFreq, 5000, 20000);
+                        drawChart(midChart, dataArray.slice(102, 152), '#32CD32', midFreq, 300, 5000);
+                        drawChart(lowChart, dataArray.slice(153, 203), '#FFD700', lowFreq, 20, 300);
+
+                        if (isMonitoring) {
+                            requestAnimationFrame(update);
+                        }
+                    }
+
+                    update();
+
+                    // 更新音軌圖表
+                    waveformInterval = setInterval(updateWaveforms, 100);
+
+                    function updateWaveforms() {
+                        // 獲取時域資料
+                        const voiceData = new Uint8Array(voiceAnalyser.fftSize);
+                        voiceAnalyser.getByteTimeDomainData(voiceData);
+
+                        const highData = new Uint8Array(highAnalyser.fftSize);
+                        highAnalyser.getByteTimeDomainData(highData);
+
+                        const midData = new Uint8Array(midAnalyser.fftSize);
+                        midAnalyser.getByteTimeDomainData(midData);
+
+                        const lowData = new Uint8Array(lowAnalyser.fftSize);
+                        lowAnalyser.getByteTimeDomainData(lowData);
+
+                        // 計算平均振幅
+                        const voiceAmplitude = computeAverageAmplitude(voiceData);
+                        const highAmplitude = computeAverageAmplitude(highData);
+                        const midAmplitude = computeAverageAmplitude(midData);
+                        const lowAmplitude = computeAverageAmplitude(lowData);
+
+                        // 儲存振幅資料
+                        voiceAmplitudeArray.push(voiceAmplitude);
+                        highAmplitudeArray.push(highAmplitude);
+                        midAmplitudeArray.push(midAmplitude);
+                        lowAmplitudeArray.push(lowAmplitude);
+
+                        // 保持資料量在100個數據點以內
+                        if (voiceAmplitudeArray.length > maxDataPoints) voiceAmplitudeArray.shift();
+                        if (highAmplitudeArray.length > maxDataPoints) highAmplitudeArray.shift();
+                        if (midAmplitudeArray.length > maxDataPoints) midAmplitudeArray.shift();
+                        if (lowAmplitudeArray.length > maxDataPoints) lowAmplitudeArray.shift();
+
+                        // 繪製音軌圖表
+                        drawAmplitudeChart(voiceWaveformCtx, voiceAmplitudeArray, '#FF6347');
+                        drawAmplitudeChart(highWaveformCtx, highAmplitudeArray, '#4682B4');
+                        drawAmplitudeChart(midWaveformCtx, midAmplitudeArray, '#32CD32');
+                        drawAmplitudeChart(lowWaveformCtx, lowAmplitudeArray, '#FFD700');
+                    }
+
+                    function computeAverageAmplitude(data) {
+                        let sum = 0;
+                        for (let i = 0; i < data.length; i++) {
+                            sum += Math.abs(data[i] - 128); 
+                        }
+                        return sum / data.length;
+                    }
+
+                    function drawAmplitudeChart(context, dataArray, color) {
+                        context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+
+                        context.beginPath();
+                        context.strokeStyle = color;
+
+                        const sliceWidth = context.canvas.width / maxDataPoints;
+                        let x = 0;
+
+                        for (let i = 0; i < dataArray.length; i++) {
+                            const v = dataArray[i] / 128.0;
+                            const y = context.canvas.height - (v * context.canvas.height);
+
+                            if (i === 0) {
+                                context.moveTo(x, y);
+                            } else {
+                                context.lineTo(x, y);
+                            }
+
+                            x += sliceWidth;
+                        }
+
+                        context.stroke();
+                    }
+
+                    
+                    function stopMonitoring() {
+                        isMonitoring = false;
+                        statusBox.textContent = "OFF AIR";
+                        statusBox.style.backgroundColor = "white";
+                        statusBox.style.color = "green";
+                        if (audioContext) {
+                            audioContext.close();
+                        }
+                        clearInterval(waveformInterval);
+                    }
+
+                    
+                    window.stopMonitoring = stopMonitoring;
+
+                })
+                .catch(function(err) {
+                    console.error('麥克風錯誤: ' + err);
+                });
+        }
+
+        function stopMonitoring() {
+            
+            console.log('監測已停止');
+        }
+
+        function drawChart(context, data, color, freqElement, minFreq, maxFreq) {
+            context.clearRect(0, 0, 400, 100); 
+            context.fillStyle = color;
+            const barWidth = 400 / data.length;
+            freqElement.innerHTML = ''; 
+
+            for (let i = 0; i < data.length; i++) {
+                const barHeight = data[i] / 2; 
+                context.fillRect(i * barWidth, 100 - barHeight, barWidth - 2, barHeight);
+
+                
+                const frequency = Math.round(minFreq + (i / data.length) * (maxFreq - minFreq));
+                if (i % 5 === 0) { 
+                    freqElement.innerHTML += `<span>${frequency}Hz</span>`;
+                }
+            }
+        }
+    </script>
+
+</body>
+</html>
