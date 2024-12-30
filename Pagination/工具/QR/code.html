@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR碼生成器（帶圖片）</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    canvas {
+      background-color: transparent;
+      border: 1px solid #ddd;
+      margin-top: 20px;
+    }
+    #qrCodeContainer {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>QR碼生成器（帶圖片）</h1>
+  
+  <!-- 輸入框和選擇錯誤修正等級 -->
+  <label for="qrText">輸入文本：</label>
+  <input type="text" id="qrText" placeholder="請輸入內容">
+  <br><br>
+
+  <label for="errorCorrectionLevel">錯誤修正等級：</label>
+  <select id="errorCorrectionLevel">
+    <option value="L">L (7%)</option>
+    <option value="M">M (15%)</option>
+    <option value="Q">Q (25%)</option>
+    <option value="H">H (30%)</option>
+  </select>
+  <br><br>
+  
+  <label for="qrColor">選擇QR碼顏色：</label>
+  <input type="color" id="qrColor" value="#000000">
+  <br><br>
+
+  <!-- 上傳圖片 -->
+  <label for="qrImage">選擇圖片：</label>
+  <input type="file" id="qrImage" accept="image/*">
+  <br><br>
+
+  <button onclick="generateQRCode()">生成QR碼</button>
+
+  <!-- 顯示QR碼 -->
+  <div id="qrCodeContainer">
+    <canvas id="qrCanvas"></canvas>
+  </div>
+
+  <!-- 引入qrcode.js庫 -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script>
+    function generateQRCode() {
+      const qrText = document.getElementById("qrText").value;
+      const errorCorrectionLevel = document.getElementById("errorCorrectionLevel").value;
+      const qrColor = document.getElementById("qrColor").value;  // 取得QR碼顏色
+      const canvas = document.getElementById("qrCanvas");
+      const context = canvas.getContext("2d");
+
+      // 清除之前的QR碼
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (qrText.trim() === "") {
+        alert("請輸入文本！");
+        return;
+      }
+
+      // 設置QR碼的選項
+      const options = {
+        errorCorrectionLevel: errorCorrectionLevel,
+        width: 300,  // QR碼寬度
+        height: 300, // QR碼高度
+        color: {
+          dark: qrColor,  // 用戶選擇的顏色
+          light: '#00000000'  // 背景透明
+        },
+        type: 'image/png' // 顯示為圖片格式
+      };
+
+      // 生成QR碼並繪製到canvas上
+      QRCode.toCanvas(canvas, qrText, options, function (error) {
+        if (error) {
+          console.error(error);
+        } else {
+          console.log("QR碼已生成！");
+          embedImageInQRCode(canvas);  // 在QR碼中插入圖片
+        }
+      });
+    }
+
+    function embedImageInQRCode(canvas) {
+      const fileInput = document.getElementById("qrImage");
+      const context = canvas.getContext("2d");
+
+      if (fileInput.files && fileInput.files[0]) {
+        const imageFile = fileInput.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+          const img = new Image();
+          img.src = e.target.result;
+          
+          img.onload = function() {
+            const qrSize = canvas.width; // QR碼的大小
+            const imgSize = qrSize / 5;  // 設定插入圖片的大小（此處設為QR碼的1/5）
+
+            const imgX = (qrSize - imgSize) / 2;  // 圖片的X坐標，使其居中
+            const imgY = (qrSize - imgSize) / 2;  // 圖片的Y坐標，使其居中
+
+            // 繪製圖片到QR碼的中央
+            context.drawImage(img, imgX, imgY, imgSize, imgSize);
+          };
+        };
+        
+        reader.readAsDataURL(imageFile);  // 讀取圖片並將其作為DataURL加載
+      }
+    }
+  </script>
+</body>
+</html>

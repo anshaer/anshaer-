@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圖片區塊操作</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin-top: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .slider-container label {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>圖片區塊操作</h1>
+    <input type="file" id="upload" accept="image/*" />
+    <button id="download">下載圖片</button>
+    <button id="randomDisappear">隨機消失5%</button>
+    <button id="randomDisappear10">隨機消失10%</button>
+    <button id="randomDisappear15">隨機消失15%</button>
+    <button id="randomDisappear20">隨機消失20%</button>
+    <div class="controls">
+        <span id="imageSize">圖片尺寸: -</span>
+    </div>
+    <div class="slider-container">
+        <label for="blockSize">區塊大小：</label>
+        <input type="number" id="blockSize" min="10" max="200" value="50"> px
+    </div>
+    <canvas id="canvas"></canvas>
+    <script>
+        const upload = document.getElementById('upload');
+        const download = document.getElementById('download');
+        const randomDisappear = document.getElementById('randomDisappear');
+        const randomDisappear10 = document.getElementById('randomDisappear10');
+        const randomDisappear15 = document.getElementById('randomDisappear15');
+        const randomDisappear20 = document.getElementById('randomDisappear20');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const blockSizeInput = document.getElementById('blockSize');
+        const imageSize = document.getElementById('imageSize');
+
+        let img = new Image();
+        let grid = [];
+        let blockSize = parseInt(blockSizeInput.value);
+
+        blockSizeInput.addEventListener('input', () => {
+            blockSize = parseInt(blockSizeInput.value);
+            if (img.src) drawGrid();
+        });
+
+        function drawGrid() {
+            const cols = Math.ceil(canvas.width / blockSize);
+            const rows = Math.ceil(canvas.height / blockSize);
+
+            grid = Array.from({ length: rows }, () => Array(cols).fill(true));
+            
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    if (grid[y][x]) {
+                        ctx.drawImage(img, x * blockSize, y * blockSize, blockSize, blockSize, x * blockSize, y * blockSize, blockSize, blockSize);
+                    }
+                }
+            }
+        }
+
+        function toggleBlock(event) {
+            const x = Math.floor(event.offsetX / blockSize);
+            const y = Math.floor(event.offsetY / blockSize);
+
+            if (grid[y] && grid[y][x] !== undefined) {
+                grid[y][x] = !grid[y][x];
+                ctx.clearRect(x * blockSize, y * blockSize, blockSize, blockSize);
+                if (grid[y][x]) {
+                    ctx.drawImage(img, x * blockSize, y * blockSize, blockSize, blockSize, x * blockSize, y * blockSize, blockSize, blockSize);
+                }
+            }
+        }
+
+        upload.addEventListener('change', event => {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = e => {
+                img.onload = () => {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    imageSize.textContent = `圖片尺寸: ${img.width} x ${img.height}px`;
+                    drawGrid();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        canvas.addEventListener('click', toggleBlock);
+
+        download.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'canvas.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+
+        function randomDisappearBlocks(percentage) {
+            const cols = Math.ceil(canvas.width / blockSize);
+            const rows = Math.ceil(canvas.height / blockSize);
+
+            const blocksToDisappear = Math.floor((cols * rows) * (percentage / 100));
+
+            for (let i = 0; i < blocksToDisappear; i++) {
+                let x = Math.floor(Math.random() * cols);
+                let y = Math.floor(Math.random() * rows);
+
+                if (grid[y][x]) {
+                    grid[y][x] = false;
+                    ctx.clearRect(x * blockSize, y * blockSize, blockSize, blockSize);
+                }
+            }
+        }
+
+        randomDisappear.addEventListener('click', () => randomDisappearBlocks(5));
+        randomDisappear10.addEventListener('click', () => randomDisappearBlocks(10));
+        randomDisappear15.addEventListener('click', () => randomDisappearBlocks(15));
+        randomDisappear20.addEventListener('click', () => randomDisappearBlocks(20));
+    </script>
+</body>
+</html>

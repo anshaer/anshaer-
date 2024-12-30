@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Channel Highlights Creator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+            background-size: cover;
+            background-position: center;
+        }
+        .form-section {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .output-preview {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background-color: white;
+        }
+        .video-card {
+            display: inline-block;
+            width: 350px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 10px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            vertical-align: top;
+        }
+        .video-card iframe {
+            width: 100%;
+            height: 200px;
+        }
+        .video-card .description {
+            padding: 10px;
+            text-align: center;
+        }
+        .social-links img {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <h1>頻道簡易網頁製作</h1>
+    <div class="form-section">
+        <label for="channelId">頻道 ID:</label>
+        <input type="text" id="channelId" placeholder="Enter Channel ID">
+
+        <label for="Brief">頻道簡述:</label>
+        <input type="text" id="Brief" placeholder="Enter Brief">
+
+        <label for="channelLink">頻道連結:</label>
+        <input type="text" id="channelLink" placeholder="Enter Channel URL">
+
+        <label for="channelAvatar">頭貼連結 (Image URL):</label>
+        <input type="text" id="channelAvatar" placeholder="Enter Image URL">
+
+        <label for="backgroundUrl">上半背景圖連結Image URL:</label>
+        <input type="text" id="backgroundUrl" placeholder="Enter Background Image URL">
+
+        <label>社群連結:</label>
+        <div id="socialLinksContainer">
+            <div>
+                <input type="text" placeholder="社群圖示連結">
+                <input type="text" placeholder="社群連結位址">
+            </div>
+        </div>
+        <button type="button" onclick="addSocialLink()">增加社群連結</button>
+
+        <label>Videos:</label>
+        <div id="videosContainer">
+            <div>
+                <input type="text" placeholder="YT影片位址">
+                <input type="text" placeholder="影片敘述">
+            </div>
+        </div>
+        <button type="button" onclick="addVideo()">增加影片</button>
+
+        <button onclick="generateWebpage()">預覽</button>
+    </div>
+
+    <div class="output-preview" id="outputPreview" style="display: none;">
+        <h2>Preview:</h2>
+        <iframe id="previewFrame" style="width: 100%; height: 500px; border: none;"></iframe>
+        <button onclick="downloadWebpage()">Download HTML</button>
+    </div>
+
+    <script>
+        function addSocialLink() {
+            const container = document.getElementById('socialLinksContainer');
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <input type="text" placeholder="Enter Icon URL">
+                <input type="text" placeholder="Enter Social Media Link">
+            `;
+            container.appendChild(div);
+        }
+
+        function addVideo() {
+            const container = document.getElementById('videosContainer');
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <input type="text" placeholder="Enter YouTube Video URL">
+                <input type="text" placeholder="Enter Video Description">
+            `;
+            container.appendChild(div);
+        }
+
+        function generateWebpage() {
+            const channelId = document.getElementById('channelId').value;
+const Brief = document.getElementById('Brief').value;
+            const channelLink = document.getElementById('channelLink').value;
+            const channelAvatar = document.getElementById('channelAvatar').value;
+            const backgroundUrl = document.getElementById('backgroundUrl').value;
+
+            const socialLinks = Array.from(document.querySelectorAll('#socialLinksContainer div'))
+                .map(div => {
+                    const inputs = div.querySelectorAll('input');
+                    return {
+                        icon: inputs[0].value.trim(),
+                        url: inputs[1].value.trim()
+                    };
+                })
+                .filter(link => link.url);
+
+            const videos = Array.from(document.querySelectorAll('#videosContainer div'))
+                .map(div => {
+                    const inputs = div.querySelectorAll('input');
+                    return {
+                        url: inputs[0].value.trim(),
+                        description: inputs[1].value.trim()
+                    };
+                })
+                .filter(video => video.url);
+
+            const output = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${channelId} - Highlights</title>
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .top-section {
+            background-image: url('${backgroundUrl}');
+            background-size: cover;
+            background-position: center;
+            padding: 20px;
+        }
+
+
+
+        .channel-header {
+            text-align: center;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+        }
+        .channel-header img {
+            border-radius: 50%;
+            width: 100px;
+            height: 100px;
+        }
+
+        .social-links {
+            text-align: center; 
+            margin: 20px 0; 
+        }
+
+
+        .social-links img {
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;            
+            vertical-align: middle;
+        }
+        .videos {
+            background: #1a1819; 
+            padding: 20px;
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            gap: 20px; 
+        }
+        .video-card {
+            display: inline-block;
+            width: 350px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 10px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .video-card iframe {
+            width: 100%;
+            height: 200px;
+        }
+        .video-card .description {
+            padding: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+ <div class="top-section">
+    <div class="channel-header">
+        
+        <h1><a href="${channelLink}" target="_blank">
+<img src="${channelAvatar}" alt="Channel Avatar"></br>${channelId}</br>${Brief}</a></h1>
+    </div>
+
+
+
+    <div class="social-links">
+        ${socialLinks.map(link => `<a href="${link.url}" target="_blank"><img src="${link.icon}" alt="Social Icon"></a>`).join('')}
+    </div>
+ </div>
+
+
+    <div class="videos">
+        ${videos.map(video => `
+        <div class="video-card">
+            <iframe src="${video.url.replace('watch?v=', 'embed/')}" frameborder="0" allowfullscreen></iframe>
+            <div class="description">${video.description}</div>
+        </div>
+        `).join('')}
+    </div>
+</body>
+</html>`;
+            
+            const previewFrame = document.getElementById('previewFrame');
+            previewFrame.srcdoc = output;
+            document.getElementById('outputPreview').style.display = 'block';
+        }
+
+        function downloadWebpage() {
+            const previewFrame = document.getElementById('previewFrame');
+            const content = previewFrame.srcdoc;
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'channel_highlights.html';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

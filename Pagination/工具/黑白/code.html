@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload and Display</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>上傳圖片使其黑白化</h1>
+    <input type="file" id="upload" accept="image/*">
+    <br><br>
+    <div class="container">
+        <div>
+            <h2>原圖</h2>
+            <img id="originalImage" alt="原圖位">
+        </div>
+        <div>
+            <h2>修改圖</h2>
+            <img id="bwImage" class="grayscale" alt="改圖位">
+        </div>
+    </div>
+    <script src="script.js"></script>
+    <p>反應時間依電腦瀏覽器效能為主超過1分鐘請刷新</p>
+</body>
+</html>

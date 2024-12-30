@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>64</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            margin: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        .controls button, .controls input {
+            margin: 10px 0;
+            display: block;
+        }
+        #image-preview, #modified-image {
+            max-width: 100%;
+            display: block;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 第一區塊 -->
+    <div class="controls">
+        <h3>圖片噪點修改</h3>
+<p>上傳要修改的圖片</p>
+        <input type="file" id="upload-modify-image" accept="image/*" placeholder="上傳要修改的圖片">
+<p>上傳要疊加的圖片</p>
+        <input type="file" id="upload-hidden-image" accept="image/*" placeholder="上傳要疊加的圖片">
+<p>上傳浮水印圖片</p>
+        <input type="file" id="upload-watermark-image" accept="image/*" placeholder="上傳浮水印圖片">
+        <button id="download-image">下載圖片</button>
+    </div>
+
+    <!-- 第二區塊 -->
+    <div class="controls">
+        <h3>浮水印與效果調整</h3>
+        <label>浮水印深淺: <span id="opacity-value">50</span>%</label>
+        <input type="range" id="opacity-range" min="0" max="100" value="50">
+
+        <label>浮水印大小: <span id="size-value">50</span></label>
+        <input type="range" id="size-range" min="1" max="100" value="50">
+
+        <label>浮水印旋轉: <span id="rotation-value">0</span>度</label>
+        <input type="range" id="rotation-range" min="0" max="360" value="0">
+
+        <label>噪點調整: <span id="noise-value">0</span></label>
+        <input type="range" id="noise-range" min="0" max="200" value="0">
+
+        <label>模糊調整: <span id="blur-value">0</span></label>
+        <input type="range" id="blur-range" min="0" max="200" value="0">
+
+        <label>馬賽克調整: <span id="pixel-value">0</span></label>
+        <input type="range" id="pixel-range" min="0" max="50" value="0">
+    </div>
+
+    <!-- 第三區塊 -->
+    <div>
+        <h3>修改後的圖片預覽</h3>
+        <canvas id="modified-image"></canvas>
+    </div>
+</div>
+
+<script>
+    const uploadModifyImage = document.getElementById('upload-modify-image');
+    const uploadHiddenImage = document.getElementById('upload-hidden-image');
+    const uploadWatermarkImage = document.getElementById('upload-watermark-image');
+    const downloadImage = document.getElementById('download-image');
+    const modifiedImageCanvas = document.getElementById('modified-image');
+    const ctx = modifiedImageCanvas.getContext('2d');
+
+    let modifyImage = null;
+    let hiddenImage = null;
+    let watermarkImage = null;
+
+    
+    function loadImage(input, callback) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = () => callback(img);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    uploadModifyImage.addEventListener('change', () => {
+        loadImage(uploadModifyImage, (img) => {
+            modifyImage = img;
+            updateCanvas();
+        });
+    });
+
+    uploadHiddenImage.addEventListener('change', () => {
+        loadImage(uploadHiddenImage, (img) => {
+            hiddenImage = img;
+            updateCanvas();
+        });
+    });
+
+    uploadWatermarkImage.addEventListener('change', () => {
+        loadImage(uploadWatermarkImage, (img) => {
+            watermarkImage = img;
+            updateCanvas();
+        });
+    });
+
+    function updateCanvas() {
+        if (!modifyImage) return;
+        
+        
+        modifiedImageCanvas.width = modifyImage.width;
+        modifiedImageCanvas.height = modifyImage.height;
+        
+        
+        ctx.clearRect(0, 0, modifiedImageCanvas.width, modifiedImageCanvas.height);
+        ctx.drawImage(modifyImage, 0, 0);
+
+        
+        if (hiddenImage) {
+            ctx.globalAlpha = 0.5;
+            ctx.drawImage(hiddenImage, 0, 0, modifyImage.width, modifyImage.height);
+        }
+
+        
+        if (watermarkImage) {
+            const opacity = document.getElementById('opacity-range').value / 100;
+            const size = document.getElementById('size-range').value / 100;
+            const rotation = document.getElementById('rotation-range').value;
+
+            ctx.globalAlpha = opacity;
+            ctx.save();
+            ctx.translate(modifiedImageCanvas.width / 2, modifiedImageCanvas.height / 2);
+            ctx.rotate((rotation * Math.PI) / 180);
+            const watermarkWidth = watermarkImage.width * size;
+            const watermarkHeight = watermarkImage.height * size;
+            ctx.drawImage(watermarkImage, -watermarkWidth / 2, -watermarkHeight / 2, watermarkWidth, watermarkHeight);
+            ctx.restore();
+        }
+
+        
+        applyEffects();
+    }
+
+    
+    document.getElementById('opacity-range').addEventListener('input', (e) => {
+        document.getElementById('opacity-value').textContent = e.target.value;
+        updateCanvas();
+    });
+
+    document.getElementById('size-range').addEventListener('input', (e) => {
+        document.getElementById('size-value').textContent = e.target.value;
+        updateCanvas();
+    });
+
+    document.getElementById('rotation-range').addEventListener('input', (e) => {
+        document.getElementById('rotation-value').textContent = e.target.value;
+        updateCanvas();
+    });
+
+    document.getElementById('noise-range').addEventListener('input', (e) => {
+        document.getElementById('noise-value').textContent = e.target.value;
+        updateCanvas();
+    });
+
+    document.getElementById('blur-range').addEventListener('input', (e) => {
+        document.getElementById('blur-value').textContent = e.target.value;
+        updateCanvas();
+    });
+
+    document.getElementById('pixel-range').addEventListener('input', (e) => {
+        document.getElementById('pixel-value').textContent = e.target.value;
+        updateCanvas();
+    });
+
+    
+    function applyEffects() {
+        const noiseLevel = parseInt(document.getElementById('noise-range').value, 10);
+        const blurLevel = parseInt(document.getElementById('blur-range').value, 10);
+        const mosaicLevel = parseInt(document.getElementById('pixel-range').value, 10);
+
+        
+        if (blurLevel > 0) {
+            ctx.filter = `blur(${blurLevel / 10}px)`;
+            ctx.drawImage(modifyImage, 0, 0);
+            ctx.filter = 'none'; 
+        }
+
+        
+        if (mosaicLevel > 0) {
+            const mosaicSize = mosaicLevel * 5;  
+            for (let y = 0; y < modifiedImageCanvas.height; y += mosaicSize) {
+                for (let x = 0; x < modifiedImageCanvas.width; x += mosaicSize) {
+                    const imageData = ctx.getImageData(x, y, mosaicSize, mosaicSize);
+                    const avgColor = getAverageColor(imageData);
+                    ctx.fillStyle = `rgb(${avgColor.r}, ${avgColor.g}, ${avgColor.b})`;
+                    ctx.fillRect(x, y, mosaicSize, mosaicSize);
+                }
+            }
+        }
+
+        
+        if (noiseLevel > 0) {
+            const imageData = ctx.getImageData(0, 0, modifiedImageCanvas.width, modifiedImageCanvas.height);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const noise = (Math.random() - 0.5) * noiseLevel;
+                data[i] += noise;     // Red
+                data[i + 1] += noise; // Green
+                data[i + 2] += noise; // Blue
+            }
+            ctx.putImageData(imageData, 0, 0);
+        }
+    }
+
+    
+    function getAverageColor(imageData) {
+        const data = imageData.data;
+        let r = 0, g = 0, b = 0;
+        for (let i = 0; i < data.length; i += 4) {
+            r += data[i];
+            g += data[i + 1];
+            b += data[i + 2];
+        }
+        const pixelCount = data.length / 4;
+        return {
+            r: Math.floor(r / pixelCount),
+            g: Math.floor(g / pixelCount),
+            b: Math.floor(b / pixelCount)
+        };
+    }
+
+    
+    downloadImage.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = 'modified-image.png';
+        link.href = modifiedImageCanvas.toDataURL();
+        link.click();
+    });
+</script>
+
+</body>
+</html>

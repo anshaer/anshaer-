@@ -1,0 +1,11 @@
+img {
+    max-width: 100%;
+    height: auto;
+}
+.grayscale {
+    filter: grayscale(100%);
+}
+.container {
+    display: flex;
+    gap: 20px;
+}

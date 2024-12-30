@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glow Effect with Edge Detection</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #2e2a2a;
+      color: white;
+      margin: 0;
+      padding: 20px;
+      height: 100vh;
+      overflow: hidden;
+    }
+h1 {
+    text-align: center;
+}
+    #canvas-container {
+      position: relative;
+      margin-top: 20px;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.5);
+    }
+    #controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    input[type="file"] {
+      color: white;
+      background: #444;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+    }
+    input[type="color"], input[type="number"] {
+      border: none;
+      padding: 5px;
+      width: 70px;
+      height: 30px;
+      text-align: center;
+      cursor: pointer;
+    }
+    #upload-button {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>
+輝光效果與邊緣偵測</br>
+Glow Effect with Edge Detection</br>
+エッジ検出付きの輝光効果
+</h1>
+
+  <div id="controls">
+    <div id="upload-button">
+      <label for="image-upload">上傳 Upload アップロード:</label>
+      <input type="file" id="image-upload" accept="image/*">
+    </div>
+    <label for="color-picker">顏色 GlowColor いろをかえる:</label>
+    <input type="color" id="color-picker" value="#00ff00">
+    <label for="edge-threshold">邊緣強度 Edge Strength エッジの強さ:</label>
+    <input type="number" id="edge-threshold" value="128" min="0" max="255" step="1">
+    <label for="blur-radius">光暈強度 Glow Blur Radius グローぼかし半径:</label>
+    <input type="number" id="blur-radius" value="5" min="1" max="50" step="1">
+  </div>
+  <div id="canvas-container">
+    <canvas id="canvas"></canvas>
+  </div>
+  <script>
+    const fileInput = document.getElementById('image-upload');
+    const colorPicker = document.getElementById('color-picker');
+    const edgeThresholdInput = document.getElementById('edge-threshold');
+    const blurRadiusInput = document.getElementById('blur-radius');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let originalImage = null;
+
+    fileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const img = new Image();
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          originalImage = img;
+          ctx.drawImage(img, 0, 0);
+          applyEdgeDetection();
+        };
+        img.src = URL.createObjectURL(file);
+      }
+    });
+
+    [colorPicker, edgeThresholdInput, blurRadiusInput].forEach(input => {
+      input.addEventListener('input', () => {
+        if (originalImage) {
+          ctx.drawImage(originalImage, 0, 0);
+          applyEdgeDetection();
+        }
+      });
+    });
+
+    function applyEdgeDetection() {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const pixels = imageData.data;
+      const glowColor = hexToRgb(colorPicker.value);
+      const edgeThreshold = parseInt(edgeThresholdInput.value);
+      const blurRadius = parseInt(blurRadiusInput.value);
+
+      const sobelX = [ -1, 0, 1, -2, 0, 2, -1, 0, 1 ];
+      const sobelY = [ -1, -2, -1, 0, 0, 0, 1, 2, 1 ];
+      const width = imageData.width;
+      const height = imageData.height;
+      const edgeData = new Uint8ClampedArray(pixels.length);
+
+      for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+          let gx = 0;
+          let gy = 0;
+          for (let ky = -1; ky <= 1; ky++) {
+            for (let kx = -1; kx <= 1; kx++) {
+              const pixelIndex = ((y + ky) * width + (x + kx)) * 4;
+              const weightX = sobelX[(ky + 1) * 3 + (kx + 1)];
+              const weightY = sobelY[(ky + 1) * 3 + (kx + 1)];
+              const gray = 0.299 * pixels[pixelIndex] + 0.587 * pixels[pixelIndex + 1] + 0.114 * pixels[pixelIndex + 2];
+              gx += gray * weightX;
+              gy += gray * weightY;
+            }
+          }
+          const magnitude = Math.sqrt(gx * gx + gy * gy);
+          const index = (y * width + x) * 4;
+          edgeData[index] = glowColor.r;
+          edgeData[index + 1] = glowColor.g;
+          edgeData[index + 2] = glowColor.b;
+          edgeData[index + 3] = magnitude > edgeThreshold ? 255 : 0;
+        }
+      }
+
+      const glowImageData = new ImageData(edgeData, width, height);
+      ctx.putImageData(glowImageData, 0, 0);
+      applyGlowBlur(blurRadius);
+    }
+
+    function applyGlowBlur(radius) {
+      ctx.filter = `blur(${radius}px)`;
+      ctx.drawImage(canvas, 0, 0);
+      ctx.filter = 'none';
+    }
+
+    function hexToRgb(hex) {
+      const bigint = parseInt(hex.slice(1), 16);
+      return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+    }
+  </script>
+</body>
+</html>

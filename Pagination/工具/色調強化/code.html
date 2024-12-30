@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload and Display</title>
+    <style>
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        .enhanced {
+            filter: contrast(100%) saturate(100%);
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>上傳圖片以強化對比度與飽和度</h1>
+    <input type="file" id="upload" accept="image/*">
+    <br><br>
+    <div class="container">
+        <div>
+            <h2>原圖</h2>
+            <img id="originalImage" alt="原圖位">
+        </div>
+        <div>
+            <h2>修改圖</h2>
+            <img id="enhancedImage" class="enhanced" alt="改圖位">
+        </div>
+    </div>
+    <br>
+    <label for="contrast">對比度:</label>
+    <input type="range" id="contrast" name="contrast" min="100" max="300" value="100">
+    <br>
+    <label for="saturation">飽和度:</label>
+    <input type="range" id="saturation" name="saturation" min="100" max="300" value="100">
+    <script>
+        document.getElementById('upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const originalImg = document.getElementById('originalImage');
+                    const enhancedImg = document.getElementById('enhancedImage');
+                    originalImg.src = e.target.result;
+                    enhancedImg.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        const contrastSlider = document.getElementById('contrast');
+        const saturationSlider = document.getElementById('saturation');
+        const enhancedImg = document.getElementById('enhancedImage');
+
+        function updateFilter() {
+            const contrast = contrastSlider.value;
+            const saturation = saturationSlider.value;
+            enhancedImg.style.filter = `contrast(${contrast}%) saturate(${saturation}%)`;
+        }
+
+        contrastSlider.addEventListener('input', updateFilter);
+        saturationSlider.addEventListener('input', updateFilter);
+    </script>
+<p>反應時間依電腦瀏覽器效能為主超過1分鐘請刷新</p>
+</body>
+</html>

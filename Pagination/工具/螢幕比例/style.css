@@ -1,0 +1,23 @@
+/* 設計主體樣式 */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 50px;
+}
+
+input[type="number"], input[type="text"] {
+    width: 100px;
+    padding: 5px;
+    margin: 10px;
+    font-size: 16px;
+}
+
+#result, #screenSizeResult, #megaPixels {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+h1 {
+    margin-top: 50px;
+}

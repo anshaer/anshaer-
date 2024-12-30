@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>連結頁面產生器</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            padding: 1rem;
+        }
+
+        h1 {
+            text-align: center;
+            color: #6200ea;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background-color: #3700b3;
+        }
+
+        .link-preview {
+            margin-top: 2rem;
+            background-color: #fff;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        pre {
+            background-color: #f4f4f4;
+            padding: 1rem;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+
+        iframe {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ccc;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>連結頁面產生器</h1>
+    <div class="form-group">
+        <label for="page-title">頁面標題</label>
+        <input type="text" id="page-title" placeholder="輸入頁面標題">
+    </div>
+    <div id="links-container">
+        <div class="form-group link-item">
+            <label>連結文字</label>
+            <input type="text" class="link-text" placeholder="輸入連結文字">
+            <label>連結 URL</label>
+            <input type="text" class="link-url" placeholder="輸入連結 URL">
+        </div>
+    </div>
+    <button id="add-link">新增連結</button>
+    <button id="generate">產生頁面</button>
+
+    <div class="link-preview" id="link-preview" style="display: none;">
+        <h2>預覽</h2>
+        <iframe id="preview-iframe"></iframe>
+        <h2>下載代碼</h2>
+        <button id="download-html">下載 HTML</button>
+        <pre id="generated-code"></pre>
+    </div>
+
+    <script>
+        document.getElementById('add-link').addEventListener('click', () => {
+            const container = document.getElementById('links-container');
+            const linkItem = document.createElement('div');
+            linkItem.className = 'form-group link-item';
+            linkItem.innerHTML = `
+                <label>連結文字</label>
+                <input type="text" class="link-text" placeholder="輸入連結文字">
+                <label>連結 URL</label>
+                <input type="text" class="link-url" placeholder="輸入連結 URL">
+            `;
+            container.appendChild(linkItem);
+        });
+
+        document.getElementById('generate').addEventListener('click', () => {
+            const title = document.getElementById('page-title').value;
+            const linkItems = document.querySelectorAll('.link-item');
+            let linksHtml = '';
+
+            linkItems.forEach(item => {
+                const text = item.querySelector('.link-text').value;
+                const url = item.querySelector('.link-url').value;
+                if (text && url) {
+                    linksHtml += `
+                        <a href="${url}" target="_blank" class="card">
+                            ${text}
+                        </a>
+                    `;
+                }
+            });
+
+            const generatedHtml = `<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        header {
+            background-color: #6200ea;
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+            font-size: 1.5rem;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .card {
+            display: block;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin: 0.5rem;
+            padding: 1rem;
+            width: calc(100% - 2rem);
+            max-width: 300px;
+            text-align: center;
+            text-decoration: none;
+            color: #6200ea;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .card:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>${title}</header>
+    <div class="container">
+        ${linksHtml}
+    </div>
+</body>
+</html>`;
+
+            const preview = document.getElementById('link-preview');
+            const codeElement = document.getElementById('generated-code');
+            const iframe = document.getElementById('preview-iframe');
+
+            codeElement.textContent = generatedHtml;
+            iframe.srcdoc = generatedHtml;
+            preview.style.display = 'block';
+        });
+
+        document.getElementById('download-html').addEventListener('click', () => {
+            const codeElement = document.getElementById('generated-code').textContent;
+            const blob = new Blob([codeElement], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'generated-page.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>剪影工具</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>精簡剪影</h1>
+    <h3>請使用透明背景圖</h3>
+    <!-- 上傳圖片按鈕 -->
+    <input type="file" id="upload" accept="image/*"><br><br>
+    <!-- 色盤 -->
+    <label for="colorPicker">剪影顏色:</label>
+    <input type="color" id="colorPicker" value="#ff0000"><br><br>
+    <!-- 左邊變色百分比 -->
+    <label for="leftPercentage">左邊剪影百分比:</label>
+    <input type="number" id="leftPercentage" min="0" max="100" value="50"><br><br>
+    <!-- 右邊變色百分比 -->
+    <label for="rightPercentage">右邊剪影百分比:</label>
+    <input type="number" id="rightPercentage" min="0" max="100" value="50"><br><br>
+    <!-- 顯示圖片 -->
+    <canvas id="canvas"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>

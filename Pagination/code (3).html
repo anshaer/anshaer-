@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>電子發票載具條碼生成器</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+    canvas {
+      display: block;
+      margin: 20px auto;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>電子發票載具條碼生成器</h1>
+  <p>請輸入條碼內容：</p>
+  <input type="text" id="inputString" placeholder="輸入字串" value="123456789012">
+  <button id="generateBtn">生成條碼</button>
+  <button id="downloadBtn">下載條碼</button>
+  <canvas id="barcodeCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('barcodeCanvas');
+    const ctx = canvas.getContext('2d');
+    const inputField = document.getElementById('inputString');
+    const generateBtn = document.getElementById('generateBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    // 背景圖片 URL
+    const backgroundUrl = 'https://pbs.twimg.com/media/GfN45GzaEAAFKjH?format=jpg&name=large'; // 替換為實際圖片連結
+    const backgroundImage = new Image();
+
+    // 當圖片加載完成後調整畫布尺寸並繪製背景
+    backgroundImage.onload = function () {
+      canvas.width = backgroundImage.width;
+      canvas.height = backgroundImage.height;
+      ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    };
+    backgroundImage.src = backgroundUrl;
+
+    function generateBarcode() {
+      const inputString = inputField.value.trim();
+
+      if (!inputString) {
+        alert('請輸入有效的字串！');
+        return;
+      }
+
+      // 清除畫布並重新繪製背景
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+
+      // 設置條碼參數
+      const barcodeWidth = 650; // 條碼寬度
+      const barcodeHeight = 200; // 條碼高度
+      const centerX = 473; // 條碼的中心 X 座標
+      const centerY = 890; // 條碼的中心 Y 座標
+
+      // 生成條碼
+      const svgBarcode = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      JsBarcode(svgBarcode, inputString, {
+        format: 'CODE39',
+        displayValue: true, // 顯示條碼下方的字串
+        fontOptions: 'bold', // 設置字體加粗
+        font: 'Arial', // 設置字體樣式
+        fontSize: 30, // 字串字體大小
+        textMargin: 15, // 條碼與字串之間的間距
+        width: Math.min(2, barcodeWidth / inputString.length), // 每條寬度，根據字串長度自適應
+        height: barcodeHeight,
+        margin: 0, // 條碼周圍的內邊距
+        textColor: '#FFD5E1' // 修改條碼字體顏色
+      });
+
+      // 將條碼從 SVG 複製到 Canvas
+      const svgUrl = new XMLSerializer().serializeToString(svgBarcode);
+      const img = new Image();
+      img.onload = function () {
+        // 計算條碼的繪製起始點，保證中心對齊到 (473, 890)
+        const x = centerX - barcodeWidth / 2;
+        const y = centerY - barcodeHeight / 2;
+        ctx.drawImage(img, x, y, barcodeWidth, barcodeHeight);
+      };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgUrl);
+    }
+
+    function downloadBarcode() {
+      const link = document.createElement('a');
+      link.download = 'barcode.png';
+      link.href = canvas.toDataURL('image/png');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    generateBtn.addEventListener('click', generateBarcode);
+    downloadBtn.addEventListener('click', downloadBarcode);
+  </script>
+</body>
+</html>

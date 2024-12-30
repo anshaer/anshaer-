@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload and Color Table</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>上傳圖片偵測圖片顏色</h1>
+    <input type="file" accept="image/*" onchange="loadImage(event)">
+    <br><br>
+    <div class="container">
+        <img id="uploadedImage" src="#" alt="Uploaded Image" onclick="pickColor(event)">
+    </div>
+    <br><br>
+    <table id="colorTable">
+        <thead>
+            <tr>
+                <th>Color</th>
+                <th>Hex</th>
+                <th>RGB</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Color rows will be added here -->
+        </tbody>
+    </table>
+    <div id="colorDisplay">
+        <div id="colorInfo"></div>
+    </div>
+    <div id="loading">Loading...</div>
+
+    <script src="script.js"></script>
+</body>
+</html>

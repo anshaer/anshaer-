@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Mosaic Editor</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>馬賽克修改器</h1>
+  <input type="file" id="upload" accept="image/*">
+  <canvas id="canvas"></canvas>
+
+  <div class="controls">
+    <label for="mosaicSize">判斷筆觸(5pt - 200pt):</label>
+    <input type="range" id="mosaicSize" min="5" max="200" value="20">
+    <span id="sizeValue">20</span> pt
+  </div>
+
+  <div class="controls">
+    <label for="mosaicDensity">組成密度(5pt - 50pt):</label>
+    <input type="range" id="mosaicDensity" min="5" max="50" value="10">
+    <span id="densityValue">10</span> pt
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>條碼生成器</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+<h1>條碼生成器</h1>
+
+<!-- 條碼類型選擇 -->
+<div class="form-group">
+    <label for="barcodeType">選擇條碼類型：</label>
+    <select id="barcodeType">
+        <option value="UPC">UPC</option>
+        <option value="CODE39">Code 39</option>
+        <option value="CODE128">Code 128</option>
+        <option value="ITF">ITF-14</option>
+    </select>
+</div>
+
+<!-- 條碼內容輸入 -->
+<div class="form-group">
+    <label for="barcodeValue">條碼內容：</label>
+    <input type="text" id="barcodeValue" placeholder="請輸入條碼內容">
+    <small id="inputHint" style="display: block; color: gray;">請選擇條碼類型以查看輸入要求</small>
+</div>
+
+<!-- 條碼寬度和高度 -->
+<div class="form-group">
+    <label for="barcodeWidth">條碼寬度：</label>
+    <input type="number" id="barcodeWidth" value="2" min="1" step="0.1"> px
+</div>
+
+<div class="form-group">
+    <label for="barcodeHeight">條碼高度：</label>
+    <input type="number" id="barcodeHeight" value="100" min="20"> px
+</div>
+
+<!-- 條碼顏色 -->
+<div class="form-group">
+    <label for="barcodeColor">條碼顏色：</label>
+    <input type="color" id="barcodeColor" value="#000000">
+</div>
+
+<!-- 是否顯示條碼文字 -->
+<div class="form-group">
+    <label for="displayText">顯示條碼文字：</label>
+    <input type="checkbox" id="displayText" checked>
+</div>
+
+<!-- 生成條碼按鈕 -->
+<div class="form-group">
+    <button onclick="generateBarcode()">生成條碼</button>
+</div>
+
+<!-- 條碼顯示區 -->
+<div class="form-group">
+    <svg id="barcode" style="background-color: transparent;"></svg>
+</div>
+
+<!-- 透明畫布 -->
+<canvas id="barcodeCanvas" style="display: none;"></canvas>
+
+<!-- 下載條碼圖片按鈕 -->
+<div class="form-group">
+    <button onclick="downloadBarcode()">下載條碼圖片</button>
+</div>
+
+<script>
+    const barcodeTypeSelect = document.getElementById("barcodeType");
+    const inputHint = document.getElementById("inputHint");
+    const barcodeValue = document.getElementById("barcodeValue");
+
+    // 更新輸入提示根據條碼格式
+    barcodeTypeSelect.addEventListener("change", function() {
+        const type = barcodeTypeSelect.value;
+        switch (type) {
+            case "UPC":
+                inputHint.textContent = "輸入 12 位數字";
+                barcodeValue.maxLength = 12;
+                break;
+            case "CODE39":
+                inputHint.textContent = "可包含數字、字母和部分特殊符號";
+                barcodeValue.maxLength = 43;
+                break;
+            case "CODE128":
+                inputHint.textContent = "可包含 ASCII 全集字符";
+                barcodeValue.maxLength = 50;
+                break;
+            case "ITF":
+                inputHint.textContent = "輸入偶數位數字（常用 14 位）";
+                barcodeValue.maxLength = 14;
+                break;
+            default:
+                inputHint.textContent = "請選擇條碼類型";
+        }
+    });
+
+    // 生成條碼
+    function generateBarcode() {
+        const type = barcodeTypeSelect.value;
+        let format;
+        let value = barcodeValue.value;
+        const width = parseFloat(document.getElementById("barcodeWidth").value);
+        const height = parseFloat(document.getElementById("barcodeHeight").value);
+        const color = document.getElementById("barcodeColor").value;
+        const displayValue = document.getElementById("displayText").checked;
+
+        // 設定正確的條碼格式
+        switch (type) {
+            case "UPC":
+                format = "UPC";
+                if (!/^\d{12}$/.test(value)) {
+                    alert("UPC 條碼需為 12 位數字");
+                    return;
+                }
+                break;
+            case "CODE39":
+                format = "CODE39";
+                break;
+            case "CODE128":
+                format = "CODE128";
+                break;
+            case "ITF":
+                format = "ITF";
+                if (value.length % 2 !== 0 || !/^\d+$/.test(value)) {
+                    alert("ITF 條碼需為偶數位數字，建議 14 位");
+                    return;
+                }
+                break;
+            default:
+                alert("不支持的條碼格式");
+                return;
+        }
+
+        // 清空之前的條碼
+        const barcodeSVG = document.getElementById("barcode");
+        barcodeSVG.innerHTML = "";
+
+        // 使用 JsBarcode 生成條碼
+        JsBarcode("#barcode", value, {
+            format: format,
+            width: width,
+            height: height,
+            lineColor: color,
+            displayValue: displayValue,
+            background: "transparent" // 保持背景透明
+        });
+
+        // 繪製到畫布
+        const canvas = document.getElementById("barcodeCanvas");
+        const svg = barcodeSVG.outerHTML;
+        const svgBlob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svgBlob);
+        const img = new Image();
+
+        img.onload = function() {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            URL.revokeObjectURL(url);
+        };
+        img.src = url;
+    }
+
+    // 下載條碼圖片
+    function downloadBarcode() {
+        const canvas = document.getElementById("barcodeCanvas");
+        const link = document.createElement("a");
+        link.download = "barcode.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    }
+</script>
+
+</body>
+</html>

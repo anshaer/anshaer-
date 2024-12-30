@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Shippori+Mincho&family=Zen+Maru+Gothic&family=Kosugi+Maru&family=Klee+One&family=LXGW+WenKai+Mono+TC&display=swap');
+
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 20px;
+}
+
+canvas {
+    border: 1px solid #ccc;
+    margin-top: 20px;
+    width: 800pt;
+}
+
+.controls {
+    margin-bottom: 20px;
+}

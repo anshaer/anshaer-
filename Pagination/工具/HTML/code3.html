@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>程式碼編輯器</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            background-color: #9cf6c7; /* 使用指定背景色 */
+            color: #69350F; /* 頁面文字顏色 */
+        }
+        .container {
+            display: flex;
+            flex: 1;
+        }
+        #editor-container {
+            display: flex;
+            flex-direction: column;
+            width: 50%;
+            box-sizing: border-box;
+            height: 100%;
+            border-right: 2px solid #69350F; /* 修改分界線顏色 */
+            padding: 10px;
+        }
+        .editor-section {
+            flex: 1;
+            margin-bottom: 10px;
+            background-color: rgba(255, 255, 255, 0.5); /* 半透明背景 */
+            border-radius: 8px; /* 圓角 */
+            padding: 10px;
+            box-sizing: border-box;
+            color: #69350F; /* 區塊文字顏色 */
+        }
+        .editor-section:last-child {
+            margin-bottom: 0;
+        }
+        textarea {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            resize: none;
+            font-size: 14px;
+            font-family: monospace;
+            background-color: transparent; /* 背景透明 */
+            border: none; /* 移除邊框 */
+            color: #69350F; /* 編輯器文字顏色 */
+        }
+        #output {
+            width: 50%;
+            padding: 10px;
+            box-sizing: border-box;
+            height: 100%;
+            color: #69350F; /* 輸出區文字顏色 */
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        #buttons {
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            background-color:  #9cf6c7; /* 移除透明效果 */
+        }
+        button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 20px; /* 圓角按鈕 */
+            border: none;
+            background-color: #69350F; /* 修改按鈕背景顏色 */
+            color:  #9cf6c7; /* 修改按鈕文字顏色 */
+            cursor: pointer;
+            transition: background-color 0.3s; /* 平滑過渡效果 */
+        }
+        button:hover {
+            background-color: #5e300d; /* 滑鼠懸停效果 */
+        }
+        label {
+            color: #69350F; /* 標籤文字顏色 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="editor-container">
+            <div class="editor-section">
+                <label for="html-editor">HTML</label>
+                <textarea id="html-editor" placeholder="在此輸入 HTML..."></textarea>
+            </div>
+            <div class="editor-section">
+                <label for="css-editor">CSS</label>
+                <textarea id="css-editor" placeholder="在此輸入 CSS..."></textarea>
+            </div>
+            <div class="editor-section">
+                <label for="js-editor">JavaScript</label>
+                <textarea id="js-editor" placeholder="在此輸入 JavaScript..."></textarea>
+            </div>
+        </div>
+        <div id="output"></div>
+    </div>
+    <div id="buttons">
+        <button id="run">運行</button>
+        <button id="stop">停止</button>
+        <button id="download-html">下載 HTML</button>
+        <button id="download-css">下載 CSS</button>
+        <button id="download-js">下載 JavaScript</button>
+    </div>
+
+    <script>
+        const runButton = document.getElementById('run');
+        const stopButton = document.getElementById('stop');
+        const downloadHtmlButton = document.getElementById('download-html');
+        const downloadCssButton = document.getElementById('download-css');
+        const downloadJsButton = document.getElementById('download-js');
+        const output = document.getElementById('output');
+        const htmlEditor = document.getElementById('html-editor');
+        const cssEditor = document.getElementById('css-editor');
+        const jsEditor = document.getElementById('js-editor');
+
+        runButton.addEventListener('click', () => {
+            const htmlCode = htmlEditor.value;
+            const cssCode = `<style>${cssEditor.value}</style>`;
+            const jsCode = `<script>${jsEditor.value}<\/script>`;
+
+            output.innerHTML = '';
+            const iframe = document.createElement('iframe');
+            output.appendChild(iframe);
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(htmlCode + cssCode + jsCode);
+            iframeDoc.close();
+        });
+
+        stopButton.addEventListener('click', () => {
+            output.innerHTML = '執行已停止';
+        });
+
+        downloadHtmlButton.addEventListener('click', () => {
+            downloadFile(htmlEditor.value, 'code.html', 'text/html');
+        });
+
+        downloadCssButton.addEventListener('click', () => {
+            downloadFile(cssEditor.value, 'style.css', 'text/css');
+        });
+
+        downloadJsButton.addEventListener('click', () => {
+            downloadFile(jsEditor.value, 'script.js', 'application/javascript');
+        });
+
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

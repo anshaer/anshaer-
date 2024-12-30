@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英文隨機人名產生器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>英文隨機人名產生器</h1>
+    <p>沒預設資料庫真的很隨機請小心使用</p>
+    <label for="quantity">產生數量(1-100):</label>
+    <input type="number" id="quantity" min="1" max="100" value="1">
+    <br><br>
+    <label for="initial">設定自首(A-Z)(空白為隨機):</label>
+    <input type="text" id="initial" maxlength="1" pattern="[A-Za-z]">
+    <br><br>
+    <label for="length">人名長度:</label>
+    <select id="length">
+        <option value="random">Random</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+        <option value="11">11</option>
+        <option value="12">12</option>
+        <option value="13">13</option>
+        <option value="14">14</option>
+        <option value="15">15</option>
+        <option value="16">16</option>
+        <option value="17">17</option>
+        <option value="18">18</option>
+        <option value="19">19</option>
+        <option value="20">20</option>
+    </select>
+    <br><br>
+    <button onclick="generateNames()">Generate</button>
+    <div id="result"></div>
+
+    <script>
+        function generateRandomName(initial, length) {
+            const letters = 'abcdefghijklmnopqrstuvwxyz';
+            let nameLength = length === 'random' ? Math.floor(Math.random() * 19) + 2 : parseInt(length);
+            let name = initial.toUpperCase();
+            for (let i = 1; i < nameLength; i++) {
+                name += letters[Math.floor(Math.random() * letters.length)];
+            }
+            return name;
+        }
+
+        function generateNames() {
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const initial = document.getElementById('initial').value.toUpperCase();
+            const length = document.getElementById('length').value;
+            const result = new Set();
+
+            while (result.size < quantity) {
+                result.add(generateRandomName(initial, length));
+            }
+
+            document.getElementById('result').innerHTML = Array.from(result).join('<br>');
+        }
+    </script>
+</body>
+</html>

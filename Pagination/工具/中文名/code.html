@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>繁體中文隨機人名產生器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input[type="number"], input[type="text"], textarea {
+            width: 100%;
+        }
+        textarea {
+            height: 150px;
+        }
+        button {
+            margin-top: 10px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .result {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>繁體中文隨機人名產生器</h1>
+
+        <label for="surname">輸入姓氏：</label>
+        <input type="text" id="surname" maxlength="2">
+
+        <label for="nameLength">選擇名字長度（2到10）：</label>
+        <input type="number" id="nameLength" min="2" max="10" value="2">
+
+        <label for="quantity">選擇產生數量（1到100）：</label>
+        <input type="number" id="quantity" min="1" max="100" value="1">
+
+        <label for="textInput">輸入中文資料庫（如文章）：</label>
+        <textarea id="textInput"></textarea>
+
+        <button onclick="generateNames()">產生人名</button>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function extractChineseCharacters(text) {
+            // 提取文本中的所有中文字符
+            return text.match(/[\u4e00-\u9fff]/g) || [];
+        }
+
+        function generateNames() {
+            const surname = document.getElementById('surname').value.trim();
+            const nameLength = parseInt(document.getElementById('nameLength').value, 10);
+            const quantity = parseInt(document.getElementById('quantity').value, 10);
+            const textInput = document.getElementById('textInput').value;
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = '';
+
+            if (!surname || nameLength < 2 || nameLength > 10 || quantity < 1 || quantity > 100) {
+                alert('請檢查輸入值是否正確。');
+                return;
+            }
+
+            const characters = extractChineseCharacters(textInput);
+            if (characters.length === 0) {
+                alert('請提供包含中文的文本。');
+                return;
+            }
+
+            for (let i = 0; i < quantity; i++) {
+                let name = surname;
+                for (let j = 0; j < nameLength - 1; j++) {
+                    const randomIndex = Math.floor(Math.random() * characters.length);
+                    name += characters[randomIndex];
+                }
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'result';
+                nameDiv.textContent = name.split('').join(' ');
+                resultsContainer.appendChild(nameDiv);
+            }
+        }
+    </script>
+</body>
+</html>

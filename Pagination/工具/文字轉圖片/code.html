@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文字轉圖片工具</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>文字轉圖片工具</h1>
+    <div class="controls">
+        <input type="text" id="textInput" placeholder="輸入文字" />
+        <select id="fontSelect">
+            <option value="Arial">Arial</option>
+            <option value="'Dela Gothic One'">Dela Gothic One</option>
+            <option value="'Shippori Mincho'">Shippori Mincho</option>
+            <option value="'Zen Maru Gothic'">Zen Maru Gothic</option>
+            <option value="'Kosugi Maru'">Kosugi Maru</option>
+            <option value="'Klee One'">Klee One</option>
+            <option value="'LXGW WenKai Mono TC'">LXGW WenKai Mono TC</option>
+        </select>
+        <select id="fontWeight">
+            <option value="normal">一般</option>
+            <option value="500">半粗體</option>
+            <option value="bold">粗體</option>
+        </select>
+        <input type="number" id="fontSize" placeholder="文字大小 (px)" min="10" value="32" />
+        <input type="color" id="colorPicker" value="#000000" />
+    </div>
+    <canvas id="canvas"></canvas>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>鋼琴108音</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      
+      background-color: #f5f5f5;
+      margin: 0;
+    }
+
+    .piano {
+      display: grid;
+      grid-template-columns: repeat(6, 100px);
+      gap: 10px;
+    }
+
+    .key {
+      width: 100px;
+      height: 80px;
+      background-color: white;
+      border: 1px solid black;
+      border-radius: 5px;
+      text-align: center;
+      line-height: 100px;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .key:active {
+      background-color: lightgray;
+    }
+  </style>
+</head>
+<body>
+
+<div class="piano">
+
+
+  <div class="key" data-note="A1">C͵͵</div>
+  <div class="key" data-note="A2">C♯͵͵／d♭͵͵</div>
+  <div class="key" data-note="A3">D͵͵</div>
+  <div class="key" data-note="A4">D♯͵͵／e♭͵͵</div>
+  <div class="key" data-note="A5">E͵͵</div>
+  <div class="key" data-note="A6">F͵͵</div>
+  <div class="key" data-note="A7">F♯͵͵／g♭͵͵</div>
+  <div class="key" data-note="A8">G͵͵</div>
+  <div class="key" data-note="A9">G♯͵͵／a♭͵͵</div>
+  <div class="key" data-note="A10">A͵͵</div>
+  <div class="key" data-note="A11">A♯͵͵／b♭͵͵</div>
+  <div class="key" data-note="A12">B͵͵</div>
+  <div class="key" data-note="A13">C͵͵</div>
+  <div class="key" data-note="A14">C♯͵／d♭͵</div>
+  <div class="key" data-note="A15">D͵</div>
+  <div class="key" data-note="A16">D♯͵／e♭͵</div>
+  <div class="key" data-note="A17">E͵</div>
+  <div class="key" data-note="A18">F͵</div>
+  <div class="key" data-note="A19">F♯͵／g♭͵</div>
+  <div class="key" data-note="A20">G͵</div>
+  <div class="key" data-note="A21">G♯͵／a♭͵</div>
+  <div class="key" data-note="A22">A͵</div>
+  <div class="key" data-note="A23">A♯͵／b♭͵</div>
+  <div class="key" data-note="A24">B͵</div>
+  <div class="key" data-note="A25">C</div>
+  <div class="key" data-note="A26">C♯／d♭</div>
+  <div class="key" data-note="A27">D</div>
+  <div class="key" data-note="A28">D♯／e♭</div>
+  <div class="key" data-note="A29">E</div>
+  <div class="key" data-note="A30">F</div>
+  <div class="key" data-note="A31">F♯／g♭</div>
+  <div class="key" data-note="A32">G</div>
+  <div class="key" data-note="A33">G♯／a♭</div>
+  <div class="key" data-note="A34">A</div>
+  <div class="key" data-note="A35">A♯／b♭</div>
+  <div class="key" data-note="A36">B</div>
+  <div class="key" data-note="A37">c</div>
+  <div class="key" data-note="A38">c♯／d♭</div>
+  <div class="key" data-note="A39">d</div>
+  <div class="key" data-note="A40">d♯／e♭</div>
+  <div class="key" data-note="A41">e</div>
+  <div class="key" data-note="A42">f</div>
+  <div class="key" data-note="A43">f♯／g♭</div>
+  <div class="key" data-note="A44">g</div>
+  <div class="key" data-note="A45">g♯／a♭</div>
+  <div class="key" data-note="A46">a</div>
+  <div class="key" data-note="A47">a♯／b♭</div>
+  <div class="key" data-note="A48">b</div>
+  <div class="key" data-note="A49">c′</div>
+  <div class="key" data-note="A50">c♯′／d♭′</div>
+  <div class="key" data-note="A51">d′</div>
+  <div class="key" data-note="A52">d♯′／e♭′</div>
+  <div class="key" data-note="A53">e′</div>
+  <div class="key" data-note="A54">f′</div>
+  <div class="key" data-note="A55">f♯′／g♭′</div>
+  <div class="key" data-note="A56">g′</div>
+  <div class="key" data-note="A57">g♯′／a♭′</div>
+  <div class="key" data-note="A58">a′</div>
+  <div class="key" data-note="A59">a♯′／b♭′</div>
+  <div class="key" data-note="A60">b′</div>
+  <div class="key" data-note="A61">c′′</div>
+  <div class="key" data-note="A62">c♯′′／d♭′′</div>
+  <div class="key" data-note="A63">d′′</div>
+  <div class="key" data-note="A64">d♯′′／e♭′′</div>
+  <div class="key" data-note="A65">e′′</div>
+  <div class="key" data-note="A66">f′′</div>
+  <div class="key" data-note="A67">f♯′′／g♭′′</div>
+  <div class="key" data-note="A68">g′′</div>
+  <div class="key" data-note="A69">g♯′′／a♭′′</div>
+  <div class="key" data-note="A70">a′′</div>
+  <div class="key" data-note="A71">a♯′′／b♭′′</div>
+  <div class="key" data-note="A72">b′′</div>
+  <div class="key" data-note="A73">c′′′</div>
+  <div class="key" data-note="A74">c♯′′′／d♭′′′</div>
+  <div class="key" data-note="A75">d′′′</div>
+  <div class="key" data-note="A76">d♯′′′／e♭′′′</div>
+  <div class="key" data-note="A77">e′′′</div>
+  <div class="key" data-note="A78">f′′′</div>
+  <div class="key" data-note="A79">f♯′′′／g♭′′′</div>
+  <div class="key" data-note="A80">g′′′</div>
+  <div class="key" data-note="A81">g♯′′′／a♭′′′</div>
+  <div class="key" data-note="A82">a′′′</div>
+  <div class="key" data-note="A83">a♯′′′／b♭′′′</div>
+  <div class="key" data-note="A84">b′′′</div>
+  <div class="key" data-note="A85">c′′′′</div>
+  <div class="key" data-note="A86">c♯′′′′／d♭′′′′</div>
+  <div class="key" data-note="A87">d′′′′</div>
+  <div class="key" data-note="A88">d♯′′′′／e♭′′′′</div>
+  <div class="key" data-note="A89">e′′′′</div>
+  <div class="key" data-note="A90">f′′′′</div>
+  <div class="key" data-note="A91">f♯′′′′／g♭′′′′</div>
+  <div class="key" data-note="A92">g′′′′</div>
+  <div class="key" data-note="A93">g♯′′′′／a♭′′′′</div>
+  <div class="key" data-note="A94">a′′′′</div>
+  <div class="key" data-note="A95">a♯′′′′／b♭′′′′</div>
+  <div class="key" data-note="A96">b′′′′</div>
+  <div class="key" data-note="A97">c′′′′′</div>
+  <div class="key" data-note="A98">c♯′′′′′／d♭′′′′′</div>
+  <div class="key" data-note="A99">d′′′′′</div>
+  <div class="key" data-note="A100">d♯′′′′′／e♭′′′′′</div>
+  <div class="key" data-note="A101">e′′′′′</div>
+  <div class="key" data-note="A102">f′′′′′</div>
+  <div class="key" data-note="A103">f♯′′′′′／g♭′′′′′</div>
+  <div class="key" data-note="A104">g′′′′′</div>
+  <div class="key" data-note="A105">g♯′′′′′／a♭′′′′′</div>
+  <div class="key" data-note="A106">a′′′′′</div>
+  <div class="key" data-note="A107">a♯′′′′′／b♭′′′′′</div>
+  <div class="key" data-note="A108">b′′′′′</div>
+
+</div>
+<script>
+  
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  
+  const frequencies = {
+'A1': 16.3516,
+'A2': 17.3239,
+'A3':18.3540,
+'A4':19.4454,
+'A5':20.6017,
+'A6':21.8268,
+'A7':23.1247,
+'A8':24.4997,
+'A9':25.9565,
+'A10':27.5000,
+'A11':29.1352,
+'A12':30.8677,
+'A13':32.7032,
+'A14':34.6478,
+'A15':36.7081,
+'A16':38.8909,
+'A17':41.2034,
+'A18':43.6535,
+'A19':46.2493,
+'A20':48.9994,
+'A21':51.9131,
+'A22':55.0000,
+'A23':58.2705,
+'A24':61.7354,
+'A25':65.4064,
+'A26':69.2957,
+'A27':73.4162,
+'A28':77.7817,
+'A29':82.4069,
+'A30':87.3071,
+'A31':92.4986,
+'A32':97.9989,
+'A33':103.826,
+'A34':110.000,
+'A35':116.541,
+'A36':123.471,
+'A37':130.813,
+'A38':138.591,
+'A39':146.832,
+'A40':155.563,
+'A41':164.814,
+'A42':174.614,
+'A43':184.997,
+'A44':195.998,
+'A45':207.652,
+'A46':220.000,
+'A47':233.082,
+'A48':246.942,
+'A49':261.626,
+'A50':277.183,
+'A51':293.665,
+'A52':311.127,
+'A53':329.628,
+'A54':349.228,
+'A55':369.994,
+'A56':391.995,
+'A57':415.305,
+'A58':440.000,
+'A59':466.164,
+'A60':493.883,
+'A61':523.251,
+'A62':554.365,
+'A63':587.330,
+'A64':622.254,
+'A65':659.255,
+'A66':698.456,
+'A67':739.989,
+'A68':783.991,
+'A69':830.609,
+'A70':880.000,
+'A71':932.328,
+'A72':987.767,
+'A73':1046.50,
+'A74':1108.73,
+'A75':1174.66,
+'A76':1244.51,
+'A77':1318.51,
+'A78':1396.91,
+'A79':1479.98,
+'A80':1567.98,
+'A81':1661.22,
+'A82':1760.00,
+'A83':1864.66,
+'A84':1975.53,
+'A85':2093.00,
+'A86':2217.46,
+'A87':2349.32,
+'A88':2489.02,
+'A89':2637.02,
+'A90':2793.83,
+'A91':2959.96,
+'A92':3135.96,
+'A93':3322.44,
+'A94':3520.00,
+'A95':3729.31,
+'A96':3951.07,
+'A97':4186.01,
+'A98':4434.92,
+'A99':4698.64,
+'A100':4978.03,
+'A101':5274.04,
+'A102':5587.65,
+'A103':5919.91,
+'A104':6271.93,
+'A105':6644.88,
+'A106':7040.00,
+'A107':7458.62,
+'A108':7902.13
+
+
+
+  };
+
+  let oscillators = {}; 
+
+  function playNote(note) {
+    
+    const oscillator = audioCtx.createOscillator();
+    oscillator.type = 'sine';  
+    oscillator.frequency.setValueAtTime(frequencies[note], audioCtx.currentTime); 
+    oscillator.start(); 
+
+    
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); 
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5); 
+
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    
+    oscillators[note] = { oscillator, gainNode };
+  }
+
+  function stopNote(note) {
+    if (oscillators[note]) {
+      const { oscillator, gainNode } = oscillators[note];
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05); 
+      oscillator.stop(audioCtx.currentTime + 0.05); // 
+      delete oscillators[note];
+    }
+  }
+  const keys = document.querySelectorAll('.key');
+
+  keys.forEach(key => {
+    const note = key.getAttribute('data-note');
+
+    key.addEventListener('mousedown', () => {
+      playNote(note); 
+    });
+
+    key.addEventListener('mouseup', () => {
+      stopNote(note); 
+    });
+
+    key.addEventListener('mouseleave', () => {
+      stopNote(note); 
+    });
+  });
+</script>
+
+</body>
+</html>

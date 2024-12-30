@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluorescent Text Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Nosifer&family=Liu+Jian+Mao+Cao&family=Zhi+Mang+Xing&family=Long+Cang&family=Microsoft+YaHei&family=Noto+Serif+TC&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #111;
+            color: white;
+        }
+        .container {
+            text-align: center;
+        }
+        .settings {
+            margin-bottom: 20px;
+        }
+        .glowing-text {
+            font-size: 50px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            animation: glow 1.5s ease-in-out infinite;
+        }
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 5px var(--glow-color), 0 0 10px var(--glow-color), 0 0 15px var(--glow-color), 0 0 20px var(--glow-color);
+            }
+            50% {
+                text-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color), 0 0 30px var(--glow-color), 0 0 40px var(--glow-color);
+            }
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+        }
+        #download-btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #download-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>螢光燈文字產生器</h1>
+    <div class="settings">
+        <label for="text-input">輸入文字:</label>
+        <input type="text" id="text-input" placeholder="輸入你的文字" value="螢光燈文字">
+        <br>
+
+        <label for="font-selector">選擇字體:</label>
+        <select id="font-selector">
+            <option value="Arial, sans-serif">Arial</option>
+            <option value="'Courier New', Courier, monospace">Courier New</option>
+            <option value="'Times New Roman', Times, serif">Times New Roman</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans</option>
+            <option value="'Monoton', cursive">Monoton</option>
+            <option value="'Nosifer', cursive">Nosifer</option>
+            <option value="'Liu Jian Mao Cao', cursive">劉健毛草</option>
+            <option value="'LXGW WenKai Mono TC', monospace">霞鶩文楷</option>
+            <option value="'Microsoft YaHei', sans-serif">微軟圓黑體</option>
+            <option value="'Noto Serif TC', serif">新細明體</option>
+            <option value="'Zhi Mang Xing', cursive">顧頡誠芝蔓行</option>
+            <option value="'Long Cang', cursive">龍藏</option>
+        </select>
+        <br>
+
+        <label for="color-picker">選擇螢光顏色:</label>
+        <input type="color" id="color-picker" value="#ff6347">
+    </div>
+
+    <div class="glowing-text" id="glowing-text">
+        螢光燈文字
+    </div>
+
+    <button id="download-btn">下載 HTML</button>
+</div>
+
+<script>
+    const textInput = document.getElementById('text-input');
+    const fontSelector = document.getElementById('font-selector');
+    const colorPicker = document.getElementById('color-picker');
+    const glowingText = document.getElementById('glowing-text');
+    const downloadBtn = document.getElementById('download-btn');
+
+    // Update text, font, and color dynamically
+    function updateTextEffect() {
+        const text = textInput.value;
+        const font = fontSelector.value;
+        const glowColor = colorPicker.value;
+
+        glowingText.textContent = text;
+        glowingText.style.fontFamily = font;
+        glowingText.style.setProperty('--glow-color', glowColor);
+    }
+
+    // Listen for changes and update accordingly
+    textInput.addEventListener('input', updateTextEffect);
+    fontSelector.addEventListener('change', updateTextEffect);
+    colorPicker.addEventListener('input', updateTextEffect);
+
+    // Download the HTML file
+    downloadBtn.addEventListener('click', () => {
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Fluorescent Text</title>
+            <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Nosifer&family=Liu+Jian+Mao+Cao&family=Zhi+Mang+Xing&family=Long+Cang&family=Microsoft+YaHei&family=Noto+Serif+TC&display=swap" rel="stylesheet">
+            <link href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css" rel="stylesheet">
+            <style>
+                body {
+                    font-family: ${fontSelector.value}, sans-serif;
+                    margin: 0;
+                    padding: 0;
+                    color: white;
+                    background-color: transparent;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                }
+                .glowing-text {
+                    font-size: 50px;
+                    font-weight: bold;
+                    text-align: center;
+                    animation: glow 1.5s ease-in-out infinite;
+                    color: white;
+                }
+                @keyframes glow {
+                    0%, 100% {
+                        text-shadow: 0 0 5px ${colorPicker.value}, 0 0 10px ${colorPicker.value}, 0 0 15px ${colorPicker.value}, 0 0 20px ${colorPicker.value};
+                    }
+                    50% {
+                        text-shadow: 0 0 10px ${colorPicker.value}, 0 0 20px ${colorPicker.value}, 0 0 30px ${colorPicker.value}, 0 0 40px ${colorPicker.value};
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="glowing-text">${textInput.value}</div>
+        </body>
+        </html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'glowing-text.html';
+    link.click();
+});
+
+
+    // Initial update
+    updateTextEffect();
+</script>
+
+</body>
+</html>

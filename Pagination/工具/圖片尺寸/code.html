@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas Resizer and Image Uploader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        input {
+            padding: 5px;
+            margin: 5px;
+            width: 80px;
+        }
+        canvas {
+            border: 1px solid black;
+            display: block;
+            margin: 0 auto;
+        }
+        .buttons {
+            margin-bottom: 20px;
+        }
+        .options {
+            margin-bottom: 20px;
+        }
+        .options label {
+            display: block;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>圖檔尺寸調整</h1>
+    <div class="controls">
+        <label for="canvasWidth">Width:</label>
+        <input type="number" id="canvasWidth" value="300" min="1">
+
+        <label for="canvasHeight">Height:</label>
+        <input type="number" id="canvasHeight" value="300" min="1">
+    </div>
+
+    <div class="options">
+        <label><input type="radio" name="scalingOption" value="fitInside" checked>保持長寬比，擴展壓縮到指定尺寸</label>
+        <label><input type="radio" name="scalingOption" value="fitOutside">保持長寬比，縮放並裁切指定尺寸</label>
+        <label><input type="radio" name="scalingOption" value="stretch">不保持長寬比，並延展到指定尺寸</label>
+        <label><input type="radio" name="scalingOption" value="keepOriginalSize">不變更圖片尺寸，擴展到指定尺寸</label>
+    </div>
+
+    <div class="buttons">
+        <input type="file" id="uploadImage" accept="image/*">
+        <button id="downloadImage">Download</button>
+    </div>
+
+    <canvas id="myCanvas" width="300" height="300"></canvas>
+
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const context = canvas.getContext('2d');
+        const widthInput = document.getElementById('canvasWidth');
+        const heightInput = document.getElementById('canvasHeight');
+        const uploadInput = document.getElementById('uploadImage');
+        const downloadButton = document.getElementById('downloadImage');
+        const scalingOptions = document.getElementsByName('scalingOption');
+
+        let currentImage = null; // Store the currently uploaded image
+
+        function getSelectedScalingOption() {
+            return Array.from(scalingOptions).find(option => option.checked).value;
+        }
+
+        function updateCanvasSize() {
+            const newWidth = parseInt(widthInput.value, 10) || 1;
+            const newHeight = parseInt(heightInput.value, 10) || 1;
+
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+            if (currentImage) {
+                drawImageOnCanvas(currentImage); // Redraw the image if it exists
+            }
+        }
+
+        function drawImageOnCanvas(image) {
+            const scalingOption = getSelectedScalingOption();
+
+            if (scalingOption === 'fitInside') {
+                const canvasRatio = canvas.width / canvas.height;
+                const imageRatio = image.width / image.height;
+
+                let drawWidth, drawHeight;
+
+                if (imageRatio > canvasRatio) {
+                    drawWidth = canvas.width;
+                    drawHeight = canvas.width / imageRatio;
+                } else {
+                    drawWidth = canvas.height * imageRatio;
+                    drawHeight = canvas.height;
+                }
+
+                const xOffset = (canvas.width - drawWidth) / 2;
+                const yOffset = (canvas.height - drawHeight) / 2;
+
+                context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+                context.drawImage(image, xOffset, yOffset, drawWidth, drawHeight);
+            } else if (scalingOption === 'fitOutside') {
+                const canvasRatio = canvas.width / canvas.height;
+                const imageRatio = image.width / image.height;
+
+                let drawWidth, drawHeight;
+
+                if (imageRatio > canvasRatio) {
+                    drawWidth = canvas.height * imageRatio;
+                    drawHeight = canvas.height;
+                } else {
+                    drawWidth = canvas.width;
+                    drawHeight = canvas.width / imageRatio;
+                }
+
+                const xOffset = (canvas.width - drawWidth) / 2;
+                const yOffset = (canvas.height - drawHeight) / 2;
+
+                context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+                context.drawImage(image, xOffset, yOffset, drawWidth, drawHeight);
+            } else if (scalingOption === 'stretch') {
+                context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+            } else if (scalingOption === 'keepOriginalSize') {
+                const xOffset = (canvas.width - image.width) / 2;
+                const yOffset = (canvas.height - image.height) / 2;
+
+                context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+                context.drawImage(image, xOffset, yOffset);
+            }
+        }
+
+        uploadInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const img = new Image();
+                img.onload = () => {
+                    currentImage = img; // Store the uploaded image
+                    drawImageOnCanvas(img);
+                };
+                img.src = URL.createObjectURL(file);
+            }
+        });
+
+        scalingOptions.forEach(option => {
+            option.addEventListener('change', () => {
+                if (currentImage) {
+                    drawImageOnCanvas(currentImage); // Redraw the image when scaling option changes
+                }
+            });
+        });
+
+        downloadButton.addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'canvas-image.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+
+        // Attach event listeners to inputs
+        widthInput.addEventListener('input', updateCanvasSize);
+        heightInput.addEventListener('input', updateCanvasSize);
+    </script>
+</body>
+</html>

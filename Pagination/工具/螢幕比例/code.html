@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圖像比例與邊寬換算</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 圖像比例換算 -->
+    <h1>圖像比例換算</h1>
+
+    <label for="screenWidth1">圖像寬度:</label>
+    <input type="number" id="screenWidth1" value="1600" oninput="calculateAspectRatio()"><br>
+
+    <label for="screenHeight1">圖像高度:</label>
+    <input type="number" id="screenHeight1" value="900" oninput="calculateAspectRatio()"><br>
+
+    <label for="aspectRatioDisplay">圖像比例:</label>
+    <input type="text" id="aspectRatioDisplay" readonly><br>
+
+    <div id="result"></div>
+
+    <!-- 圖像邊寬換算 -->
+    <h1>圖像邊寬換算</h1>
+
+    <label for="aspectWidth">圖像比例寬度:</label>
+    <input type="number" id="aspectWidth" value="16" oninput="calculateScreenDimensions()"><br>
+
+    <label for="aspectHeight">圖像比例高度:</label>
+    <input type="number" id="aspectHeight" value="9" oninput="calculateScreenDimensions()"><br>
+
+    <label for="fixedOption">選擇固定:</label>
+    <select id="fixedOption" onchange="calculateScreenDimensions()">
+        <option value="width">固定寬度</option>
+        <option value="height">固定高度</option>
+    </select><br>
+
+    <!-- 固定寬度時顯示 -->
+    <div id="fixedWidthSection">
+        <label for="screenWidth2">圖像寬度:</label>
+        <input type="text" id="screenWidth2" readonly><br>
+
+        <label for="calculatedHeight">圖像高度:</label>
+        <input type="text" id="calculatedHeight" readonly><br>
+    </div>
+
+    <!-- 固定高度時顯示 -->
+    <div id="fixedHeightSection" style="display: none;">
+        <label for="calculatedWidth">圖像寬度:</label>
+        <input type="text" id="calculatedWidth" readonly><br>
+
+        <label for="screenHeight2">圖像高度:</label>
+        <input type="text" id="screenHeight2" readonly><br>
+    </div>
+
+    <div id="screenSizeResult"></div>
+    <div id="megaPixels"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
