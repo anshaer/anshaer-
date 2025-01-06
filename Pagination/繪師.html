@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Cards</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            text-align: center;
+        }
+
+        #searchBar {
+            width: 100%;
+            max-width: 500px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .card-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            max-width: 1000px;
+            margin: 20px auto;
+            z-index: 10;
+            position: relative;
+        }
+
+        .card {
+            width: 150px;
+            height: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            overflow: hidden;
+            text-align: center;
+            transition: transform 0.2s;
+            padding: 10px;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        .card img {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+
+        .card-info {
+            margin-top: 10px;
+        }
+
+        .card-name {
+            font-weight: bold;
+        }
+
+        .card-remark, .card-tags {
+            font-size: 12px;
+            color: #666;
+        }
+
+        iframe {
+            position: fixed;
+            top: 5%;
+            left: 5%;
+            width: 90%;
+            height: 90%;
+            border: none;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+        }
+
+        .close-btn:hover {
+            background-color: #f4f4f4;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix"></canvas>
+
+    <header>
+        <h2>Random Cards</h2>
+        <input id="searchBar" type="text" placeholder="Search cards by name, remark, or tags..." oninput="filterCards()">
+    </header>
+
+    <div class="overlay" onclick="closeIframe()"></div>
+    <iframe id="iframeViewer"></iframe>
+    <button class="close-btn" onclick="closeIframe()">&times;</button>
+
+    <div class="card-container" id="cardContainer">
+        <!-- Cards will be inserted here by JavaScript -->
+    </div>
+
+    <script>
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        function initializeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        initializeCanvas();
+
+        const fontSize = 16;
+        let columns = Math.floor(canvas.width / fontSize);
+
+        const characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZぁぃぅぇぉかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙㄧㄨㄩㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥ';
+        let drops = Array(columns).fill(0).map(() => Math.floor(Math.random() * canvas.height / fontSize));
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'hsl(120, 100%, 30%)';
+
+
+            ctx.font = `${fontSize}px monospace`;
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = characters[Math.floor(Math.random() * characters.length)];
+                const x = i * fontSize;
+                const y = drops[i] * fontSize;
+
+                ctx.fillText(text, x, y);
+
+                if (y > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+
+                drops[i]++;
+            }
+        }
+
+        setInterval(draw, 50);
+
+        window.addEventListener('resize', () => {
+            initializeCanvas();
+            columns = Math.floor(canvas.width / fontSize);
+            drops = Array(columns).fill(0).map(() => Math.floor(Math.random() * canvas.height / fontSize));
+        });
+
+        const cardsData = [
+            { name: 'Alice', img: '繪師/闇崎夜弥/001.jpg', url: '繪師/闇崎夜弥/generated_page.html', remark: '廣東話/國語/English/日本語', tags: ['#繪師 #Live2D #TW #HK #雙人勢 #Vtuber'] },
+
+        ];
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function loadCards() {
+            const cardContainer = document.getElementById('cardContainer');
+            shuffle(cardsData);
+            cardsData.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card';
+                cardElement.innerHTML = `
+                    <img src="${card.img}" alt="${card.name}">
+                    <div class="card-info">
+                        <div class="card-name">${card.name}</div>
+                        <div class="card-remark">${card.remark}</div>
+                        <div class="card-tags">Tags: ${card.tags.join(', ')}</div>
+                    </div>
+                `;
+                cardElement.addEventListener('click', () => openIframe(card.url));
+                cardContainer.appendChild(cardElement);
+            });
+        }
+
+        function filterCards() {
+            const query = document.getElementById('searchBar').value.toLowerCase();
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                const name = card.querySelector('.card-name').textContent.toLowerCase();
+                const remark = card.querySelector('.card-remark').textContent.toLowerCase();
+                const tags = card.querySelector('.card-tags').textContent.toLowerCase();
+                card.style.display = (name.includes(query) || remark.includes(query) || tags.includes(query)) ? 'block' : 'none';
+            });
+        }
+
+        function openIframe(url) {
+            const iframe = document.getElementById('iframeViewer');
+            const overlay = document.querySelector('.overlay');
+            iframe.src = url;
+            iframe.style.display = 'block';
+            overlay.style.display = 'block';
+            document.querySelector('.close-btn').style.display = 'block';
+        }
+
+        function closeIframe() {
+            const iframe = document.getElementById('iframeViewer');
+            const overlay = document.querySelector('.overlay');
+            iframe.src = '';
+            iframe.style.display = 'none';
+            overlay.style.display = 'none';
+            document.querySelector('.close-btn').style.display = 'none';
+        }
+
+        // Initial load
+        loadCards();
+    </script>
+</body>
+</html>
