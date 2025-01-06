@@ -166,7 +166,7 @@
             let linksHtml = '';
             links.forEach(link => {
                 if (link.image && link.url) {
-                    linksHtml += `<a href="${link.url}"><img src="${link.image}" alt="連結圖片" style="width:80px;height:80px;margin:5px;border-radius:8px;"></a>`;
+                    linksHtml += `<a href="${link.url}" target="_blank"><img src="${link.image}" alt="連結圖片" style="width:80px;height:80px;margin:5px;border-radius:8px;"></a>`;
                 }
             });
 
@@ -180,7 +180,6 @@
     body {
         font-family: Arial, sans-serif;
         text-align: center;
-       
         margin: 0;
         padding: 0;
     }
@@ -201,7 +200,7 @@
         margin-bottom: 20px;
     }
     .id {
-        font-size: 2rem; /* h1 尺寸 */
+        font-size: 2rem;
         font-weight: bold;
         color: ${textColor};
         margin-bottom: 10px;
@@ -231,19 +230,22 @@
 </body>
 </html>`;
 
+            // 更新預覽
             const previewFrame = document.getElementById('previewFrame');
             const previewDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
             previewDoc.open();
             previewDoc.write(generatedHtml);
             previewDoc.close();
 
-            document.getElementById('downloadButton').addEventListener('click', () => {
+            // 更新下載按鈕功能
+            const downloadButton = document.getElementById('downloadButton');
+            downloadButton.onclick = () => {
                 const blob = new Blob([generatedHtml], { type: 'text/html' });
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
                 a.download = 'generated_page.html';
                 a.click();
-            });
+            };
         });
     </script>
 </body>
