@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網頁生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5b8b8;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+        .left, .right {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .left {
+            background: var(--left-bg-color, #4e4f49);
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .right {
+            background: var(--right-bg-color, #4e4f49);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #cfc7c4;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            color: #cfc7c4;
+        }
+        input, textarea, button {
+            font-size: 16px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: #cfc7c4;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        iframe {
+            width: 100%;
+            height: 90%;
+            border: none;
+            background: var(--iframe-bg-color, #807d7c);
+        }
+    </style>
+</head>
+<body>
+    <div class="left">
+        <div class="container">
+            <h1>網頁生成器</h1>
+            <form id="generatorForm">
+                <label>
+                    頭像網址:
+                    <input type="url" id="avatarUrl" placeholder="輸入頭像圖片網址">
+                </label>
+                <label>
+                    ID:
+                    <input type="text" id="userId" placeholder="輸入您的ID">
+                </label>
+                <label>
+                    簡述:
+                    <textarea id="description" placeholder="輸入簡述"></textarea>
+                </label>
+                <label>
+                    語言:
+                    <input type="text" id="languages" placeholder="輸入語言 (用逗號分隔)">
+                </label>
+                <label>
+                    備註:
+                    <textarea id="remarks" placeholder="輸入備註"></textarea>
+                </label>
+                <label>
+                    文字顏色:
+                    <input type="color" id="textColor" value="#000000">
+                </label>
+                <label>
+                    容器背景顏色:
+                    <input type="color" id="containerBgColor" value="#ffffff">
+                </label>
+                <label>
+                    容器背景圖片網址（可選）:
+                    <input type="url" id="containerBgImage" placeholder="輸入圖片網址">
+                </label>
+                <div class="links-container" id="linksContainer">
+                    <div class="link-item">
+                        <label>
+                            連結圖片網址:
+                            <input type="url" class="link-image" placeholder="輸入連結圖片網址">
+                        </label>
+                        <label>
+                            連結目標網址:
+                            <input type="url" class="link-url" placeholder="輸入連結目標網址">
+                        </label>
+                    </div>
+                </div>
+                <button type="button" id="addLinkButton">增加連結</button>
+                <button type="button" id="generateButton">生成網頁</button>
+                <button type="button" id="downloadButton">下載HTML</button>
+            </form>
+        </div>
+    </div>
+    <div class="right">
+        <iframe id="previewFrame" title="預覽"></iframe>
+    </div>
+
+    <script>
+        document.getElementById('addLinkButton').addEventListener('click', () => {
+            const container = document.getElementById('linksContainer');
+            const newLinkItem = document.createElement('div');
+            newLinkItem.classList.add('link-item');
+            newLinkItem.innerHTML = `
+                <label>
+                    連結圖片網址:
+                    <input type="url" class="link-image" placeholder="輸入連結圖片網址">
+                </label>
+                <label>
+                    連結目標網址:
+                    <input type="url" class="link-url" placeholder="輸入連結目標網址">
+                </label>
+            `;
+            container.appendChild(newLinkItem);
+        });
+
+        document.getElementById('generateButton').addEventListener('click', () => {
+            const avatarUrl = document.getElementById('avatarUrl').value;
+            const userId = document.getElementById('userId').value;
+            const description = document.getElementById('description').value;
+            const languages = document.getElementById('languages').value;
+            const remarks = document.getElementById('remarks').value;
+
+            const textColor = document.getElementById('textColor').value;
+            const containerBgColor = document.getElementById('containerBgColor').value;
+            const containerBgImage = document.getElementById('containerBgImage').value;
+
+            const links = Array.from(document.querySelectorAll('.link-item')).map(item => ({
+                image: item.querySelector('.link-image').value,
+                url: item.querySelector('.link-url').value
+            }));
+
+            let linksHtml = '';
+            links.forEach(link => {
+                if (link.image && link.url) {
+                    linksHtml += `<a href="${link.url}"><img src="${link.image}" alt="連結圖片" style="width:80px;height:80px;margin:5px;border-radius:8px;"></a>`;
+                }
+            });
+
+            const generatedHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個人網頁</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+       
+        margin: 0;
+        padding: 0;
+    }
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: ${containerBgColor};
+        ${containerBgImage ? `background-image: url('${containerBgImage}'); background-size: cover; background-position: center;` : ''}
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+    }
+    .avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 20px;
+    }
+    .id {
+        font-size: 2rem; /* h1 尺寸 */
+        font-weight: bold;
+        color: ${textColor};
+        margin-bottom: 10px;
+    }
+    .description, .language, .remarks {
+        font-size: 16px;
+        color: ${textColor};
+        margin-bottom: 20px;
+    }
+    .links a {
+        display: inline-block;
+        margin: 10px;
+    }
+</style>
+
+</head>
+<body>
+<div class="container">
+    <img src="${avatarUrl}" alt="頭像" class="avatar">
+    <h1 class="id">${userId}</h1>
+    <div class="description">${description}</div>
+    <div class="language">語言: ${languages}</div>
+    <div class="remarks">備註: ${remarks}</div>
+    <div class="links">${linksHtml}</div>
+</div>
+
+</body>
+</html>`;
+
+            const previewFrame = document.getElementById('previewFrame');
+            const previewDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+            previewDoc.open();
+            previewDoc.write(generatedHtml);
+            previewDoc.close();
+
+            document.getElementById('downloadButton').addEventListener('click', () => {
+                const blob = new Blob([generatedHtml], { type: 'text/html' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'generated_page.html';
+                a.click();
+            });
+        });
+    </script>
+</body>
+</html>
