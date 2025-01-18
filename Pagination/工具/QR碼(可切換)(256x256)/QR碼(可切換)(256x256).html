@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Editor</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            
+        }
+
+        #qrContainer {
+            text-align: center;
+        }
+
+        #qrCode {
+            cursor: pointer;
+            margin-bottom: 20px;
+            width: 256px;
+            height: 256px;
+            transition: opacity 1s ease-in-out;
+        }
+
+        #qrForm {
+            display: none;
+            background: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #bgColorContainer {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"], input[type="color"], button, textarea, input[type="file"], input[type="number"] {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 8px;
+            font-size: 1em;
+        }
+
+        input[type="color"] {
+            width: 100px;
+            height: 40px;
+            padding: 0;
+            margin-bottom: 10px;
+        }
+
+        button {
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div id="qrContainer">
+        <canvas id="qrCode"></canvas>
+        <form id="qrForm">
+<p>QR碼尺寸綁定256*256</p>
+            <label for="qrText">QR碼內容 (多行用換行分隔)</label>
+            <textarea id="qrText" rows="3" placeholder="輸入多行內容，每行用換行分隔"></textarea>
+
+            <label for="qrColor">QR碼顏色</label>
+            <input type="color" id="qrColor" value="#000000">
+
+            <label for="transparentBg">背景透明</label>
+            <input type="checkbox" id="transparentBg">
+
+            <div id="bgColorContainer">
+                <label for="bgColor">背景顏色</label>
+                <input type="color" id="bgColor" value="#ffffff">
+            </div>
+
+            <label for="imageUpload">上傳圖片 (作為其中一頁內容)</label>
+            <input type="file" id="imageUpload" accept="image/*">
+
+            <label for="rotationTime">圖片/QR碼切換時間 (秒)</label>
+            <input type="number" id="rotationTime" value="10" min="1" placeholder="輸入切換時間">
+
+            <button type="button" onclick="startQRCodeRotation()">生成</button>
+        </form>
+    </div>
+
+    <script>
+        let qrLines = [];
+        let currentLineIndex = 0;
+        let rotationInterval;
+        let uploadedImage = null;
+        const qrCodeCanvas = document.getElementById('qrCode');
+
+        function generateQRCode(content) {
+            const qrColor = document.getElementById('qrColor').value;
+            const transparentBg = document.getElementById('transparentBg').checked;
+            const bgColor = transparentBg ? null : document.getElementById('bgColor').value;
+
+            qrCodeCanvas.style.opacity = 0; // Start fade-out
+
+            setTimeout(() => {
+                if (typeof content === 'string') {
+                    QRCode.toCanvas(qrCodeCanvas, content, {
+                        width: 256, // 固定尺寸
+                        height: 256, // 固定尺寸
+                        color: {
+                            dark: qrColor,
+                            light: bgColor || '#0000' // Transparent if bgColor is null
+                        }
+                    }, function (error) {
+                        if (error) console.error(error);
+                        console.log('QR code generated!');
+                    });
+                } else if (content instanceof Image) {
+                    const ctx = qrCodeCanvas.getContext('2d');
+                    ctx.clearRect(0, 0, qrCodeCanvas.width, qrCodeCanvas.height);
+                    ctx.drawImage(content, 0, 0, 256, 256);
+                    console.log('Image displayed!');
+                }
+                qrCodeCanvas.style.opacity = 1; // Fade-in
+            }, 500); // Wait for fade-out to complete
+        }
+
+        function startQRCodeRotation() {
+            const qrText = document.getElementById('qrText').value;
+            const rotationTime = parseInt(document.getElementById('rotationTime').value, 10) * 1000;
+            qrLines = qrText.split('\n').filter(line => line.trim() !== '');
+
+            if (uploadedImage) {
+                qrLines.push(uploadedImage); // Add the uploaded image as one of the slides
+            }
+
+            if (qrLines.length === 0) {
+                alert('請輸入至少一行QR碼內容或上傳圖片');
+                return;
+            }
+
+            if (rotationInterval) clearInterval(rotationInterval);
+
+            currentLineIndex = 0;
+            generateQRCode(qrLines[currentLineIndex]);
+            document.getElementById('qrForm').style.display = 'none'; // Hide form after generating
+
+            if (qrLines.length > 1) {
+                rotationInterval = setInterval(() => {
+                    currentLineIndex = (currentLineIndex + 1) % qrLines.length;
+                    generateQRCode(qrLines[currentLineIndex]);
+                }, rotationTime); // 根據設定的時間切換
+            }
+        }
+
+        document.getElementById('qrCode').addEventListener('click', function() {
+            document.getElementById('qrForm').style.display = 'block';
+        });
+
+        document.getElementById('transparentBg').addEventListener('change', function() {
+            const bgColorContainer = document.getElementById('bgColorContainer');
+            bgColorContainer.style.display = this.checked ? 'none' : 'block';
+        });
+
+        document.getElementById('imageUpload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const img = new Image();
+                img.onload = () => {
+                    uploadedImage = img;
+                    console.log('Image uploaded and ready for use.');
+                };
+                img.src = URL.createObjectURL(file);
+            }
+        });
+
+        window.onload = () => generateQRCode('0123');
+    </script>
+</body>
+</html>
