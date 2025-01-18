@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網頁生成器</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5b8b8;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: row;
+            height: 100vh;
+        }
+        .left, .right {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .left {
+            background: var(--left-bg-color, #4e4f49);
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .right {
+            background: var(--right-bg-color, #4e4f49);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+.gallery img, .gallery video {
+    width: 300px;
+    height: auto; /* 保持比例 */
+    margin: 10px;
+    display:inline-block;
+}
+
+        h1 {
+            text-align: center;
+            color: #cfc7c4;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            color: #cfc7c4;
+        }
+        input, textarea, button, select {
+            font-size: 16px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #007bff;
+            color: #cfc7c4;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .links-container, .gallery-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        iframe {
+            width: 100%;
+            height: 90%;
+            border: none;
+            background: var(--iframe-bg-color, #807d7c);
+        }
+    </style>
+</head>
+<body>
+    <div class="left">
+        <div class="container">
+            <h1>個人網頁生成器</h1>
+            <form id="generatorForm">
+                <label>
+                    頭像網址:
+                    <input type="url" id="avatarUrl" placeholder="輸入頭像圖片網址">
+                    <P>使用圖片網址或使用同資料夾的圖檔</P>
+<p>常見圖片網址對推特右鍵"複製圖片網址"</p>
+<P>檔名.副檔名 或是 資料夾名/檔名.副檔名</P>
+                </label>
+
+                <label>
+                    ID:
+                    <input type="text" id="userId" placeholder="輸入您的ID">
+                </label>
+                <label>
+                    暱稱:
+                    <textarea id="nickname" placeholder="輸入暱稱"></textarea>
+                </label>
+                <label>
+                    語言:
+                    <input type="text" id="languages" placeholder="輸入語言 (用逗號分隔)">
+                </label>
+                <label>
+                    詳述:
+                    <textarea id="details" placeholder="輸入詳述"></textarea>
+                </label>
+                <label>
+                    文字顏色:
+                    <input type="color" id="textColor" value="#000000">
+                </label>
+                <label>
+                    容器背景顏色:
+                    <input type="color" id="containerBgColor" value="#ffffff">
+                </label>
+                <label>
+                    容器背景圖片網址（可選）:
+                    <input type="url" id="containerBgImage" placeholder="輸入圖片網址">
+                </label>
+
+                <h2>連結管理</h2>
+                <div class="links-container" id="linksContainer">
+                    <div class="link-item">
+                        <label>
+                            連結圖片:
+                            <select class="link-image">
+                                <option value="https://via.placeholder.com/80">預設圖片</option>
+                                <option value="https://via.placeholder.com/80/ff0000">紅色圖片</option>
+                                <option value="https://via.placeholder.com/80/00ff00">綠色圖片</option>
+                                <option value="https://via.placeholder.com/80/0000ff">藍色圖片</option>
+                                <option value="ICON/link/01.svg">連結(紫)</option>
+                                <option value="ICON/link/02.svg">連結(藍)</option>
+                                <option value="ICON/link/03.svg">連結(綠)</option>
+                                <option value="ICON/link/04.svg">連結(黃)</option>
+                                <option value="ICON/link/05.svg">連結(黑)</option>
+                                <option value="ICON/link/06.svg">連結(白)</option>
+                                <option value="ICON/link/07.svg">連結(紅)</option>
+                                <option value="ICON/link/08.svg">(灰)連結</option>
+                                <option value="ICON/youtube/01.svg">youtube(紫)</option>
+                                <option value="ICON/youtube/02.svg">youtube(藍)</option>
+                                <option value="ICON/youtube/03.svg">youtube(綠)</option>
+                                <option value="ICON/youtube/04.svg">youtube(黃)</option>
+                                <option value="ICON/youtube/05.svg">youtube(黑)</option>
+                                <option value="ICON/youtube/06.svg">youtube(白)</option>
+                                <option value="ICON/youtube/07.svg">youtube(紅)</option>
+                                <option value="ICON/youtube/08.svg">(灰)youtube</option>       
+                                <option value="ICON/bluesky/01.svg">藍蝶(紫)</option>
+                                <option value="ICON/bluesky/02.svg">藍蝶(藍)</option>
+                                <option value="ICON/bluesky/03.svg">藍蝶(綠)</option>
+                                <option value="ICON/bluesky/04.svg">藍蝶(黃)</option>
+                                <option value="ICON/bluesky/05.svg">藍蝶(黑)</option>
+                                <option value="ICON/bluesky/06.svg">藍蝶(白)</option>
+                                <option value="ICON/bluesky/07.svg">藍蝶(紅)</option>
+                                <option value="ICON/bluesky/08.svg">(灰)藍蝶</option>
+                                <option value="ICON/buy/01.svg">購物(紫)</option>
+                                <option value="ICON/buy/02.svg">購物(藍)</option>
+                                <option value="ICON/buy/03.svg">購物(綠)</option>
+                                <option value="ICON/buy/04.svg">購物(黃)</option>
+                                <option value="ICON/buy/05.svg">購物(黑)</option>
+                                <option value="ICON/buy/06.svg">購物(白)</option>
+                                <option value="ICON/buy/07.svg">購物(紅)</option>
+                                <option value="ICON/buy/08.svg">(灰)購物</option>
+                                <option value="ICON/card/01.svg">刷卡(紫)</option>
+                                <option value="ICON/card/02.svg">刷卡(藍)</option>
+                                <option value="ICON/card/03.svg">刷卡(綠)</option>
+                                <option value="ICON/card/04.svg">刷卡(黃)</option>
+                                <option value="ICON/card/05.svg">刷卡(黑)</option>
+                                <option value="ICON/card/06.svg">刷卡(白)</option>
+                                <option value="ICON/card/07.svg">刷卡(紅)</option>
+                                <option value="ICON/card/08.svg">(灰)刷卡</option>
+                                <option value="ICON/discord/01.svg">dc(紫)</option>
+                                <option value="ICON/discord/02.svg">dc(藍)</option>
+                                <option value="ICON/discord/03.svg">dc(綠)</option>
+                                <option value="ICON/discord/04.svg">dc(黃)</option>
+                                <option value="ICON/discord/05.svg">dc(黑)</option>
+                                <option value="ICON/discord/06.svg">dc(白)</option>
+                                <option value="ICON/discord/07.svg">dc(紅)</option>
+                                <option value="ICON/discord/08.svg">(灰)DC</option>
+                                <option value="ICON/email/01.svg">信箱(紫)</option>
+                                <option value="ICON/email/02.svg">信箱(藍)</option>
+                                <option value="ICON/email/03.svg">信箱(綠)</option>
+                                <option value="ICON/email/04.svg">信箱(黃)</option>
+                                <option value="ICON/email/05.svg">信箱(黑)</option>
+                                <option value="ICON/email/06.svg">信箱(白)</option>
+                                <option value="ICON/email/07.svg">信箱(紅)</option>
+                                <option value="ICON/email/08.svg">(灰)信箱</option>
+                                <option value="ICON/fb/01.svg">FB(紫)</option>
+                                <option value="ICON/fb/02.svg">FB(藍)</option>
+                                <option value="ICON/fb/03.svg">FB(綠)</option>
+                                <option value="ICON/fb/04.svg">FB(黃)</option>
+                                <option value="ICON/fb/05.svg">FB(黑)</option>
+                                <option value="ICON/fb/06.svg">FB(白)</option>
+                                <option value="ICON/fb/07.svg">FB(紅)</option>
+                                <option value="ICON/fb/08.svg">(灰)FB</option>
+                                <option value="ICON/github/01.svg">github(紫)</option>
+                                <option value="ICON/github/02.svg">github(藍)</option>
+                                <option value="ICON/github/03.svg">github(綠)</option>
+                                <option value="ICON/github/04.svg">github(黃)</option>
+                                <option value="ICON/github/05.svg">github(黑)</option>
+                                <option value="ICON/github/06.svg">github(白)</option>
+                                <option value="ICON/github/07.svg">github(紅)</option>
+                                <option value="ICON/github/08.svg">(灰)github</option>
+                                <option value="ICON/house/01.svg">house(紫)</option>
+                                <option value="ICON/house/02.svg">house(藍)</option>
+                                <option value="ICON/house/03.svg">house(綠)</option>
+                                <option value="ICON/house/04.svg">house(黃)</option>
+                                <option value="ICON/house/05.svg">house(黑)</option>
+                                <option value="ICON/house/06.svg">house(白)</option>
+                                <option value="ICON/house/07.svg">house(紅)</option>
+                                <option value="ICON/house/08.svg">(灰)house</option>
+                                <option value="ICON/instagram/01.svg">IG(紫)</option>
+                                <option value="ICON/instagram/02.svg">IG(藍)</option>
+                                <option value="ICON/instagram/03.svg">IG(綠)</option>
+                                <option value="ICON/instagram/04.svg">IG(黃)</option>
+                                <option value="ICON/instagram/05.svg">IG(黑)</option>
+                                <option value="ICON/instagram/06.svg">IG(白)</option>
+                                <option value="ICON/instagram/07.svg">IG(紅)</option>
+                                <option value="ICON/instagram/08.svg">(灰)IG</option>
+                                <option value="ICON/marshmallows/01.svg">棉花糖(紫)</option>
+                                <option value="ICON/marshmallows/02.svg">棉花糖(藍)</option>
+                                <option value="ICON/marshmallows/03.svg">棉花糖(綠)</option>
+                                <option value="ICON/marshmallows/04.svg">棉花糖(黃)</option>
+                                <option value="ICON/marshmallows/05.svg">棉花糖(黑)</option>
+                                <option value="ICON/marshmallows/06.svg">棉花糖(白)</option>
+                                <option value="ICON/marshmallows/07.svg">棉花糖(紅)</option>
+                                <option value="ICON/marshmallows/08.svg">(灰)棉花糖</option>
+                                <option value="ICON/paypal/01.svg">paypal(紫)</option>
+                                <option value="ICON/paypal/02.svg">paypal(藍)</option>
+                                <option value="ICON/paypal/03.svg">paypal(綠)</option>
+                                <option value="ICON/paypal/04.svg">paypal(黃)</option>
+                                <option value="ICON/paypal/05.svg">paypal(黑)</option>
+                                <option value="ICON/paypal/06.svg">paypal(白)</option>
+                                <option value="ICON/paypal/07.svg">paypal(紅)</option>
+                                <option value="ICON/paypal/08.svg">(灰)paypal</option>
+                                <option value="ICON/pinterest/01.svg">pinterest(紫)</option>
+                                <option value="ICON/pinterest/02.svg">pinterest(藍)</option>
+                                <option value="ICON/pinterest/03.svg">pinterest(綠)</option>
+                                <option value="ICON/pinterest/04.svg">pinterest(黃)</option>
+                                <option value="ICON/pinterest/05.svg">pinterest(黑)</option>
+                                <option value="ICON/pinterest/06.svg">pinterest(白)</option>
+                                <option value="ICON/pinterest/07.svg">pinterest(紅)</option>
+                                <option value="ICON/pinterest/08.svg">(灰)pinterest</option>
+                                <option value="ICON/tiktok/01.svg">tiktok(紫)</option>
+                                <option value="ICON/tiktok/02.svg">tiktok(藍)</option>
+                                <option value="ICON/tiktok/03.svg">tiktok(綠)</option>
+                                <option value="ICON/tiktok/04.svg">tiktok(黃)</option>
+                                <option value="ICON/tiktok/05.svg">tiktok(黑)</option>
+                                <option value="ICON/tiktok/06.svg">tiktok(白)</option>
+                                <option value="ICON/tiktok/07.svg">tiktok(紅)</option>
+                                <option value="ICON/tiktok/08.svg">(灰)tiktok</option>
+                                <option value="ICON/twitch/01.svg">twitch(紫)</option>
+                                <option value="ICON/twitch/02.svg">twitch(藍)</option>
+                                <option value="ICON/twitch/03.svg">twitch(綠)</option>
+                                <option value="ICON/twitch/04.svg">twitch(黃)</option>
+                                <option value="ICON/twitch/05.svg">twitch(黑)</option>
+                                <option value="ICON/twitch/06.svg">twitch(白)</option>
+                                <option value="ICON/twitch/07.svg">twitch(紅)</option>
+                                <option value="ICON/twitch/08.svg">(灰)twitch</option>
+                                <option value="ICON/twitter/01.svg">twitter(紫)</option>
+                                <option value="ICON/twitter/02.svg">twitter(藍)</option>
+                                <option value="ICON/twitter/03.svg">twitter(綠)</option>
+                                <option value="ICON/twitter/04.svg">twitter(黃)</option>
+                                <option value="ICON/twitter/05.svg">twitter(黑)</option>
+                                <option value="ICON/twitter/06.svg">twitter(白)</option>
+                                <option value="ICON/twitter/07.svg">twitter(紅)</option>
+                                <option value="ICON/twitter/08.svg">(灰)twitter</option>
+                                <option value="ICON/webpage/01.svg">網頁(紫)</option>
+                                <option value="ICON/webpage/02.svg">網頁(藍)</option>
+                                <option value="ICON/webpage/03.svg">網頁(綠)</option>
+                                <option value="ICON/webpage/04.svg">網頁(黃)</option>
+                                <option value="ICON/webpage/05.svg">網頁(黑)</option>
+                                <option value="ICON/webpage/06.svg">網頁(白)</option>
+                                <option value="ICON/webpage/07.svg">網頁(紅)</option>
+                                <option value="ICON/webpage/08.svg">(灰)網頁</option>
+                            </select>
+                        </label>
+                        <label>
+                            連結目標網址:
+                            <input type="url" class="link-url" placeholder="輸入連結目標網址">
+                        </label>
+                    </div>
+                </div>
+                <button type="button" id="addLinkButton">增加連結</button>
+
+                <h2>作品展示</h2>
+                <div class="gallery-container" id="galleryContainer">
+                    <div class="gallery-item">
+                        <label>
+                            作品網址:
+                            <input type="url" class="gallery-url" placeholder="輸入圖片或影片網址">                      
+<P>使用圖片網址或使用同資料夾的圖檔</P>
+<P>檔名.副檔名 或是 資料夾名/檔名.副檔名</P>
+                            <P>圖片支持:JPG png SVG 網址</P>
+                            <P>影片片支持:MP4 WEBM 網址 YT網址</P>
+                        </label>
+                    </div>
+                </div>
+                <button type="button" id="addGalleryButton">增加展示項目</button>
+
+                <h2>網站所有權</h2>
+                <label>
+                    所有權資訊:
+                    <textarea id="ownership" placeholder="輸入網站所有權資訊"></textarea>
+                </label>
+
+                <h2>網站問題與侵權回報</h2>
+                <label>
+                    回報方式:
+                    <textarea id="issueReport" placeholder="輸入回報方式"></textarea>
+                </label>
+
+                <button type="button" id="generateButton">生成網頁</button>
+                <button type="button" id="downloadButton">下載HTML</button>
+<p>
+如何將個人將個人網頁連上網 </br>
+(1)網頁測試:使用瀏覽器開啟網頁 </br>
+(檢查檔案名稱與先改為index.html) </br>
+            </br>
+(2)確認完後使用Github</br>
+到</br>
+https://github.com</br>
+建立帳號並登入</br>
+</br>
+(3)在頁面右上角找到+號點下選擇New repository </br>
+</br>
+(4)在New repository頁面 </br>
+"Owner"是你的ID不用改" </br>
+"Repository name"是你的資料庫名稱 </br>
+輸入完後點"Create repository"來建立資料庫 </br>
+</br>
+(5)在資料庫頁面 </br>
+找到uploading an existing file這行藍字 </br>
+點下去上傳檔案 </br>
+</br>
+(6)將剛的index.html網頁檔案上傳 </br>
+如果有圖檔或資料夾連同一起上傳 </br>
+建議使用滑鼠拖拉進視窗 </br>
+使用一般點擊上傳會無法上傳資料夾 </br>
+"Commit changes"來上傳 </br>
+</br>
+(7)檔案上傳後 </br>
+會在資料庫的"code"頁面 </br>
+在上方點擊"Settings"頁面 </br>
+</br>
+(8)在Settings頁面左側點擊"Pages" </br>
+切換到"GitHub Pages"頁面 </br>
+</br>
+(9)"GitHub Pages"頁面 </br>
+找到"None"按鈕點擊 </br>
+切換為"main" </br>
+(旁邊新增的按鈕保持/root) </br>
+點擊Save儲存 </br>
+等待1-10分鐘(依當日Github網站狀況) </br>
+</br>
+(10)如成功架設完成迴有新的"Visit site"按鈕 </br>
+點下去就是你的網頁 </br>
+</br>
+(註1)index.html是網頁首頁 </br>
+(註2)如需使用個人網址在(9)GitHub Pages頁面 </br>
+Custom domain的輸入中輸入個人網址 </br>
+(註3)網頁未顯示請檢查index.html是不是在最上層 </br>
+要能點進資料庫就能看到 </br>
+如果是放資料夾 </br>
+如:01/01/01.html </br>
+那網頁會在Visit site按鈕開啟後的網址後面加上01/01/01 </br>
+(註4)真的看不懂 </br>
+去問鳥哥 或是 Vtuber勞哥 或是中華電信客服 </br>
+不要問GPT  </br>
+GPT上的資料是錯的還沒有改 </br>
+
+
+    
+</p>
+            </form>
+        </div>
+    </div>
+    <div class="right">
+        <iframe id="previewFrame" title="預覽"></iframe>
+    </div>
+
+    <script>
+        document.getElementById('addLinkButton').addEventListener('click', () => {
+            const container = document.getElementById('linksContainer');
+            const newLinkItem = document.createElement('div');
+            newLinkItem.classList.add('link-item');
+            newLinkItem.innerHTML = `
+                <label>
+                    連結圖片:
+                    <select class="link-image">
+                        <option value="https://via.placeholder.com/80">預設圖片</option>
+                        <option value="https://via.placeholder.com/80/ff0000">紅色圖片</option>
+                        <option value="https://via.placeholder.com/80/00ff00">綠色圖片</option>
+                        <option value="https://via.placeholder.com/80/0000ff">藍色圖片</option>
+                                <option value="ICON/link/01.svg">連結(紫)</option>
+                                <option value="ICON/link/02.svg">連結(藍)</option>
+                                <option value="ICON/link/03.svg">連結(綠)</option>
+                                <option value="ICON/link/04.svg">連結(黃)</option>
+                                <option value="ICON/link/05.svg">連結(黑)</option>
+                                <option value="ICON/link/06.svg">連結(白)</option>
+                                <option value="ICON/link/07.svg">連結(紅)</option>
+                                <option value="ICON/link/08.svg">(灰)連結</option>
+                                <option value="ICON/youtube/01.svg">youtube(紫)</option>
+                                <option value="ICON/youtube/02.svg">youtube(藍)</option>
+                                <option value="ICON/youtube/03.svg">youtube(綠)</option>
+                                <option value="ICON/youtube/04.svg">youtube(黃)</option>
+                                <option value="ICON/youtube/05.svg">youtube(黑)</option>
+                                <option value="ICON/youtube/06.svg">youtube(白)</option>
+                                <option value="ICON/youtube/07.svg">youtube(紅)</option>
+                                <option value="ICON/youtube/08.svg">(灰)youtube</option>       
+                                <option value="ICON/bluesky/01.svg">藍蝶(紫)</option>
+                                <option value="ICON/bluesky/02.svg">藍蝶(藍)</option>
+                                <option value="ICON/bluesky/03.svg">藍蝶(綠)</option>
+                                <option value="ICON/bluesky/04.svg">藍蝶(黃)</option>
+                                <option value="ICON/bluesky/05.svg">藍蝶(黑)</option>
+                                <option value="ICON/bluesky/06.svg">藍蝶(白)</option>
+                                <option value="ICON/bluesky/07.svg">藍蝶(紅)</option>
+                                <option value="ICON/bluesky/08.svg">(灰)藍蝶</option>
+                                <option value="ICON/buy/01.svg">購物(紫)</option>
+                                <option value="ICON/buy/02.svg">購物(藍)</option>
+                                <option value="ICON/buy/03.svg">購物(綠)</option>
+                                <option value="ICON/buy/04.svg">購物(黃)</option>
+                                <option value="ICON/buy/05.svg">購物(黑)</option>
+                                <option value="ICON/buy/06.svg">購物(白)</option>
+                                <option value="ICON/buy/07.svg">購物(紅)</option>
+                                <option value="ICON/buy/08.svg">(灰)購物</option>
+                                <option value="ICON/card/01.svg">刷卡(紫)</option>
+                                <option value="ICON/card/02.svg">刷卡(藍)</option>
+                                <option value="ICON/card/03.svg">刷卡(綠)</option>
+                                <option value="ICON/card/04.svg">刷卡(黃)</option>
+                                <option value="ICON/card/05.svg">刷卡(黑)</option>
+                                <option value="ICON/card/06.svg">刷卡(白)</option>
+                                <option value="ICON/card/07.svg">刷卡(紅)</option>
+                                <option value="ICON/card/08.svg">(灰)刷卡</option>
+                                <option value="ICON/discord/01.svg">dc(紫)</option>
+                                <option value="ICON/discord/02.svg">dc(藍)</option>
+                                <option value="ICON/discord/03.svg">dc(綠)</option>
+                                <option value="ICON/discord/04.svg">dc(黃)</option>
+                                <option value="ICON/discord/05.svg">dc(黑)</option>
+                                <option value="ICON/discord/06.svg">dc(白)</option>
+                                <option value="ICON/discord/07.svg">dc(紅)</option>
+                                <option value="ICON/discord/08.svg">(灰)DC</option>
+                                <option value="ICON/email/01.svg">信箱(紫)</option>
+                                <option value="ICON/email/02.svg">信箱(藍)</option>
+                                <option value="ICON/email/03.svg">信箱(綠)</option>
+                                <option value="ICON/email/04.svg">信箱(黃)</option>
+                                <option value="ICON/email/05.svg">信箱(黑)</option>
+                                <option value="ICON/email/06.svg">信箱(白)</option>
+                                <option value="ICON/email/07.svg">信箱(紅)</option>
+                                <option value="ICON/email/08.svg">(灰)信箱</option>
+                                <option value="ICON/fb/01.svg">FB(紫)</option>
+                                <option value="ICON/fb/02.svg">FB(藍)</option>
+                                <option value="ICON/fb/03.svg">FB(綠)</option>
+                                <option value="ICON/fb/04.svg">FB(黃)</option>
+                                <option value="ICON/fb/05.svg">FB(黑)</option>
+                                <option value="ICON/fb/06.svg">FB(白)</option>
+                                <option value="ICON/fb/07.svg">FB(紅)</option>
+                                <option value="ICON/fb/08.svg">(灰)FB</option>
+                                <option value="ICON/github/01.svg">github(紫)</option>
+                                <option value="ICON/github/02.svg">github(藍)</option>
+                                <option value="ICON/github/03.svg">github(綠)</option>
+                                <option value="ICON/github/04.svg">github(黃)</option>
+                                <option value="ICON/github/05.svg">github(黑)</option>
+                                <option value="ICON/github/06.svg">github(白)</option>
+                                <option value="ICON/github/07.svg">github(紅)</option>
+                                <option value="ICON/github/08.svg">(灰)github</option>
+                                <option value="ICON/house/01.svg">house(紫)</option>
+                                <option value="ICON/house/02.svg">house(藍)</option>
+                                <option value="ICON/house/03.svg">house(綠)</option>
+                                <option value="ICON/house/04.svg">house(黃)</option>
+                                <option value="ICON/house/05.svg">house(黑)</option>
+                                <option value="ICON/house/06.svg">house(白)</option>
+                                <option value="ICON/house/07.svg">house(紅)</option>
+                                <option value="ICON/house/08.svg">(灰)house</option>
+                                <option value="ICON/instagram/01.svg">IG(紫)</option>
+                                <option value="ICON/instagram/02.svg">IG(藍)</option>
+                                <option value="ICON/instagram/03.svg">IG(綠)</option>
+                                <option value="ICON/instagram/04.svg">IG(黃)</option>
+                                <option value="ICON/instagram/05.svg">IG(黑)</option>
+                                <option value="ICON/instagram/06.svg">IG(白)</option>
+                                <option value="ICON/instagram/07.svg">IG(紅)</option>
+                                <option value="ICON/instagram/08.svg">(灰)IG</option>
+                                <option value="ICON/marshmallows/01.svg">棉花糖(紫)</option>
+                                <option value="ICON/marshmallows/02.svg">棉花糖(藍)</option>
+                                <option value="ICON/marshmallows/03.svg">棉花糖(綠)</option>
+                                <option value="ICON/marshmallows/04.svg">棉花糖(黃)</option>
+                                <option value="ICON/marshmallows/05.svg">棉花糖(黑)</option>
+                                <option value="ICON/marshmallows/06.svg">棉花糖(白)</option>
+                                <option value="ICON/marshmallows/07.svg">棉花糖(紅)</option>
+                                <option value="ICON/marshmallows/08.svg">(灰)棉花糖</option>
+                                <option value="ICON/paypal/01.svg">paypal(紫)</option>
+                                <option value="ICON/paypal/02.svg">paypal(藍)</option>
+                                <option value="ICON/paypal/03.svg">paypal(綠)</option>
+                                <option value="ICON/paypal/04.svg">paypal(黃)</option>
+                                <option value="ICON/paypal/05.svg">paypal(黑)</option>
+                                <option value="ICON/paypal/06.svg">paypal(白)</option>
+                                <option value="ICON/paypal/07.svg">paypal(紅)</option>
+                                <option value="ICON/paypal/08.svg">(灰)paypal</option>
+                                <option value="ICON/pinterest/01.svg">pinterest(紫)</option>
+                                <option value="ICON/pinterest/02.svg">pinterest(藍)</option>
+                                <option value="ICON/pinterest/03.svg">pinterest(綠)</option>
+                                <option value="ICON/pinterest/04.svg">pinterest(黃)</option>
+                                <option value="ICON/pinterest/05.svg">pinterest(黑)</option>
+                                <option value="ICON/pinterest/06.svg">pinterest(白)</option>
+                                <option value="ICON/pinterest/07.svg">pinterest(紅)</option>
+                                <option value="ICON/pinterest/08.svg">(灰)pinterest</option>
+                                <option value="ICON/tiktok/01.svg">tiktok(紫)</option>
+                                <option value="ICON/tiktok/02.svg">tiktok(藍)</option>
+                                <option value="ICON/tiktok/03.svg">tiktok(綠)</option>
+                                <option value="ICON/tiktok/04.svg">tiktok(黃)</option>
+                                <option value="ICON/tiktok/05.svg">tiktok(黑)</option>
+                                <option value="ICON/tiktok/06.svg">tiktok(白)</option>
+                                <option value="ICON/tiktok/07.svg">tiktok(紅)</option>
+                                <option value="ICON/tiktok/08.svg">(灰)tiktok</option>
+                                <option value="ICON/twitch/01.svg">twitch(紫)</option>
+                                <option value="ICON/twitch/02.svg">twitch(藍)</option>
+                                <option value="ICON/twitch/03.svg">twitch(綠)</option>
+                                <option value="ICON/twitch/04.svg">twitch(黃)</option>
+                                <option value="ICON/twitch/05.svg">twitch(黑)</option>
+                                <option value="ICON/twitch/06.svg">twitch(白)</option>
+                                <option value="ICON/twitch/07.svg">twitch(紅)</option>
+                                <option value="ICON/twitch/08.svg">(灰)twitch</option>
+                                <option value="ICON/twitter/01.svg">twitter(紫)</option>
+                                <option value="ICON/twitter/02.svg">twitter(藍)</option>
+                                <option value="ICON/twitter/03.svg">twitter(綠)</option>
+                                <option value="ICON/twitter/04.svg">twitter(黃)</option>
+                                <option value="ICON/twitter/05.svg">twitter(黑)</option>
+                                <option value="ICON/twitter/06.svg">twitter(白)</option>
+                                <option value="ICON/twitter/07.svg">twitter(紅)</option>
+                                <option value="ICON/twitter/08.svg">(灰)twitter</option>
+                                <option value="ICON/webpage/01.svg">網頁(紫)</option>
+                                <option value="ICON/webpage/02.svg">網頁(藍)</option>
+                                <option value="ICON/webpage/03.svg">網頁(綠)</option>
+                                <option value="ICON/webpage/04.svg">網頁(黃)</option>
+                                <option value="ICON/webpage/05.svg">網頁(黑)</option>
+                                <option value="ICON/webpage/06.svg">網頁(白)</option>
+                                <option value="ICON/webpage/07.svg">網頁(紅)</option>
+                                <option value="ICON/webpage/08.svg">(灰)網頁</option>
+                    </select>
+                </label>
+                <label>
+                    連結目標網址:
+                    <input type="url" class="link-url" placeholder="輸入連結目標網址">
+                </label>
+            `;
+            container.appendChild(newLinkItem);
+        });
+
+        document.getElementById('addGalleryButton').addEventListener('click', () => {
+            const container = document.getElementById('galleryContainer');
+            const newGalleryItem = document.createElement('div');
+            newGalleryItem.classList.add('gallery-item');
+            newGalleryItem.innerHTML = `
+                <label>
+                    作品網址:
+                    <input type="url" class="gallery-url" placeholder="輸入圖片或影片網址">
+                </label>
+            `;
+            container.appendChild(newGalleryItem);
+        });
+
+        document.getElementById('generateButton').addEventListener('click', () => {
+            const avatarUrl = document.getElementById('avatarUrl').value;
+            const userId = document.getElementById('userId').value;
+            const nickname = document.getElementById('nickname').value;
+            const languages = document.getElementById('languages').value;
+            const details = document.getElementById('details').value;
+            const ownership = document.getElementById('ownership').value;
+            const issueReport = document.getElementById('issueReport').value;
+
+            const textColor = document.getElementById('textColor').value;
+            const containerBgColor = document.getElementById('containerBgColor').value;
+            const containerBgImage = document.getElementById('containerBgImage').value;
+
+            const links = Array.from(document.querySelectorAll('.link-item')).map(item => ({
+                image: item.querySelector('.link-image').value,
+                url: item.querySelector('.link-url').value
+            }));
+
+            const gallery = Array.from(document.querySelectorAll('.gallery-item')).map(item => item.querySelector('.gallery-url').value);
+
+            let linksHtml = '';
+            links.forEach(link => {
+                if (link.image && link.url) {
+                    linksHtml += `<a href="${link.url}" target="_blank"><img src="${link.image}" alt="連結圖片" style="width:80px;height:80px;margin:5px;border-radius:8px;"></a>`;
+                }
+            });
+
+            let galleryHtml = '';
+            gallery.forEach(url => {
+                if (url.endsWith('.mp4') || url.endsWith('.webm')) {
+                    galleryHtml += `<video src="${url}" controls style="width:100%;max-width:300px;margin:10px;display:inline-block;"></video>`;
+                } else {
+                    galleryHtml += `<img src="${url}"  style="width:300px;height:auto;margin:10px;display:inline-block;">`;
+                }
+            });
+
+            const generatedHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個人網頁</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+    }
+    .container {
+        background-color: ${containerBgColor};
+        ${containerBgImage ? `background-image: url('${containerBgImage}'); background-size: cover; background-position: center;` : ''}
+    }
+    .avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 20px;
+    }
+    .id {
+        font-size: 2rem;
+        font-weight: bold;
+        color: ${textColor};
+        margin-bottom: 10px;
+    }
+    .nickname, .language, .details {
+        font-size: 16px;
+        color: ${textColor};
+        margin-bottom: 20px;
+    }
+    .links a {
+        display: inline-block;
+        margin: 10px;
+    }
+ .gallery img, .gallery video {
+        width: 300px;
+        height: auto; /* 保持比例 */
+        margin: 10px;
+        display:inline-block;
+    }
+    .ownership, .issue-report {
+        margin-top: 20px;
+        font-size: 14px;
+        color: ${textColor};
+    }
+
+</style>
+</head>
+<body>
+<div class="container">
+    <img src="${avatarUrl}" alt="頭像" class="avatar">
+    <h1 class="id">${userId}</h1>
+    <div class="nickname">${nickname}</div>
+    <div class="language">${languages}</div>
+    <div class="details">${details}</div>
+    <div class="links">${linksHtml}</div>
+    <div class="gallery">${galleryHtml}</div>
+    <div class="ownership">${ownership}</div>
+    <div class="issue-report">${issueReport}</div>
+</div>
+</body>
+</html>`;
+
+            const previewFrame = document.getElementById('previewFrame');
+            const previewDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+            previewDoc.open();
+            previewDoc.write(generatedHtml);
+            previewDoc.close();
+
+            const downloadButton = document.getElementById('downloadButton');
+            downloadButton.onclick = () => {
+                const blob = new Blob([generatedHtml], { type: 'text/html' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'generated_page.html';
+                a.click();
+            };
+        });
+    </script>
+</body>
+</html>
