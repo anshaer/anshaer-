@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>刮刮樂</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>刮刮樂</h1>
+        <button id="settings-btn" class="btn">設定</button>
+        <button id="instructions-btn" class="btn btn-secondary">使用說明</button>
+        <div id="thumbnail-container" class="thumbnail-container"></div>
+    </div>
+
+    <!-- 設定彈窗 -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>設定</h2>
+            <label for="card-count">刮刮卡數量 (最多 100 張):</label>
+            <input type="number" id="card-count" min="1" max="100" value="10">
+            </br>
+            <label for="silver-color">銀漆顏色:</label>
+            <input type="color" id="silver-color" value="#cccccc"></br>
+            <label for="scratch-pattern">銀漆圖案連結:</label>
+            <input type="text" id="scratch-pattern" placeholder="輸入圖片 URL">
+            </br>
+            <label for="background-color">銀漆背景顏色:</label>
+            <input type="color" id="background-color" value="#ffffff">    </br>        
+            <label for="background-image">銀漆背景 URL:</label>
+            <input type="text" id="background-image" placeholder="輸入圖片 URL">
+            </br>
+            <label for="modal-background-color">彈窗背景顏色:</label>
+            <input type="color" id="modal-background-color" value="#ffffff">    </br>        
+            <label for="modal-background-image">彈窗背景 URL:</label>
+            <input type="text" id="modal-background-image" placeholder="輸入圖片 URL">
+            
+            <h3>獎項設定</h3>
+            <div id="prize-settings">
+                <div class="prize">
+                    <label>獎項名稱:</label>
+                    <input type="text" class="prize-name" placeholder="例如: 頭獎">
+                    <label>獎項卡號 (逗號分隔):</label>
+                    <input type="text" class="prize-cards" placeholder="例如: 1,2,3">
+                </div>
+            </div>
+            <button id="add-prize" class="btn">新增獎項</button>
+            <button id="save-settings" class="btn btn-secondary">保存設定</button>
+        </div>
+    </div>
+
+    <!-- 使用說明彈窗 -->
+    <div id="instructions-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>使用說明</h2>
+            <p>1. 點擊「設定」按鈕，設定刮刮卡的數量、銀漆顏色、背景圖片等。</p>
+            <p>2. 在「獎項設定」中新增獎項，並指定對應的卡號。</p>
+            <p>3. 點擊縮圖開始刮卡，刮開後會顯示獎項結果。</p>
+            <p>4. 您可以隨時修改設定並重新生成刮刮卡。</p>
+        </div>
+    </div>
+
+    <!-- 刮刮卡放大顯示 -->
+    <div id="scratch-card-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="scratch-card">
+                <div id="scratch-result"></div>
+                <canvas id="scratch-canvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

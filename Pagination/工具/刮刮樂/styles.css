@@ -1,0 +1,165 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    padding: 20px;
+    text-align: center;
+}
+
+.thumbnail-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.thumbnail {
+    width: 100px;
+    height: 120px; /* 增加高度以容納卡號 */
+    background-color: #cccccc;
+    border: 1px solid #999;
+    border-radius: 10px; /* 圓角效果 */
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    overflow: hidden; /* 確保圖片不超出邊界 */
+    position: relative;
+}
+
+.thumbnail img {
+    width: 100%;
+    height: 80px; /* 圖片高度 */
+    object-fit: cover; /* 圖片填滿縮圖 */
+}
+
+.thumbnail .card-number {
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fff; /* 預設白色背景 */
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 350px;
+    position: relative;
+    border-radius: 10px; /* 圓角效果 */
+    background-size: cover; /* 背景圖片填滿 */
+    background-position: center; /* 背景圖片居中 */
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #000;
+}
+
+#scratch-card {
+    width: 300px;
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    margin: 0 auto; /* 確保容器水平居中 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box; /* 確保內邊距不影響大小 */
+}
+
+#scratch-canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 95%;
+    height: 95%;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    z-index: 2;
+    border-radius: 10px;
+    box-sizing: border-box; /* 確保 padding 不影響尺寸 */
+}
+
+#scratch-result {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #000;
+    background-size: cover; /* 確保背景圖完整顯示 */
+    background-position: center; /* 背景圖居中 */
+    z-index: 1; /* 背景圖和文字在銀漆層下方 */
+    border-radius: 10px; /* 圓角效果 */
+}
+
+.prize {
+    margin-bottom: 10px;
+}
+
+.prize label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.prize input {
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+
+/* 按鈕美化 */
+.btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #45a049;
+}
+
+.btn-secondary {
+    background-color: #008CBA;
+}
+
+.btn-secondary:hover {
+    background-color: #007B9E;
+}
