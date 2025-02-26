@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文本編輯與下載</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h2>文本編輯器</h2>
+    <div class="stats">
+        <label>文字大小: <input type="number" id="fontSize" value="16" min="10" max="50" onchange="updateFontSize()"> px</label>
+        <label>文字顏色: <input type="color" id="fontColor" value="#ffffff" onchange="updateFontColor()"></label>
+        <span>字數: <span id="charCount">0</span></span>
+        <span>行數: <span id="lineCount">0</span></span>
+        <span>自動存檔倒數: <span id="saveTimer">300</span> 秒</span>
+        <select id="fileType">
+            <option value="txt">TXT</option>
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+            <option value="js">JavaScript</option>
+            <option value="json">JSON</option>
+            <option value="bat">BAT</option>
+            <option value="cad">CAD</option>
+        </select>
+        <select id="timeInterval" onchange="resetTimer()">
+            <option value="300">5 分鐘</option>
+            <option value="600">10 分鐘</option>
+            <option value="900">15 分鐘</option>
+            <option value="1200">20 分鐘</option>
+            <option value="1500">25 分鐘</option>
+        </select>
+        <input type="text" id="fileName" placeholder="輸入檔名" value="default_filename">
+    </div>
+    <textarea id="editor" oninput="updateStats()"></textarea>
+    <div class="buttons">
+        <input type="file" id="fileInput" accept=".txt,.html,.css,.js,.json,.bat,.cad" onchange="uploadFile()">
+        <button onclick="downloadFile('txt')">下載 TXT</button>
+        <button onclick="downloadFile('html')">下載 HTML</button>
+        <button onclick="downloadFile('css')">下載 CSS</button>
+        <button onclick="downloadFile('js')">下載 JavaScript</button>
+        <button onclick="downloadFile('json')">下載 JSON</button>
+        <button onclick="downloadFile('bat')">下載 BAT</button>
+        <button onclick="downloadFile('cad')">下載 CAD</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
