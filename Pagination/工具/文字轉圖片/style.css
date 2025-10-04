@@ -15,3 +15,21 @@ canvas {
 .controls {
     margin-bottom: 20px;
 }
+/* style.css */
+
+/* ... (其他樣式) */
+
+#downloadButton {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #007bff; /* 藍色背景 */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    margin-top: 15px;
+}
+
+#downloadButton:hover {
+    background-color: #0056b3;
+}
