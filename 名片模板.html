@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的電子名片 - [您的名字]</title>
+    <style>
+        /* --- 基礎設定與網頁背景 --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            color: #1c1c1e; 
+            
+            background: linear-gradient(135deg, #f0f0f5 0%, #e0e0e5 100%);
+            
+            /* 縱向（預設）：讓所有內容居中堆疊 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center; 
+            padding: 40px 20px;
+        }
+
+        /* --- 內容區塊樣式 --- */
+        .vcard-container {
+            max-width: 450px; 
+            width: 100%;
+        }
+
+        /* 頭像：方形、無陰影、不裁切壓縮進 140x140 */
+        .avatar {
+            width: 140px;
+            height: 140px;
+            /* 確保圖片完整顯示，不裁切，可能留白 */
+            object-fit: contain; 
+            
+            border-radius: 0; 
+            margin-bottom: 25px;
+            box-shadow: none;
+            border: none; 
+        }
+
+        /* 語言標示 (國際碼) */
+        .language-tag {
+            display: inline-flex; 
+            align-items: center;
+            background-color: rgba(0, 122, 255, 0.08); 
+            color: #007aff; 
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.8em;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        /* 語言標示中的圖標間隔 */
+        .language-tag i {
+            margin-right: 6px;
+            font-size: 1em;
+            color: #007aff; 
+        }
+
+        /* 名字 */
+        h1 {
+            margin: 0;
+            color: #1c1c1e; 
+            font-size: 2.8em;
+            font-weight: 700; 
+        }
+
+        /* 職稱/介紹 */
+        .title {
+            color: #8e8e93; 
+            font-size: 1.2em;
+            margin: 10px 0 35px;
+            font-weight: 400;
+        }
+
+        /* --- 社群連結 (圖標風格) --- */
+        .social-links {
+            margin-top: 40px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap; 
+            gap: 20px 25px; 
+        }
+
+        .social-links a {
+            color: #48484a; 
+            text-decoration: none;
+            font-size: 1.8em; 
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .social-links a:hover {
+            transform: translateY(-3px); 
+            color: #007aff; 
+        }
+
+        /* 連結懸停時的顏色自定義 */
+        .social-links a[title="YouTube"]:hover { color: #ff0000; }
+        .social-links a[title="X"]:hover { color: #000000; }
+        .social-links a[title="Facebook"]:hover { color: #1877f2; }
+        .social-links a[title="Instagram"]:hover { color: #c32aa3; }
+        .social-links a[title="Twitch"]:hover { color: #9146ff; }
+        .social-links a[title="圖片"]:hover { color: #ff9800; }
+        .social-links a[title="影片"]:hover { color: #FF5722; } 
+        .social-links a[title="付費"]:hover { color: #e91e63; }
+        .social-links a[title="信用卡"]:hover { color: #4CAF50; } 
+        /* 新增的圖標顏色 */
+        .social-links a[title="工具"]:hover { color: #607d8b; } /* 藍灰色 */
+        .social-links a[title="新聞"]:hover { color: #ff9800; } /* 橘色 */
+        .social-links a[title="Email"]:hover { color: #00bcd4; } /* 青色 */
+        .social-links a[title="網頁"]:hover { color: #00bcd4; } 
+
+
+        /* --- 橫向佈局 (媒體查詢) --- */
+        @media (min-width: 768px) {
+            body {
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .vcard-container {
+                display: flex;
+                flex-direction: row; 
+                text-align: left; 
+                max-width: 850px; /* 再次加寬以容納更多圖標 */
+                align-items: center; 
+            }
+
+            .avatar {
+                margin-right: 60px; 
+                margin-bottom: 0;
+                width: 160px; 
+                height: 160px;
+            }
+
+            .info-section {
+                text-align: left;
+            }
+
+            .social-links {
+                justify-content: flex-start; 
+            }
+        }
+
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+<div class="vcard-container">
+    <img src="您的頭像圖片網址.jpg" alt="頭像" class="avatar">
+
+    <div class="info-section">
+        <div class="language-tag" lang="zh-TW">
+            <i class="fas fa-globe"></i>zh-TW
+        </div>
+
+        <h1>您的名字 / Name</h1>
+        
+        <p class="title">內容創作者 / Web Developer</p>
+
+        <div class="social-links">
+            <a href="您的YouTube連結" target="_blank" title="YouTube">
+                <i class="fab fa-youtube"></i>
+            </a>
+            <a href="您的X/Twitter連結" target="_blank" title="X">
+                <i class="fab fa-x-twitter"></i>
+            </a>
+            <a href="您的Facebook連結" target="_blank" title="Facebook">
+                <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="您的Instagram連結" target="_blank" title="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="您的Twitch連結" target="_blank" title="Twitch">
+                <i class="fab fa-twitch"></i>
+            </a>
+            
+            <a href="您的圖片/相簿連結" target="_blank" title="圖片">
+                <i class="fas fa-camera"></i>
+            </a>
+            <a href="您的影片連結" target="_blank" title="影片">
+                <i class="fas fa-video"></i>
+            </a>
+            <a href="您的新聞/部落格連結" target="_blank" title="新聞">
+                <i class="fas fa-newspaper"></i>
+            </a>
+
+            <a href="您的付費/贊助連結" target="_blank" title="付費">
+                <i class="fas fa-money-bill-wave"></i>
+            </a>
+            <a href="您的信用卡/支付連結" target="_blank" title="信用卡">
+                <i class="fas fa-credit-card"></i>
+            </a>
+            <a href="mailto:您的電子郵件地址" target="_blank" title="Email">
+                <i class="fas fa-envelope"></i>
+            </a>
+
+            <a href="您的工具頁面連結" target="_blank" title="工具">
+                <i class="fas fa-wrench"></i>
+            </a>
+            <a href="您的個人網頁連結" target="_blank" title="網頁">
+                <i class="fas fa-link"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
