@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <title>404 | 頁面找不到</title>
+    <style>
+        /* Apple Dark Mode 顏色定義 */
+        :root {
+            --dark-background: #1c1c1e; /* 非常深的背景色 */
+            --dark-surface: #2c2c2e;    /* 稍微淺一點的卡片/內容區塊色 */
+            --dark-primary-text: #f2f2f7; /* 接近白色的主要文字 */
+            --dark-secondary-text: #8e8e93; /* 輔助文字 (System Gray) */
+            --apple-blue: #0a84ff;      /* 保持亮眼的藍色作為主色 */
+            --apple-blue-hover: #38a0ff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+            text-align: center;
+            padding: 50px;
+            background-color: var(--dark-background);
+            color: var(--dark-primary-text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+        }
+
+        h1 {
+            font-size: 140px;
+            font-weight: 600;
+            color: var(--dark-primary-text);
+            margin-bottom: 0px;
+            letter-spacing: -5px;
+            /* 輕微的文字陰影讓數字更突出，模擬光感 */
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--dark-primary-text);
+            margin-top: 5px;
+            margin-bottom: 40px;
+        }
+
+        p {
+            font-size: 17px;
+            color: var(--dark-secondary-text);
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .joke {
+            margin: 40px 0;
+            padding: 30px;
+            background-color: var(--dark-surface); /* 使用深色表面色 */
+            border-radius: 12px;
+            /* 輕微的邊框讓區塊更明確 */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            /* 內嵌陰影模擬暗色模式下的「層次」感 */
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .joke h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-primary-text);
+            margin-top: 0;
+        }
+
+        .joke p {
+            font-size: 15px;
+            color: var(--dark-secondary-text); /* 輔助文字顏色 */
+        }
+
+        .button-group {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            border-radius: 9px;
+            transition: background-color 0.2s, opacity 0.2s;
+        }
+
+        /* 主要按鈕 (填充藍色) */
+        .btn-primary {
+            background-color: var(--apple-blue);
+            color: var(--dark-primary-text); /* 文字使用淺色 */
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--apple-blue-hover);
+        }
+
+        /* 次要按鈕 (邊框/透明) */
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--apple-blue);
+            border: 1px solid var(--apple-blue);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(10, 132, 255, 0.1); /* 藍色透明背景 */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>404</h1>
+        <h2>這個頁面跑到我們找不著的地方了。</h2>
+
+        <div class="joke">
+            <h3>您剛才的點擊... 可能有點隨興。 🧐</h3>
+            <p><strong>您到底在忙什麼？</strong> 您似乎找到了一個連我們工程師都沒設定過的路徑。雖然我們欣賞您的探險精神，但這裡確實什麼都沒有。我們建議您走正規路線，體驗會更順暢。</p>
+        </div>
+
+        <p>請重新導航，讓您回到熟悉的地方：</p>
+
+        <div class="button-group">
+            <a href="/" class="btn btn-primary">返回首頁</a>
+            <a href="javascript:history.back()" class="btn btn-secondary">回到上一頁</a>
+        </div>
+    </div>
+
+</body>
+</html>
