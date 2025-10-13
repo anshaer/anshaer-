@@ -1,0 +1,31 @@
+/* ... (其他樣式保持不變，如 body, html, .split-container) ... */
+
+.split-area {
+    /* ... (保持不變) ... */
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    /* ... (保持不變) ... */
+}
+
+/* 確保兩層疊放 */
+.area-one { z-index: 2; }
+.area-two { z-index: 1; }
+
+/* 內容文字基礎樣式 - 關鍵變動: 使用 translate(0, 0) 作為基準，並讓文字內容置中 */
+.content {
+    position: absolute; 
+    /* 移除 padding，改為使用 transform 和定位來處理位置 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 50%; /* 限制寬度，避免文字延伸太遠 */
+    /* 讓 JS 動態控制 top/left/transform */
+    transform-origin: center center; 
+    
+    /* 確保文字不會被裁切，多給一些 z-index */
+    z-index: 10; 
+}
+
+/* ... (H1, P 樣式保持不變) ... */
