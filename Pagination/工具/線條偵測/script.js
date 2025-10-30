@@ -1,31 +1,23 @@
-// DOM 元素引用
-const imageLoader = document.getElementById('imageLoader');
-const canvas = document.getElementById('imageCanvas');
-const ctx = canvas.getContext('2d');
-const detectLinesButton = document.getElementById('detectLinesButton');
-const downloadButton = document.getElementById('downloadButton');
+// =================================================================
+// 1. DOM 元素與狀態管理
+// =================================================================
 
-// 新的控制項
-const redWeightSlider = document.getElementById('redWeight');
-const greenWeightSlider = document.getElementById('greenWeight');
-const blueWeightSlider = document.getElementById('blueWeight');
-const redWeightValueDisplay = document.getElementById('redWeightValue');
-const greenWeightValueDisplay = document.getElementById('greenWeightValue');
-const blueWeightValueDisplay = document.getElementById('blueWeightValue');
-
-const thresholdValueInput = document.getElementById('thresholdValueInput');
-const thresholdValueDisplay = document.getElementById('thresholdValueDisplay');
-
-const lineColorPicker = document.getElementById('lineColorPicker');
-const bgColorPicker = document.getElementById('bgColorPicker');
-const transparentBackgroundCheckbox = document.getElementById('transparentBackground');
-
+const elements = {}; // 存放所有 DOM 元素的物件
 let img = null; // 儲存上傳的圖片物件
-let originalImageData = null; // 儲存原始圖片像素數據
-let cachedGrayData = null; // 快取灰度數據
-let cachedMagnitudeData = null; // 快取梯度數據
+let originalImageData = null; // 儲存圖片在畫布上的初始像素數據 (已縮放)
+let cachedGrayData = null; // 快取當前灰度化設定下的灰度數據
+let cachedMagnitudeData = null; // 快取 Sobel 運算後的梯度強度數據
+const MAX_CANVAS_WIDTH = 800; // 畫布最大寬度限制 (與 CSS 配合)
 
-// 將 HEX 顏色碼轉換為 RGB 陣列 [r, g, b]
+// =================================================================
+// 2. 輔助函式
+// =================================================================
+
+/**
+ * 將 HEX 顏色碼轉換為 RGB 陣列 [r, g, b]
+ * @param {string} hex - #RRGGBB 格式的顏色碼
+ * @returns {number[]} RGB 陣列
+ */
 function hexToRgb(hex) {
     let r = 0, g = 0, b = 0;
     if (hex.length === 7) {
@@ -40,21 +32,40 @@ function hexToRgb(hex) {
     return [r, g, b];
 }
 
-// --- 核心處理邏輯 ---
+/**
+ * 根據螢幕和最大限制，計算畫布的縮放尺寸
+ * @param {number} originalWidth - 圖片原始寬度
+ * @param {number} originalHeight - 圖片原始高度
+ * @returns {{width: number, height: number}} 縮放後的尺寸
+ */
+function calculateCanvasSize(originalWidth, originalHeight) {
+    const viewportWidth = window.innerWidth;
+    // 考慮 CSS 樣式中的 5% 邊距
+    const maxAllowableWidth = Math.min(MAX_CANVAS_WIDTH, viewportWidth * 0.95);
+
+    if (originalWidth > maxAllowableWidth) {
+        const scale = maxAllowableWidth / originalWidth;
+        return {
+            width: maxAllowableWidth,
+            height: originalHeight * scale
+        };
+    }
+    return { width: originalWidth, height: originalHeight };
+}
+
+// =================================================================
+// 3. 核心圖像處理邏輯
+// =================================================================
 
 /**
  * 灰度化：根據權重將 RGB 數據轉換為灰度值
- * @param {ImageData} imageData - 原始圖片的 ImageData 物件
- * @param {number[]} weights - [R, G, B] 的浮點數權重陣列
- * @returns {Uint8ClampedArray} 單通道灰度數據
  */
 function applyGrayscale(imageData, weights) {
     const data = imageData.data;
-    const grayData = new Uint8ClampedArray(imageData.width * imageData.height);
-    const [wR, wG, wB] = weights; // 權重
+    const grayData = new new Uint8ClampedArray(imageData.width * imageData.height);
+    const [wR, wG, wB] = weights;
 
     for (let i = 0; i < data.length; i += 4) {
-        // 加權平均計算灰度值
         const avg = wR * data[i] + wG * data[i + 1] + wB * data[i + 2];
         grayData[i / 4] = avg > 255 ? 255 : (avg < 0 ? 0 : avg);
     }
@@ -63,10 +74,6 @@ function applyGrayscale(imageData, weights) {
 
 /**
  * Sobel 邊緣偵測：從灰度數據計算梯度強度
- * @param {Uint8ClampedArray} grayData - 灰度數據
- * @param {number} width - 圖片寬度
- * @param {number} height - 圖片高度
- * @returns {Uint8ClampedArray} 梯度強度數據
  */
 function applySobel(grayData, width, height) {
     const magnitudeData = new Uint8ClampedArray(width * height);
@@ -92,7 +99,6 @@ function applySobel(grayData, width, height) {
 
             const magnitude = Math.sqrt(sumX * sumX + sumY * sumY); 
             const index = y * width + x;
-            // 限制梯度強度在 0-255 範圍
             magnitudeData[index] = magnitude > 255 ? 255 : magnitude; 
         }
     }
@@ -101,17 +107,9 @@ function applySobel(grayData, width, height) {
 
 /**
  * 閾值化和著色：根據梯度強度和閾值，設定線條或底色/透明
- * @param {Uint8ClampedArray} magnitudeData - 梯度強度數據
- * @param {number} width - 圖片寬度
- * @param {number} height - 圖片高度
- * @param {number} threshold - 閾值強度
- * @param {number[]} lineColor - 線條 RGB 顏色 [r, g, b]
- * @param {number[]} bgColor - 底色 RGB 顏色 [r, g, b]
- * @param {boolean} isTransparent - 底色是否透明
- * @returns {ImageData} 最終的輸出圖像數據
  */
 function applyThresholdingAndColoring(magnitudeData, width, height, threshold, lineColor, bgColor, isTransparent) {
-    const edgeData = ctx.createImageData(width, height);
+    const edgeData = elements.ctx.createImageData(width, height);
     const edgeDataArr = edgeData.data;
 
     const [lineR, lineG, lineB] = lineColor;
@@ -122,22 +120,22 @@ function applyThresholdingAndColoring(magnitudeData, width, height, threshold, l
         const outputIndex = i * 4;
 
         if (magnitude > threshold) {
-            // 線條部分 (使用線條顏色)
+            // 線條部分
             edgeDataArr[outputIndex]     = lineR; 
             edgeDataArr[outputIndex + 1] = lineG;
             edgeDataArr[outputIndex + 2] = lineB;
-            edgeDataArr[outputIndex + 3] = 255;   // 完全不透明
+            edgeDataArr[outputIndex + 3] = 255;
         } else {
-            // 底色部分 (使用底色或透明)
+            // 底色部分
             if (isTransparent) {
-                edgeDataArr[outputIndex]     = 0;     // R
-                edgeDataArr[outputIndex + 1] = 0;     // G
-                edgeDataArr[outputIndex + 2] = 0;     // B
+                edgeDataArr[outputIndex]     = 0;
+                edgeDataArr[outputIndex + 1] = 0;
+                edgeDataArr[outputIndex + 2] = 0;
                 edgeDataArr[outputIndex + 3] = 0;     // Alpha = 0 (完全透明)
             } else {
-                edgeDataArr[outputIndex]     = bgR;   // R
-                edgeDataArr[outputIndex + 1] = bgG;   // G
-                edgeDataArr[outputIndex + 2] = bgB;   // B
+                edgeDataArr[outputIndex]     = bgR;
+                edgeDataArr[outputIndex + 1] = bgG;
+                edgeDataArr[outputIndex + 2] = bgB;
                 edgeDataArr[outputIndex + 3] = 255;   // 完全不透明
             }
         }
@@ -146,21 +144,24 @@ function applyThresholdingAndColoring(magnitudeData, width, height, threshold, l
 }
 
 
-// --- 協調與繪製函式 ---
+// =================================================================
+// 4. 流程控制函式
+// =================================================================
 
 /**
  * 執行完整的偵測流程：灰度化 -> Sobel -> 閾值化和著色
+ * 在圖片載入或灰度權重改變時呼叫。
  */
 function runFullDetection() {
     if (!originalImageData) return;
     
-    const width = canvas.width;
-    const height = canvas.height;
+    const width = elements.canvas.width;
+    const height = elements.canvas.height;
     
-    // 1. 獲取灰度化權重
-    const wR = parseFloat(redWeightSlider.value) / 100;
-    const wG = parseFloat(greenWeightSlider.value) / 100;
-    const wB = parseFloat(blueWeightSlider.value) / 100;
+    // 1. 獲取灰度化權重 (轉換為 0.00-1.00)
+    const wR = parseFloat(elements.redWeightSlider.value) / 100;
+    const wG = parseFloat(elements.greenWeightSlider.value) / 100;
+    const wB = parseFloat(elements.blueWeightSlider.value) / 100;
     
     // 2. 灰度化並快取
     cachedGrayData = applyGrayscale(originalImageData, [wR, wG, wB]);
@@ -173,23 +174,23 @@ function runFullDetection() {
 }
 
 /**
- * 僅執行閾值化和著色 (Sobel 數據不變時使用)
+ * 僅執行閾值化和著色 (在閾值、顏色或透明度改變時呼叫)
  */
 function updateColorAndThresholding() {
      if (!cachedMagnitudeData) {
-         // 如果還沒有梯度數據，則先執行一次完整的偵測
+         // 如果還沒有梯度數據，表示圖片尚未偵測過，執行一次完整的偵測
          runFullDetection();
          return;
      }
 
-    const width = canvas.width;
-    const height = canvas.height;
+    const width = elements.canvas.width;
+    const height = elements.canvas.height;
     
     // 獲取當前的閾值和顏色設定
-    const threshold = parseInt(thresholdValueInput.value);
-    const lineColor = hexToRgb(lineColorPicker.value);
-    const bgColor = hexToRgb(bgColorPicker.value);
-    const isTransparent = transparentBackgroundCheckbox.checked;
+    const threshold = parseInt(elements.thresholdValueInput.value);
+    const lineColor = hexToRgb(elements.lineColorPicker.value);
+    const bgColor = hexToRgb(elements.bgColorPicker.value);
+    const isTransparent = elements.transparentBackgroundCheckbox.checked;
 
     // 執行閾值化和著色
     const finalImageData = applyThresholdingAndColoring(
@@ -203,88 +204,171 @@ function updateColorAndThresholding() {
     );
     
     // 繪製到畫布
-    ctx.putImageData(finalImageData, 0, 0);
+    elements.ctx.putImageData(finalImageData, 0, 0);
 }
 
 
-// --- 事件處理與輔助函式 ---
+// =================================================================
+// 5. 事件處理器
+// =================================================================
 
-// 圖片上傳處理
+/**
+ * 處理圖片上傳
+ */
 function handleImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
     const reader = new FileReader();
     reader.onload = function(event) {
         img = new Image();
         img.onload = function() {
-            canvas.width = img.width;
-            canvas.height = img.height;
+            // 1. 計算縮放尺寸
+            const { width, height } = calculateCanvasSize(img.width, img.height);
+
+            // 2. 設定畫布尺寸並繪圖
+            elements.canvas.width = width;
+            elements.canvas.height = height;
+            elements.ctx.drawImage(img, 0, 0, width, height); 
+
+            // 3. 獲取初始像素數據 (縮放後)
+            originalImageData = elements.ctx.getImageData(0, 0, width, height);
             
-            ctx.drawImage(img, 0, 0);
-            // 獲取原始圖片的像素數據，供後續處理使用
-            originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            
-            // 清空快取
+            // 4. 清空快取
             cachedGrayData = null; 
             cachedMagnitudeData = null;
 
-            // 啟用控制項
-            [detectLinesButton, downloadButton, redWeightSlider, greenWeightSlider, blueWeightSlider, 
-             thresholdValueInput, lineColorPicker, bgColorPicker, transparentBackgroundCheckbox].forEach(el => {
-                el.disabled = false;
-            });
+            // 5. 啟用控制項
+            toggleControls(false);
             
-            // 執行一次完整的偵測作為預設結果
+            // 6. 執行預設偵測
             runFullDetection();
         }
         img.src = event.target.result;
     }
-    reader.readAsDataURL(e.target.files[0]);
+    reader.readAsDataURL(file);
 }
 
-// 下載函式 (使用 PNG 支援透明度)
-function downloadImage() {
-    if (!img) return;
+/**
+ * 處理灰度權重滑動條的輸入事件
+ */
+function handleGrayscaleInput() {
+    // 更新顯示的權重值
+    elements.redWeightValueDisplay.textContent = (parseInt(elements.redWeightSlider.value) / 100).toFixed(2);
+    elements.greenWeightValueDisplay.textContent = (parseInt(elements.greenWeightSlider.value) / 100).toFixed(2);
+    elements.blueWeightValueDisplay.textContent = (parseInt(elements.blueWeightSlider.value) / 100).toFixed(2);
     
-    const dataURL = canvas.toDataURL('image/png'); 
+    if (img) runFullDetection(); // 灰度權重改變，必須重新執行完整的偵測
+}
+
+/**
+ * 處理閾值、顏色或透明度控制項的輸入事件
+ */
+function handleThresholdColorInput(e) {
+    if (e.target.id === 'thresholdValueInput') {
+        elements.thresholdValueDisplay.textContent = e.target.value;
+    }
+    if (img) updateColorAndThresholding(); // 僅改變最終顯示效果，只需重新應用閾值化
+}
+
+/**
+ * 下載畫布圖片為 PNG
+ */
+function downloadImage() {
+    if (!img || elements.downloadButton.disabled) {
+        alert("請先上傳圖片並完成偵測。");
+        return;
+    }
+    
+    const dataURL = elements.canvas.toDataURL('image/png'); 
     
     const a = document.createElement('a');
     a.href = dataURL;
-    a.download = 'edge_detection_' + new Date().getTime() + '.png';
+    a.download = `edge_detection_${new Date().getTime()}.png`;
     
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 }
 
-// 事件監聽設定
-imageLoader.addEventListener('change', handleImage, false);
-detectLinesButton.addEventListener('click', runFullDetection, false);
-downloadButton.addEventListener('click', downloadImage, false);
-
-// 灰度化權重改變，需要重新計算 Sobel 
-[redWeightSlider, greenWeightSlider, blueWeightSlider].forEach(slider => {
-    slider.addEventListener('input', (e) => {
-        // 更新顯示的權重值 (可以選擇是否強制總和為 1.00，這裡僅做展示更新)
-        redWeightValueDisplay.textContent = (parseInt(redWeightSlider.value) / 100).toFixed(2);
-        greenWeightValueDisplay.textContent = (parseInt(greenWeightSlider.value) / 100).toFixed(2);
-        blueWeightValueDisplay.textContent = (parseInt(blueWeightSlider.value) / 100).toFixed(2);
-        
-        if (img) runFullDetection(); // 每次灰度權重調整都重新計算
+/**
+ * 啟用/禁用所有控制項
+ * @param {boolean} disabled - 是否禁用 (true) 或啟用 (false)
+ */
+function toggleControls(disabled) {
+    const controls = [
+        elements.detectLinesButton, elements.downloadButton, elements.redWeightSlider, 
+        elements.greenWeightSlider, elements.blueWeightSlider, elements.thresholdValueInput, 
+        elements.lineColorPicker, elements.bgColorPicker, elements.transparentBackgroundCheckbox
+    ];
+    controls.forEach(el => {
+        if (el) el.disabled = disabled;
     });
-});
+}
 
-// 閾值化、顏色或透明度改變，僅需重新應用閾值化
-[thresholdValueInput, lineColorPicker, bgColorPicker, transparentBackgroundCheckbox].forEach(control => {
-    control.addEventListener('input', () => {
-        if (control.id === 'thresholdValueInput') {
-            thresholdValueDisplay.textContent = thresholdValueInput.value;
+// =================================================================
+// 6. 初始化
+// =================================================================
+
+/**
+ * 獲取所有 DOM 元素並設置事件監聽
+ */
+function init() {
+    // 獲取 DOM 元素
+    elements.canvas = document.getElementById('imageCanvas');
+    elements.ctx = elements.canvas.getContext('2d');
+    elements.imageLoader = document.getElementById('imageLoader');
+    elements.detectLinesButton = document.getElementById('detectLinesButton');
+    elements.downloadButton = document.getElementById('downloadButton');
+    
+    elements.redWeightSlider = document.getElementById('redWeight');
+    elements.greenWeightSlider = document.getElementById('greenWeight');
+    elements.blueWeightSlider = document.getElementById('blueWeight');
+    elements.redWeightValueDisplay = document.getElementById('redWeightValue');
+    elements.greenWeightValueDisplay = document.getElementById('greenWeightValue');
+    elements.blueWeightValueDisplay = document.getElementById('blueWeightValue');
+    
+    elements.thresholdValueInput = document.getElementById('thresholdValueInput');
+    elements.thresholdValueDisplay = document.getElementById('thresholdValueDisplay');
+
+    elements.lineColorPicker = document.getElementById('lineColorPicker');
+    elements.bgColorPicker = document.getElementById('bgColorPicker');
+    elements.transparentBackgroundCheckbox = document.getElementById('transparentBackground');
+
+    // 設定初始狀態（禁用所有控制項直到圖片上傳）
+    toggleControls(true);
+
+    // 設定事件監聽
+    elements.imageLoader.addEventListener('change', handleImage, false);
+    elements.detectLinesButton.addEventListener('click', runFullDetection, false);
+    elements.downloadButton.addEventListener('click', downloadImage, false);
+
+    // 灰度化權重改變
+    [elements.redWeightSlider, elements.greenWeightSlider, elements.blueWeightSlider].forEach(slider => {
+        slider.addEventListener('input', handleGrayscaleInput);
+    });
+
+    // 閾值化、顏色或透明度改變
+    [elements.thresholdValueInput, elements.lineColorPicker, elements.bgColorPicker, elements.transparentBackgroundCheckbox].forEach(control => {
+        control.addEventListener('input', handleThresholdColorInput);
+    });
+
+    // 處理視窗大小改變時，如果圖片已載入，重新調整畫布大小 (可選，但響應式設計建議)
+    window.addEventListener('resize', () => {
+        if (img) {
+            // 由於調整畫布會清空內容，這裡只處理寬度
+            const { width, height } = calculateCanvasSize(img.width, img.height);
+            if (elements.canvas.width !== width) {
+                // 如果偵測結果存在，則嘗試重新繪製
+                if (cachedMagnitudeData) {
+                    // 需要將當前畫布內容備份，調整大小，再繪製回來
+                    // 為了簡化，這裡在 resize 時不做複雜的重繪，只在圖片上傳時處理響應式
+                    // 如果用戶在手機上調整方向，需要重新載入或執行一次 runFullDetection
+                }
+            }
         }
-        if (img) updateColorAndThresholding(); // 每次改變都重新繪製
     });
-});
+}
 
-
-// 初始禁用控制項
-[detectLinesButton, downloadButton, redWeightSlider, greenWeightSlider, blueWeightSlider, 
- thresholdValueInput, lineColorPicker, bgColorPicker, transparentBackgroundCheckbox].forEach(el => {
-    el.disabled = true;
-});
+// 網頁載入完成後執行初始化
+document.addEventListener('DOMContentLoaded', init);
