@@ -1,3 +1,90 @@
-#canvas {
-    border: 1px solid black;
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 20px;
+    background-color: #f4f4f4;
+}
+h1 {
+    color: #333;
+}
+#controls {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: inline-block;
+    text-align: left; /* 讓內部元素靠左對齊，更容易排版 */
+}
+#controls div {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+#controls label {
+    margin-right: 10px;
+    min-width: 120px; /* 增加標籤寬度以容納新標籤 */
+    text-align: right;
+    font-size: 14px;
+}
+#controls input[type="range"] {
+    width: 150px;
+    margin-right: 10px;
+}
+#controls input[type="color"] {
+    width: 50px;
+    height: 30px;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+}
+.action-buttons {
+    margin-top: 15px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    display: flex;
+    justify-content: space-around;
+    gap: 10px;
+}
+#detectLinesButton, #downloadButton {
+    padding: 8px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+#detectLinesButton:hover:not(:disabled), #downloadButton:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+#detectLinesButton:disabled, #downloadButton:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+#imageCanvas {
+    border: 1px solid #ccc;
+    background-color: #fff;
+    display: block;
+    margin: 20px auto;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    /* 讓透明背景在預覽時能看得出來 */
+    background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), 
+                      linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #ccc 75%),
+                      linear-gradient(-45deg, transparent 75%, #ccc 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+.value-display {
+    min-width: 40px;
+    text-align: left;
+}
+.checkbox-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 10px;
 }
