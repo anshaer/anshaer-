@@ -1,18 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Line Detection</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
+    <title>圖片畫布與線條偵測</title>
+    <link rel="stylesheet" href="style.css"> </head>
 <body>
-    <h1>上傳圖片偵測線條</h1>
-    <input type="file" id="upload" accept="image/*">
-    <br>
-    <canvas id="canvas"></canvas>
-    <br>
-    <input type="range" id="threshold" min="0" max="255" value="128">
-    <script src="script.js"></script>
-</body>
+
+    <h1>圖片畫布處理與線條偵測</h1>
+
+    <div id="controls">
+        <div>
+            <label for="imageLoader">上傳圖片:</label>
+            <input type="file" id="imageLoader" name="imageLoader" accept="image/*">
+        </div>
+        
+        <div>
+            <label for="redWeight">灰度紅權重 (R):</label>
+            <input type="range" id="redWeight" min="0" max="100" value="29">
+            <span id="redWeightValue" class="value-display">0.29</span>
+        </div>
+        <div>
+            <label for="greenWeight">灰度綠權重 (G):</label>
+            <input type="range" id="greenWeight" min="0" max="100" value="59">
+            <span id="greenWeightValue" class="value-display">0.59</span>
+        </div>
+        <div>
+            <label for="blueWeight">灰度藍權重 (B):</label>
+            <input type="range" id="blueWeight" min="0" max="100" value="12">
+            <span id="blueWeightValue" class="value-display">0.12</span>
+        </div>
+        
+        <div>
+            <label for="thresholdValueInput">邊緣閾值 (強度):</label>
+            <input type="range" id="thresholdValueInput" min="0" max="255" value="100">
+            <span id="thresholdValueDisplay" class="value-display">100</span>
+        </div>
+
+        <div>
+            <label for="lineColorPicker">線條顏色:</label>
+            <input type="color" id="lineColorPicker" value="#000000">
+        </div>
+        <div>
+            <label for="bgColorPicker">底色顏色:</label>
+            <input type="color" id="bgColorPicker" value="#ffffff">
+        </div>
+        
+        <div class="action-buttons">
+            <button id="detectLinesButton" disabled>執行偵測</button>
+
+            <div class="checkbox-control">
+                <input type="checkbox" id="transparentBackground">
+                <label for="transparentBackground" style="min-width: unset;">底色透明</label>
+            </div>
+            
+            <button id="downloadButton" disabled>下載圖片 (PNG)</button>
+        </div>
+    </div>
+
+    <canvas id="imageCanvas"></canvas>
+
+    <script src="script.js"></script> </body>
 </html>
