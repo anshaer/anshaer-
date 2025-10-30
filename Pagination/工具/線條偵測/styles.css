@@ -1,90 +1,132 @@
+/* 基礎樣式 (適用於所有設備) */
 body {
     font-family: Arial, sans-serif;
     text-align: center;
-    margin: 20px;
+    margin: 0; /* 移除預設邊距 */
+    padding: 20px;
     background-color: #f4f4f4;
 }
 h1 {
     color: #333;
-}
-#controls {
+    font-size: 24px; /* 手機上字體不要太大 */
     margin-bottom: 20px;
+}
+
+/* 控制面板樣式 */
+#controls {
+    margin: 0 auto 20px auto; /* 居中 */
     padding: 15px;
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: inline-block;
-    text-align: left; /* 讓內部元素靠左對齊，更容易排版 */
+    display: flex; /* 使用 Flexbox 進行佈局 */
+    flex-direction: column; /* 預設在小螢幕上垂直堆疊 */
+    align-items: center; /* 讓內容居中 */
+    width: 95%; /* 佔滿大部分寬度 */
+    max-width: 700px; /* 最大寬度限制，確保電腦上不會太寬 */
 }
 #controls div {
     margin-bottom: 10px;
     display: flex;
     align-items: center;
+    width: 100%; /* 確保每個控制項行佔滿父元素寬度 */
+    justify-content: space-between; /* 元素之間保持間距 */
 }
 #controls label {
     margin-right: 10px;
-    min-width: 120px; /* 增加標籤寬度以容納新標籤 */
-    text-align: right;
+    min-width: 120px; 
+    text-align: left; /* 在小螢幕上靠左對齊 */
     font-size: 14px;
 }
 #controls input[type="range"] {
-    width: 150px;
+    flex-grow: 1; /* 滑動條佔據剩餘空間 */
+    max-width: 150px; 
     margin-right: 10px;
 }
 #controls input[type="color"] {
-    width: 50px;
-    height: 30px;
-    border: none;
+    width: 40px; /* 手機上縮小顏色塊 */
+    height: 25px;
+    border: 1px solid #ccc;
     cursor: pointer;
     padding: 0;
     margin: 0;
 }
+.value-display {
+    min-width: 40px;
+    text-align: right; /* 數值靠右 */
+}
+
+/* 行動按鈕區塊 */
 .action-buttons {
     margin-top: 15px;
     border-top: 1px solid #eee;
     padding-top: 15px;
     display: flex;
-    justify-content: space-around;
+    flex-direction: column; /* 手機上垂直堆疊按鈕 */
     gap: 10px;
+    width: 100%;
 }
-#detectLinesButton, #downloadButton {
-    padding: 8px 15px;
+.action-buttons button, .checkbox-control {
+    width: 100%; /* 按鈕佔滿寬度 */
+    justify-content: center;
+}
+.action-buttons button {
+    padding: 10px 15px;
+    font-size: 16px;
+    /* 保持原有的顏色和效果... */
     background-color: #007bff;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
     transition: background-color 0.3s ease;
 }
-#detectLinesButton:hover:not(:disabled), #downloadButton:hover:not(:disabled) {
-    background-color: #0056b3;
-}
-#detectLinesButton:disabled, #downloadButton:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-}
+
+/* 畫布樣式 */
 #imageCanvas {
     border: 1px solid #ccc;
     background-color: #fff;
     display: block;
     margin: 20px auto;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    /* 讓透明背景在預覽時能看得出來 */
+    /* 讓透明背景能看得出來 */
     background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), 
                       linear-gradient(-45deg, #ccc 25%, transparent 25%),
                       linear-gradient(45deg, transparent 75%, #ccc 75%),
                       linear-gradient(-45deg, transparent 75%, #ccc 75%);
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    
+    /* 畫布的實際尺寸將由 JS 設定，這裡確保它能被看到 */
+    max-width: 95vw; /* 限制最大寬度為視口寬度的 95% */
+    height: auto; /* 高度自動 */
 }
-.value-display {
-    min-width: 40px;
-    text-align: left;
-}
-.checkbox-control {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 10px;
+
+
+/* --- 響應式媒體查詢 (適用於平板或電腦等較大螢幕) --- */
+@media (min-width: 600px) {
+    h1 {
+        font-size: 28px;
+    }
+    
+    /* 在較大螢幕上，將控制項的 label 和 input 再次靠右對齊，並限制滑動條寬度 */
+    #controls label {
+        text-align: right;
+    }
+
+    /* 將按鈕重新排成一行 */
+    .action-buttons {
+        flex-direction: row;
+        gap: 15px;
+        justify-content: space-around;
+    }
+    .action-buttons button, .checkbox-control {
+        width: auto; /* 自動調整寬度 */
+        flex-grow: 1;
+    }
+    
+    /* 畫布最大寬度在電腦上可以更大一點 */
+    #imageCanvas {
+        max-width: 800px; 
+    }
 }
