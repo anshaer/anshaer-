@@ -49,7 +49,6 @@ h1 {
     align-items: center;
 }
 
-
 #controls label {
     margin-right: 10px;
     min-width: 120px;
@@ -68,23 +67,18 @@ h1 {
     padding: 0;
     margin: 0;
 }
-#controls input[type="checkbox"] {
-    margin-right: 10px;
-    width: auto;
-}
 
 /* 線條不透明度滑桿的特殊樣式 */
-#lineAlphaControl, #edgeFeatheringStrengthControl {
+#lineAlphaControl {
     margin-top: -5px; /* 稍微向上調整，靠近顏色選擇器 */
     margin-bottom: 15px; /* 與下一個顏色控制項之間拉開距離 */
-    padding-bottom: 5px;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.1); /* 與底色控制項區隔開 */
+    padding-bottom: 10px;
 }
-#lineAlphaControl label, #edgeFeatheringStrengthControl label {
+#lineAlphaControl label {
     min-width: 120px;
     text-align: right;
 }
-
 /* 底色不透明度滑桿的特殊樣式 */
 #backgroundAlphaControl {
     margin-top: -5px; /* 稍微向上調整，靠近顏色選擇器 */
@@ -95,7 +89,6 @@ h1 {
     min-width: 120px;
     text-align: right;
 }
-
 /* 下載按鈕的容器 */
 .process-buttons {
     display: flex;
