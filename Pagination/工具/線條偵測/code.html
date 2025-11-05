@@ -8,91 +8,88 @@
 <body oncontextmenu="return false;">
     <h1>圖片畫布處理與線條偵測</h1>
 
-    <div id="main-layout">
-        <div id="controls">
+    <div id="controls">
+        <div>
+            <label for="imageLoader">上傳圖片:</label>
+            <input type="file" id="imageLoader" name="imageLoader" accept="image/*">
+        </div>
+
+        <div class="control-group">
+            <label>灰度權重:</label>
             <div>
-                <label for="imageLoader">上傳圖片:</label>
-                <input type="file" id="imageLoader" name="imageLoader" accept="image/*">
+                <label for="redWeight">紅權重 (R):</label>
+                <input type="range" id="redWeight" min="0" max="100" value="29">
+                <span id="redWeightValue" class="value-display">0.29</span>
             </div>
-
-            <div class="control-group">
-                <label>灰度權重:</label>
-                <div>
-                    <label for="redWeight">紅權重 (R):</label>
-                    <input type="range" id="redWeight" min="0" max="100" value="29">
-                    <span id="redWeightValue" class="value-display">0.29</span>
-                </div>
-                <div>
-                    <label for="greenWeight">綠權重 (G):</label>
-                    <input type="range" id="greenWeight" min="0" max="100" value="59">
-                    <span id="greenWeightValue" class="value-display">0.59</span>
-                </div>
-                <div>
-                    <label for="blueWeight">藍權重 (B):</label>
-                    <input type="range" id="blueWeight" min="0" max="100" value="12">
-                    <span id="blueWeightValue" class="value-display">0.12</span>
-                </div>
-            </div>
-            
             <div>
-                <label for="thresholdValueInput">邊緣閾值 (強度):</label>
-                <input type="range" id="thresholdValueInput" min="0" max="255" value="100">
-                <span id="thresholdValueDisplay" class="value-display">100</span>
+                <label for="greenWeight">綠權重 (G):</label>
+                <input type="range" id="greenWeight" min="0" max="100" value="59">
+                <span id="greenWeightValue" class="value-display">0.59</span>
             </div>
-
-            <div class="control-group">
-                <label>線條後處理 (平滑):</label>
-                <div style="flex-grow: 1;">
-                    <div>
-                        <label for="postBlurToggle">啟用線條平滑:</label>
-                        <input type="checkbox" id="postBlurToggle">
-                    </div>
-                    <div>
-                        <label for="postBlurRadius">平滑半徑:</label>
-                        <input type="range" id="postBlurRadius" min="0" max="3" value="0" step="0.1">
-                        <span id="postBlurRadiusDisplay" class="value-display">0 (關閉)</span>
-                    </div>
-                </div>
+            <div>
+                <label for="blueWeight">藍權重 (B):</label>
+                <input type="range" id="blueWeight" min="0" max="100" value="12">
+                <span id="blueWeightValue" class="value-display">0.12</span>
             </div>
-            
-            <div class="control-group">
-                <label>顏色與不透明度:</label>
-                <div>
-                    <label for="lineColorPicker">線條顏色:</label>
-                    <input type="color" id="lineColorPicker" value="#000000">
-                </div>
-                
-                <div id="lineAlphaControl">
-                    <label for="lineAlpha">線條不透明度:</label>
-                    <input type="range" id="lineAlpha" min="0" max="255" value="255">
-                    <span id="lineAlphaDisplay" class="value-display">255 (不透明)</span>
-                </div>
-
-                <div>
-                    <label for="bgColorPicker">底色顏色:</label>
-                    <input type="color" id="bgColorPicker" value="#ffffff">
-                </div>
-
-                <div id="backgroundAlphaControl">
-                    <label for="backgroundAlpha">底色不透明度:</label>
-                    <input type="range" id="backgroundAlpha" min="0" max="255" value="255">
-                    <span id="backgroundAlphaDisplay" class="value-display">255 (不透明)</span>
-                </div>
-            </div>
-
-<div class="process-buttons">
-    <button id="downloadThumbnailButton" disabled>下載縮圖 (PNG)</button>
-    <button id="processFullSizeButton" disabled>處理原始圖 (耗時)</button> 
-    <button id="downloadFullSizeButton" disabled>下載原始圖 (PNG)</button>
-</div>
         </div>
         
-        <div class="canvas-wrapper thumbnail-wrapper">
+        <div>
+            <label for="thresholdValueInput">邊緣閾值 (強度):</label>
+            <input type="range" id="thresholdValueInput" min="0" max="255" value="100">
+            <span id="thresholdValueDisplay" class="value-display">100</span>
+        </div>
+
+        <div class="control-group">
+            <label>線條後處理 (平滑):</label>
+            <div style="flex-grow: 1;">
+                <div>
+                    <label for="postBlurToggle">啟用線條平滑:</label>
+                    <input type="checkbox" id="postBlurToggle">
+                </div>
+                <div>
+                    <label for="postBlurRadius">平滑半徑:</label>
+                    <input type="range" id="postBlurRadius" min="0" max="3" value="0" step="0.1">
+                    <span id="postBlurRadiusDisplay" class="value-display">0 (關閉)</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label>顏色與不透明度:</label>
+            <div>
+                <label for="lineColorPicker">線條顏色:</label>
+                <input type="color" id="lineColorPicker" value="#000000">
+            </div>
+            
+            <div id="lineAlphaControl">
+                <label for="lineAlpha">線條不透明度:</label>
+                <input type="range" id="lineAlpha" min="0" max="255" value="255">
+                <span id="lineAlphaDisplay" class="value-display">255 (不透明)</span>
+            </div>
+
+            <div>
+                <label for="bgColorPicker">底色顏色:</label>
+                <input type="color" id="bgColorPicker" value="#ffffff">
+            </div>
+
+            <div id="backgroundAlphaControl">
+                <label for="backgroundAlpha">底色不透明度:</label>
+                <input type="range" id="backgroundAlpha" min="0" max="255" value="255">
+                <span id="backgroundAlphaDisplay" class="value-display">255 (不透明)</span>
+            </div>
+        </div>
+
+        <div class="process-buttons">
+            <button id="downloadThumbnailButton" disabled>下載縮圖 (PNG)</button>
+            <button id="downloadFullSizeButton" disabled>下載原始圖 (PNG)</button>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <div class="canvas-wrapper">
             <h3>縮圖畫布 (最大寬高 <span id="thumbnailMaxSizeDisplay">800</span>px)</h3>
             <canvas id="thumbnailCanvas"></canvas>
         </div>
-        
-    </div> <div class="canvas-container">
         <div class="canvas-wrapper">
             <h3>原始尺寸畫布</h3>
             <canvas id="fullSizeCanvas"></canvas>
