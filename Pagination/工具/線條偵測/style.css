@@ -152,8 +152,8 @@ h3 {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     padding: 10px;
     text-align: center;
-    width: calc(100vw - 40px); /* 在手機上佔據大部分寬度 */
-    max-width: 95%;
+    /* 這裡使用 min-width: 0 確保 flex item 不會溢出 */
+    min-width: 0; 
     
     /* 棋盤格背景 */
     background-image: linear-gradient(45deg, #eee 25%, transparent 25%), 
@@ -163,10 +163,11 @@ h3 {
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
+
+/* 所有畫布在小螢幕上都限制最大寬度 */
 canvas {
     display: block;
     margin: 0 auto;
-    /* 關鍵的 RWD 設置 */
     max-width: 100%; 
     height: auto;
 }
@@ -205,15 +206,20 @@ canvas {
         justify-content: space-around;
     }
     
-    /* 畫布容器並排顯示 (如果空間允許，但這裡我們保持垂直以便長畫布) */
-    .canvas-container {
-        /* 如果想並排，可以改為：
-        flex-direction: row;
-        flex-wrap: wrap; 
-        justify-content: center; */
-    }
-    
     .canvas-wrapper {
-        max-width: 800px; /* 在大螢幕上允許更大的顯示寬度 */
+        max-width: unset; /* 移除包裹器的最大寬度限制 */
+        width: auto; /* 讓包裹器根據內容自動調整寬度 */
+    }
+
+    /* 原始尺寸畫布在桌面/大螢幕上不限制最大寬度 */
+    #fullSizeCanvas {
+        max-width: unset; /* 移除最大寬度限制 */
+        width: auto; /* 讓畫布顯示其原始 CSS 寬度 */
+    }
+
+    /* 縮圖畫布仍然受限於 MAX_THUMBNAIL_SIZE */
+    #thumbnailCanvas {
+        max-width: 800px; /* 這裡可以根據需要設置一個更明確的最大值 */
+        width: auto;
     }
 }
