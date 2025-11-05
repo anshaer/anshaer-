@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>圖片畫布與線條偵測</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body oncontextmenu="return false;">
     <h1>圖片畫布處理與線條偵測</h1>
@@ -25,84 +25,48 @@
             </div>
         </div>
 
-        <div class="control-group">
-            <label>灰度權重:</label>
-            <div style="flex-grow: 1;">
-                <div>
-                    <label for="redWeight">紅權重 (R):</label>
-                    <input type="range" id="redWeight" min="0" max="100" value="29">
-                    <span id="redWeightValue" class="value-display">0.29</span>
-                </div>
-                <div>
-                    <label for="greenWeight">綠權重 (G):</label>
-                    <input type="range" id="greenWeight" min="0" max="100" value="59">
-                    <span id="greenWeightValue" class="value-display">0.59</span>
-                </div>
-                <div>
-                    <label for="blueWeight">藍權重 (B):</label>
-                    <input type="range" id="blueWeight" min="0" max="100" value="12">
-                    <span id="blueWeightValue" class="value-display">0.12</span>
-                </div>
-            </div>
+        <div>
+            <label for="redWeight">灰度紅權重 (R):</label>
+            <input type="range" id="redWeight" min="0" max="100" value="29">
+            <span id="redWeightValue" class="value-display">0.29</span>
+        </div>
+        <div>
+            <label for="greenWeight">灰度綠權重 (G):</label>
+            <input type="range" id="greenWeight" min="0" max="100" value="59">
+            <span id="greenWeightValue" class="value-display">0.59</span>
+        </div>
+        <div>
+            <label for="blueWeight">灰度藍權重 (B):</label>
+            <input type="range" id="blueWeight" min="0" max="100" value="12">
+            <span id="blueWeightValue" class="value-display">0.12</span>
         </div>
         
-        <div class="control-group">
-            <label>邊緣閾值設定:</label>
-            <div style="flex-grow: 1;">
-                <div>
-                    <label for="hysteresisToggle">啟用滯後閾值:</label>
-                    <input type="checkbox" id="hysteresisToggle" checked>
-                </div>
-                <div>
-                    <label for="thresholdValueInputHigh">高閾值 (強邊緣):</label>
-                    <input type="range" id="thresholdValueInputHigh" min="0" max="255" value="100">
-                    <span id="thresholdValueDisplayHigh" class="value-display">100</span>
-                </div>
-                <div>
-                    <label for="thresholdValueInputLow">低閾值 (弱邊緣):</label>
-                    <input type="range" id="thresholdValueInputLow" min="0" max="255" value="50">
-                    <span id="thresholdValueDisplayLow" class="value-display">50</span>
-                </div>
-                 <div id="singleThresholdControl">
-                    <label for="thresholdValueInputSingle">單一閾值 (強度):</label>
-                    <input type="range" id="thresholdValueInputSingle" min="0" max="255" value="100">
-                    <span id="thresholdValueDisplaySingle" class="value-display">100</span>
-                </div>
-            </div>
+        <div>
+            <label for="thresholdValueInput">邊緣閾值 (強度):</label>
+            <input type="range" id="thresholdValueInput" min="0" max="255" value="100">
+            <span id="thresholdValueDisplay" class="value-display">100</span>
         </div>
 
-        <div class="control-group">
-            <label>線條與背景顏色:</label>
-            <div style="flex-grow: 1;">
-                <div>
-                    <label for="lineColorPicker">線條顏色:</label>
-                    <input type="color" id="lineColorPicker" value="#000000">
-                </div>
-                <div id="lineAlphaControl">
-                    <label for="lineAlpha">線條不透明度:</label>
-                    <input type="range" id="lineAlpha" min="0" max="255" value="255">
-                    <span id="lineAlphaDisplay" class="value-display">255 (不透明)</span>
-                </div>
-                <div>
-                    <label for="edgeFeatheringToggle">啟用邊緣柔化:</label>
-                    <input type="checkbox" id="edgeFeatheringToggle" checked>
-                </div>
-                <div id="edgeFeatheringStrengthControl">
-                    <label for="edgeFeatheringStrength">柔化強度:</label>
-                    <input type="range" id="edgeFeatheringStrength" min="0" max="100" value="50">
-                    <span id="edgeFeatheringStrengthDisplay" class="value-display">50%</span>
-                </div>
+        <div>
+            <label for="lineColorPicker">線條顏色:</label>
+            <input type="color" id="lineColorPicker" value="#000000">
+        </div>
+        
+        <div id="lineAlphaControl">
+            <label for="lineAlpha">線條不透明度:</label>
+            <input type="range" id="lineAlpha" min="0" max="255" value="255">
+            <span id="lineAlphaDisplay" class="value-display">255 (不透明)</span>
+        </div>
 
-                <div>
-                    <label for="bgColorPicker">底色顏色:</label>
-                    <input type="color" id="bgColorPicker" value="#ffffff">
-                </div>
-                <div id="backgroundAlphaControl">
-                    <label for="backgroundAlpha">底色不透明度:</label>
-                    <input type="range" id="backgroundAlpha" min="0" max="255" value="255">
-                    <span id="backgroundAlphaDisplay" class="value-display">255 (不透明)</span>
-                </div>
-            </div>
+        <div>
+            <label for="bgColorPicker">底色顏色:</label>
+            <input type="color" id="bgColorPicker" value="#ffffff">
+        </div>
+
+        <div id="backgroundAlphaControl">
+            <label for="backgroundAlpha">底色不透明度:</label>
+            <input type="range" id="backgroundAlpha" min="0" max="255" value="255">
+            <span id="backgroundAlphaDisplay" class="value-display">255 (不透明)</span>
         </div>
         
         <div class="process-buttons">
