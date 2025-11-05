@@ -2,28 +2,57 @@ body {
     font-family: Arial, sans-serif;
     text-align: center;
     margin: 20px;
-    background-color: #f4f4f4;
+    background-color: #000;
 }
 h1 {
-    color: #333;
+    color: #fff;
 }
 #controls {
     margin-bottom: 20px;
     padding: 15px;
-    background-color: #fff;
+    background-color: rgba(255,255,255,0.5);
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     display: inline-block;
-    text-align: left; /* 讓內部元素靠左對齊，更容易排版 */
+    text-align: left;
+    width: 380px; /* 固定控制面板寬度 */
+    max-width: calc(100vw - 40px);
 }
-#controls div {
+#controls > div { /* 直接子元素div，用於控制項分組 */
     margin-bottom: 10px;
     display: flex;
     align-items: center;
 }
+
+.control-group {
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 15px !important;
+    background-color: rgba(255,255,255,0.2);
+    display: block !important; /* 使其佔據一行 */
+}
+.control-group > label {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 8px;
+    display: block; /* 讓標籤獨立一行 */
+    text-align: left !important;
+    min-width: unset !important; /* 重置min-width */
+}
+.control-group > div { /* 內部包裹的div */
+    padding-top: 5px;
+}
+.control-group > div > div { /* 各個獨立的控制項 */
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+
 #controls label {
     margin-right: 10px;
-    min-width: 120px; /* 增加標籤寬度以容納新標籤 */
+    min-width: 120px;
     text-align: right;
     font-size: 14px;
 }
@@ -39,52 +68,97 @@ h1 {
     padding: 0;
     margin: 0;
 }
-.action-buttons {
-    margin-top: 15px;
-    border-top: 1px solid #eee;
-    padding-top: 15px;
-    display: flex;
-    justify-content: space-around;
-    gap: 10px;
+#controls input[type="checkbox"] {
+    margin-right: 10px;
+    width: auto;
 }
-#detectLinesButton, #downloadButton {
+
+/* 線條不透明度滑桿的特殊樣式 */
+#lineAlphaControl, #edgeFeatheringStrengthControl {
+    margin-top: -5px; /* 稍微向上調整，靠近顏色選擇器 */
+    margin-bottom: 15px; /* 與下一個顏色控制項之間拉開距離 */
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+#lineAlphaControl label, #edgeFeatheringStrengthControl label {
+    min-width: 120px;
+    text-align: right;
+}
+
+/* 底色不透明度滑桿的特殊樣式 */
+#backgroundAlphaControl {
+    margin-top: -5px; /* 稍微向上調整，靠近顏色選擇器 */
+    border-bottom: 1px solid rgba(0,0,0,0.1); /* 與按鈕區隔開 */
+    padding-bottom: 10px;
+}
+#backgroundAlphaControl label {
+    min-width: 120px;
+    text-align: right;
+}
+
+/* 下載按鈕的容器 */
+.process-buttons {
+    display: flex;
+    justify-content: space-around; 
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%; 
+    padding-top: 15px; /* 保持與上一區塊的間距 */
+}
+.process-buttons button {
     padding: 8px 15px;
-    background-color: #007bff;
+    background-color: #04101c;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s ease;
+    flex-grow: 1; 
 }
-#detectLinesButton:hover:not(:disabled), #downloadButton:hover:not(:disabled) {
+.process-buttons button:hover:not(:disabled) {
     background-color: #0056b3;
 }
-#detectLinesButton:disabled, #downloadButton:disabled {
+.process-buttons button:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
 }
-#imageCanvas {
-    border: 1px solid #ccc;
+/* 畫布容器：垂直排列 */
+.canvas-container {
+    display: flex;
+    flex-direction: column; 
+    align-items: center; 
+    gap: 40px; 
+    margin-top: 20px;
+}
+.canvas-wrapper {
     background-color: #fff;
-    display: block;
-    margin: 20px auto;
+    border: 1px solid #ccc;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    /* 讓透明背景在預覽時能看得出來 */
-    background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), 
-                      linear-gradient(-45deg, #ccc 25%, transparent 25%),
-                      linear-gradient(45deg, transparent 75%, #ccc 75%),
-                      linear-gradient(-45deg, transparent 75%, #ccc 75%);
+    padding: 10px;
+    text-align: center;
+    max-width: calc(100vw - 40px);
+    
+    background-image: linear-gradient(45deg, #eee 25%, transparent 25%), 
+                      linear-gradient(-45deg, #eee 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #eee 75%),
+                      linear-gradient(-45deg, transparent 75%, #eee 75%);
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+.canvas-wrapper h3 {
+    margin-top: 0;
+    color: #555;
+}
+#thumbnailCanvas {
+    max-width: 100%; 
+    height: auto;
+}
+#fullSizeCanvas {
+    display: block;
+    margin: 0 auto;
 }
 .value-display {
     min-width: 40px;
     text-align: left;
-}
-.checkbox-control {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 10px;
 }
