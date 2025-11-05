@@ -8,12 +8,12 @@ const thumbnailMaxSizeDisplay = document.getElementById('thumbnailMaxSizeDisplay
 
 const fullSizeCanvas = document.getElementById('fullSizeCanvas');
 const fullSizeCtx = fullSizeCanvas.getContext('2d');
-// 新增按鈕引用
-const processFullSizeButton = document.getElementById('processFullSizeButton'); 
 const downloadFullSizeButton = document.getElementById('downloadFullSizeButton');
 
-// 控制項 (保持不變)
-// ... (所有控制項的引用代碼與您上次提供的版本相同，這裡省略以保持簡潔)
+// 控制項
+// 預處理高斯模糊控制項已移除
+
+// 後處理控制項
 const postBlurToggle = document.getElementById('postBlurToggle');
 const postBlurRadiusSlider = document.getElementById('postBlurRadius');
 const postBlurRadiusDisplay = document.getElementById('postBlurRadiusDisplay');
@@ -51,15 +51,173 @@ let fullSizeCachedMagnitudeData = null;
 
 thumbnailMaxSizeDisplay.textContent = MAX_THUMBNAIL_SIZE;
 
-// 保持 hexToRgb, applyGaussianFilter, applyGrayscale, applySobel, applyThresholdingAndColoring 函式不變
-// ... (這些函式邏輯保持不變)
+// 將 HEX 顏色碼轉換為 RGB 陣列 [r, g, b]
+function hexToRgb(hex) {
+    let r = 0, g = 0, b = 0;
+    if (hex.length === 7) { 
+        r = parseInt(hex.substring(1, 3), 16);
+        g = parseInt(hex.substring(3, 5), 16);
+        b = parseInt(hex.substring(5, 7), 16);
+    } else if (hex.length === 4) {
+        r = parseInt(hex[1] + hex[1], 16);
+        g = parseInt(hex[2] + hex[2], 16);
+        b = parseInt(hex[3] + hex[3], 16);
+    }
+    return [r, g, b];
+}
 
-// 偵測執行函式 (保持不變)
+// --- 核心處理邏輯 ---
+
+// 1. 高斯模糊 (用於後處理平滑)
+function applyGaussianFilter(imageData, radius) {
+    if (radius <= 0) return imageData;
+
+    const width = imageData.width;
+    const height = imageData.height;
+    const data = new Uint8ClampedArray(imageData.data); 
+    const blurredData = new Uint8ClampedArray(imageData.data.length); 
+
+    const sigma = radius / 3; 
+    const kernelSize = Math.ceil(radius * 2 + 1); 
+    const kernel = [];
+    let sum = 0;
+
+    // 計算高斯核心
+    for (let i = 0; i < kernelSize; i++) {
+        const x = i - Math.floor(kernelSize / 2);
+        const val = (1 / (Math.sqrt(2 * Math.PI) * sigma)) * Math.exp(-(x * x) / (2 * sigma * sigma));
+        kernel.push(val);
+        sum += val;
+    }
+    // 歸一化核心
+    for (let i = 0; i < kernel.length; i++) {
+        kernel[i] /= sum;
+    }
+
+    // 水平方向模糊
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            let r = 0, g = 0, b = 0, a = 0;
+            for (let i = 0; i < kernelSize; i++) {
+                const x_offset = x - Math.floor(kernelSize / 2) + i;
+                const p = Math.min(Math.max(x_offset, 0), width - 1); 
+                const index = (y * width + p) * 4;
+                r += data[index] * kernel[i];
+                g += data[index + 1] * kernel[i];
+                b += data[index + 2] * kernel[i];
+                a += data[index + 3] * kernel[i];
+            }
+            const outputIndex = (y * width + x) * 4;
+            blurredData[outputIndex] = r;
+            blurredData[outputIndex + 1] = g;
+            blurredData[outputIndex + 2] = b;
+            blurredData[outputIndex + 3] = a;
+        }
+    }
+
+    // 垂直方向模糊 (在水平模糊的結果上進行)
+    for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+            let r = 0, g = 0, b = 0, a = 0;
+            for (let i = 0; i < kernelSize; i++) {
+                const y_offset = y - Math.floor(kernelSize / 2) + i;
+                const p = Math.min(Math.max(y_offset, 0), height - 1); 
+                const index = (p * width + x) * 4; 
+                r += blurredData[index] * kernel[i];
+                g += blurredData[index + 1] * kernel[i];
+                b += blurredData[index + 2] * kernel[i];
+                a += blurredData[index + 3] * kernel[i];
+            }
+            const outputIndex = (y * width + x) * 4;
+            // 將最終結果寫回原始 imageData.data
+            imageData.data[outputIndex] = r;
+            imageData.data[outputIndex + 1] = g;
+            imageData.data[outputIndex + 2] = b;
+            imageData.data[outputIndex + 3] = a;
+        }
+    }
+    return imageData;
+}
+
+
+// 2. 灰度化 (未改變)
+function applyGrayscale(imageData, weights) {
+    // ... 保持不變
+    const data = imageData.data;
+    const grayData = new Uint8ClampedArray(imageData.width * imageData.height);
+    const [wR, wG, wB] = weights;
+
+    for (let i = 0; i < data.length; i += 4) {
+        const avg = wR * data[i] + wG * data[i + 1] + wB * data[i + 2];
+        grayData[i / 4] = avg > 255 ? 255 : (avg < 0 ? 0 : avg);
+    }
+    return grayData;
+}
+
+// 3. Sobel 邊緣偵測 (未改變)
+function applySobel(grayData, width, height) {
+    // ... 保持不變
+    const magnitudeData = new Uint8ClampedArray(width * height);
+    
+    const Gx = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
+    const Gy = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
+
+    for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+            let sumX = 0;
+            let sumY = 0;
+
+            for (let ky = -1; ky <= 1; ky++) {
+                for (let kx = -1; kx <= 1; kx++) {
+                    const pixelIndex = ((y + ky) * width + (x + kx));
+                    const grayscaleValue = grayData[pixelIndex];
+
+                    sumX += grayscaleValue * Gx[ky + 1][kx + 1];
+                    sumY += grayscaleValue * Gy[ky + 1][kx + 1]; 
+                }
+            }
+
+            const magnitude = Math.sqrt(sumX * sumX + sumY * sumY);    
+            const index = y * width + x;
+            magnitudeData[index] = magnitude > 255 ? 255 : magnitude;
+        }
+    }
+    return magnitudeData;
+}
+
+// 4. 閾值化和著色 (未改變)
+function applyThresholdingAndColoring(magnitudeData, width, height, threshold, lineColor, lineAlpha, bgColor, backgroundAlpha, ctxTarget) {
+    // ... 保持不變
+    const edgeData = ctxTarget.createImageData(width, height);
+    const edgeDataArr = edgeData.data;
+
+    const [lineR, lineG, lineB] = lineColor;
+    const [bgR, bgG, bgB] = bgColor;
+    
+    for (let i = 0; i < magnitudeData.length; i++) {
+        const magnitude = magnitudeData[i];
+        const outputIndex = i * 4;
+
+        if (magnitude > threshold) {
+            edgeDataArr[outputIndex]        = lineR;  
+            edgeDataArr[outputIndex + 1] = lineG;
+            edgeDataArr[outputIndex + 2] = lineB;
+            edgeDataArr[outputIndex + 3] = lineAlpha; 
+        } else {
+            edgeDataArr[outputIndex]        = bgR;    
+            edgeDataArr[outputIndex + 1] = bgG;    
+            edgeDataArr[outputIndex + 2] = bgB;    
+            edgeDataArr[outputIndex + 3] = backgroundAlpha; 
+        }
+    }
+    return edgeData;
+}
+
+// 偵測執行函式 (移除預處理高斯模糊邏輯)
 function runDetectionForCanvas(canvasEl, ctxTarget, originalImgData, 
                                  cachedGray, cachedMagnitude, recalculatePreprocessing = true) {
     if (!originalImgData) return;
     
-    // ... (runDetectionForCanvas 函式內容保持不變，它接受參數決定是否重新計算)
     const width = canvasEl.width;
     const height = canvasEl.height;
     
@@ -68,21 +226,26 @@ function runDetectionForCanvas(canvasEl, ctxTarget, originalImgData,
     const wB = parseFloat(blueWeightSlider.value) / 100;
     const weights = [wR, wG, wB];
     
+    // 後處理高斯模糊參數
     const postBlurEnabled = postBlurToggle.checked;
     const postBlurRadius = parseFloat(postBlurRadiusSlider.value);
 
     let currentGrayData = cachedGray;
     let currentMagnitudeData = cachedMagnitude;
 
+    // 複製一份原始圖像數據，用於灰度化
     let currentImageDataForProcessing = new ImageData(new Uint8ClampedArray(originalImgData.data), width, height);
 
+    // 只有灰度權重改變時才重新計算前處理
     if (recalculatePreprocessing || !currentGrayData || !currentMagnitudeData) {
         // 預處理高斯模糊已移除
         
+        // 1. 灰度化 & 2. Sobel 偵測
         currentGrayData = applyGrayscale(currentImageDataForProcessing, weights);
         currentMagnitudeData = applySobel(currentGrayData, width, height);
     }
     
+    // 3. 閾值化和著色 (產生最終線條圖)
     const threshold = parseInt(thresholdValueInput.value);
     const lineColor = hexToRgb(lineColorPicker.value);
     const lineAlpha = parseInt(lineAlphaSlider.value); 
@@ -101,6 +264,7 @@ function runDetectionForCanvas(canvasEl, ctxTarget, originalImgData,
         ctxTarget 
     );
     
+    // 4. 應用後處理高斯模糊 (線條平滑)
     if (postBlurEnabled && postBlurRadius > 0) {
         finalImageData = applyGaussianFilter(finalImageData, postBlurRadius);
     }
@@ -110,19 +274,16 @@ function runDetectionForCanvas(canvasEl, ctxTarget, originalImgData,
     return { gray: currentGrayData, magnitude: currentMagnitudeData };
 }
 
-
-// --- 核心修改區域 START ---
-
-// 統籌函式 (只處理縮圖 - 灰度權重改變時)
+// 統籌函式 (當灰度權重改變時，需要重新計算 Sobel 梯度)
 function runFullDetection() {
     if (!uploadedImage) return;
 
-    // 清空縮圖快取，強制重新計算
+    // 清空所有快取，強制重新計算
     thumbnailCachedGrayData = null;
     thumbnailCachedMagnitudeData = null;
-    // 不碰 fullSize 的快取
+    fullSizeCachedGrayData = null;
+    fullSizeCachedMagnitudeData = null;
 
-    // *只對縮圖執行處理*
     const thumbResult = runDetectionForCanvas(
         thumbnailCanvas, thumbnailCtx, thumbnailOriginalImageData, 
         thumbnailCachedGrayData, thumbnailCachedMagnitudeData, true 
@@ -131,16 +292,21 @@ function runFullDetection() {
         thumbnailCachedGrayData = thumbResult.gray;
         thumbnailCachedMagnitudeData = thumbResult.magnitude;
     }
-    
-    // 禁用下載全尺寸按鈕，直到原始圖處理完成
-    downloadFullSizeButton.disabled = true;
+
+    const fullResult = runDetectionForCanvas(
+        fullSizeCanvas, fullSizeCtx, fullSizeOriginalImageData, 
+        fullSizeCachedGrayData, fullSizeCachedMagnitudeData, true 
+    );
+    if (fullResult) {
+        fullSizeCachedGrayData = fullResult.gray;
+        fullSizeCachedMagnitudeData = fullResult.magnitude;
+    }
 }
 
-// 統籌函式 (只處理縮圖 - 顏色、閾值、平滑改變時)
+// 統籌函式 (當閾值、顏色或後處理模糊參數改變時，只需重新應用閾值和著色，重用之前的灰度和梯度數據)
 function updateColorAndThresholding() {
     if (!uploadedImage) return;
     
-    // *只對縮圖執行處理*
     const thumbResult = runDetectionForCanvas(
         thumbnailCanvas, thumbnailCtx, thumbnailOriginalImageData, 
         thumbnailCachedGrayData, thumbnailCachedMagnitudeData, false // 不重新計算前處理
@@ -150,60 +316,21 @@ function updateColorAndThresholding() {
         thumbnailCachedMagnitudeData = thumbResult.magnitude;
     }
 
-    // 禁用下載全尺寸按鈕，直到原始圖處理完成
-    downloadFullSizeButton.disabled = true;
+    const fullResult = runDetectionForCanvas(
+        fullSizeCanvas, fullSizeCtx, fullSizeOriginalImageData, 
+        fullSizeCachedGrayData, fullSizeCachedMagnitudeData, false // 不重新計算前處理
+    );
+    if (fullResult) {
+        fullSizeCachedGrayData = fullResult.gray;
+        fullSizeCachedMagnitudeData = fullResult.magnitude;
+    }
 }
-
-// 手動觸發原始尺寸畫布處理的專門函式
-function processFullSize() {
-    if (!uploadedImage) return;
-    
-    // 清空原始圖快取，強制重新計算（因為參數可能已變）
-    fullSizeCachedGrayData = null;
-    fullSizeCachedMagnitudeData = null;
-
-    processFullSizeButton.textContent = '處理中... (請稍候)';
-    processFullSizeButton.disabled = true;
-    
-    // 使用 setTimeout 讓瀏覽器有機會更新 UI，避免完全鎖死
-    setTimeout(() => {
-        try {
-            const fullResult = runDetectionForCanvas(
-                fullSizeCanvas, fullSizeCtx, fullSizeOriginalImageData, 
-                fullSizeCachedGrayData, fullSizeCachedMagnitudeData, true // 強制重新計算所有步驟
-            );
-            
-            if (fullResult) {
-                fullSizeCachedGrayData = fullResult.gray;
-                fullSizeCachedMagnitudeData = fullResult.magnitude;
-            }
-
-            processFullSizeButton.textContent = '原始圖處理完成';
-            downloadFullSizeButton.disabled = false;
-        } catch (error) {
-            console.error('原始圖處理失敗:', error);
-            processFullSizeButton.textContent = '處理失敗';
-            alert('處理原始圖失敗，圖片可能太大或設備記憶體不足。');
-        } finally {
-            // 處理完成後，無論成功或失敗，重新啟用按鈕，等待下一次手動點擊
-            setTimeout(() => {
-                processFullSizeButton.textContent = '處理原始圖 (耗時)';
-                processFullSizeButton.disabled = false;
-            }, 3000); 
-        }
-    }, 50); // 延遲執行，釋放 UI 執行緒
-}
-
-// --- 核心修改區域 END ---
-
 
 // --- 事件處理 ---
 
 imageLoader.addEventListener('change', handleImage, false);
 downloadThumbnailButton.addEventListener('click', () => downloadImage(thumbnailCanvas, 'thumbnail'), false);
 downloadFullSizeButton.addEventListener('click', () => downloadImage(fullSizeCanvas, 'fullsize'), false);
-// 新增手動處理按鈕的監聽
-processFullSizeButton.addEventListener('click', processFullSize, false); 
 
 // 灰度權重改變 (觸發 runFullDetection)
 [redWeightSlider, greenWeightSlider, blueWeightSlider].forEach(control => {
@@ -250,7 +377,7 @@ processFullSizeButton.addEventListener('click', processFullSize, false);
 });
 
 
-// 圖片上傳處理
+// 圖片上傳處理 (未改變)
 function handleImage(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -289,7 +416,7 @@ function handleImage(e) {
             fullSizeCachedMagnitudeData = null;
 
             // 啟用控制項
-            [downloadThumbnailButton, processFullSizeButton, 
+            [downloadThumbnailButton, downloadFullSizeButton, 
              postBlurToggle, postBlurRadiusSlider,
              redWeightSlider, greenWeightSlider, blueWeightSlider, 
              thresholdValueInput, lineColorPicker, lineAlphaSlider, 
@@ -297,10 +424,7 @@ function handleImage(e) {
                 el.disabled = false;
             });
             
-            // 初始狀態下禁用下載原始圖按鈕
-            downloadFullSizeButton.disabled = true;
-
-            runFullDetection(); // 初始處理縮圖
+            runFullDetection(); 
         }
         uploadedImage.src = event.target.result;
     }
@@ -322,8 +446,8 @@ function downloadImage(canvasTarget, prefix) {
     document.body.removeChild(a);
 }
 
-// 初始禁用控制項
-[downloadThumbnailButton, processFullSizeButton, downloadFullSizeButton, 
+// 初始禁用控制項 (未改變)
+[downloadThumbnailButton, downloadFullSizeButton, 
  postBlurToggle, postBlurRadiusSlider,
  redWeightSlider, greenWeightSlider, blueWeightSlider, 
  thresholdValueInput, lineColorPicker, lineAlphaSlider, 
