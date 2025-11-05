@@ -125,6 +125,7 @@ h1 {
 /* 下載按鈕的容器 */
 .process-buttons {
     display: flex;
+    flex-wrap: wrap; /* 允許按鈕換行，在窄螢幕上更美觀 */
     justify-content: space-around; 
     gap: 10px;
     margin-top: 10px;
@@ -138,9 +139,10 @@ h1 {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px; /* 稍微縮小字體，容納三個按鈕 */
     transition: background-color 0.3s ease;
     flex-grow: 1; 
+    min-width: 100px; /* 確保按鈕不會太小 */
 }
 .process-buttons button:hover:not(:disabled) {
     background-color: #0056b3;
