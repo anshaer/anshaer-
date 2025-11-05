@@ -1,137 +1,161 @@
+/* =================================================================
+   基本設定與排版 (針對所有設備)
+   ================================================================= */
 body {
     font-family: Arial, sans-serif;
     text-align: center;
-    margin: 20px;
+    margin: 10px; /* 針對手機優化，縮小邊距 */
     background-color: #000;
+    color: #fff; /* 預設文字顏色 */
 }
 h1 {
-    color: #fff;
+    font-size: 1.6em;
+    margin: 15px 0;
 }
-#controls {
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: rgba(255,255,255,0.5);
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    display: inline-block;
-    text-align: left;
-    width: 380px; /* 固定控制面板寬度 */
-    max-width: calc(100vw - 40px);
-}
-#controls > div { /* 直接子元素div，用於控制項分組 */
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
+h3 {
+    margin-top: 0;
+    color: #555;
+    font-size: 1.1em;
 }
 
+/* =================================================================
+   控制面板樣式 (#controls)
+   ================================================================= */
+#controls {
+    margin: 0 auto 20px auto; /* 居中對齊 */
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.9); /* 提高透明度 */
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 100%; /* 手機上佔滿寬度 */
+    max-width: 450px; /* 設定最大寬度，避免在大螢幕上過寬 */
+    text-align: left;
+    color: #333;
+    box-sizing: border-box; /* 確保 padding 不增加寬度 */
+}
+
+/* 頂層控制項分組 */
+#controls > div:not(.control-group) {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px; /* 增加小間距 */
+}
+
+/* 標籤樣式 */
+#controls label {
+    font-size: 0.9em;
+    font-weight: 500;
+    min-width: 80px; /* 調整最小寬度以適應手機 */
+    text-align: left;
+    flex-shrink: 0; /* 防止標籤被壓縮 */
+}
+
+/* 值顯示 */
+.value-display {
+    min-width: 40px;
+    text-align: right;
+    font-size: 0.9em;
+    flex-shrink: 0;
+}
+
+/* 滑桿和輸入框 */
+#controls input[type="range"] {
+    flex-grow: 1; /* 讓滑桿盡量佔滿空間 */
+    width: auto;
+    margin-right: 5px;
+    min-width: 100px;
+}
+#controls input[type="color"] {
+    width: 40px;
+    height: 25px;
+}
+#controls input[type="file"] {
+    flex-grow: 1;
+}
+
+/* --- 複雜控制項分組 (.control-group) --- */
 .control-group {
-    border: 1px solid rgba(0,0,0,0.2);
-    border-radius: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
     padding: 10px;
     margin-bottom: 15px !important;
-    background-color: rgba(255,255,255,0.2);
-    display: block !important; /* 使其佔據一行 */
+    background-color: rgba(255, 255, 255, 0.6);
+    display: block !important;
 }
 .control-group > label {
     font-weight: bold;
-    color: #333;
+    color: #000;
     margin-bottom: 8px;
-    display: block; /* 讓標籤獨立一行 */
+    display: block;
     text-align: left !important;
-    min-width: unset !important; /* 重置min-width */
 }
 .control-group > div { /* 內部包裹的div */
     padding-top: 5px;
 }
-.control-group > div > div { /* 各個獨立的控制項 */
+.control-group > div > div { /* 各個獨立的控制項 (R/G/B, 顏色/透明度) */
     margin-bottom: 8px;
     display: flex;
     align-items: center;
+    flex-wrap: nowrap; /* 盡量不換行 */
 }
 
-#controls label {
-    margin-right: 10px;
-    min-width: 120px;
-    text-align: right;
-    font-size: 14px;
-}
-#controls input[type="range"] {
-    width: 150px;
-    margin-right: 10px;
-}
-#controls input[type="color"] {
-    width: 50px;
-    height: 30px;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    margin: 0;
+/* 線條/底色 Alpha 控制項間隔 */
+#lineAlphaControl, #backgroundAlphaControl {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 10px;
+    margin-top: -5px;
 }
 
-/* 線條不透明度滑桿的特殊樣式 */
-#lineAlphaControl {
-    margin-top: -5px; /* 稍微向上調整，靠近顏色選擇器 */
-    margin-bottom: 15px; /* 與下一個顏色控制項之間拉開距離 */
-    border-bottom: 1px solid rgba(0,0,0,0.1); /* 與底色控制項區隔開 */
-    padding-bottom: 10px;
-}
-#lineAlphaControl label {
-    min-width: 120px;
-    text-align: right;
-}
-/* 底色不透明度滑桿的特殊樣式 */
-#backgroundAlphaControl {
-    margin-top: -5px; /* 稍微向上調整，靠近顏色選擇器 */
-    border-bottom: 1px solid rgba(0,0,0,0.1); /* 與按鈕區隔開 */
-    padding-bottom: 10px;
-}
-#backgroundAlphaControl label {
-    min-width: 120px;
-    text-align: right;
-}
-/* 下載按鈕的容器 */
+/* --- 下載按鈕樣式 --- */
 .process-buttons {
     display: flex;
-    justify-content: space-around; 
+    flex-direction: column; /* 手機上垂直堆疊 */
     gap: 10px;
-    margin-top: 10px;
-    width: 100%; 
-    padding-top: 15px; /* 保持與上一區塊的間距 */
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 .process-buttons button {
-    padding: 8px 15px;
-    background-color: #04101c;
+    padding: 10px 15px;
+    background-color: #004d99;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 1em;
     transition: background-color 0.3s ease;
-    flex-grow: 1; 
+    flex-grow: 1;
 }
 .process-buttons button:hover:not(:disabled) {
-    background-color: #0056b3;
+    background-color: #007bff;
 }
 .process-buttons button:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
 }
-/* 畫布容器：垂直排列 */
+
+/* =================================================================
+   畫布容器樣式 (canvas-container)
+   ================================================================= */
 .canvas-container {
     display: flex;
-    flex-direction: column; 
-    align-items: center; 
-    gap: 40px; 
+    flex-direction: column; /* 垂直排列 */
+    align-items: center;
+    gap: 30px;
     margin-top: 20px;
 }
 .canvas-wrapper {
     background-color: #fff;
     border: 1px solid #ccc;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     padding: 10px;
     text-align: center;
-    max-width: calc(100vw - 40px);
+    width: calc(100vw - 40px); /* 在手機上佔據大部分寬度 */
+    max-width: 95%;
     
+    /* 棋盤格背景 */
     background-image: linear-gradient(45deg, #eee 25%, transparent 25%), 
                       linear-gradient(-45deg, #eee 25%, transparent 25%),
                       linear-gradient(45deg, transparent 75%, #eee 75%),
@@ -139,19 +163,57 @@ h1 {
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
-.canvas-wrapper h3 {
-    margin-top: 0;
-    color: #555;
-}
-#thumbnailCanvas {
+canvas {
+    display: block;
+    margin: 0 auto;
+    /* 關鍵的 RWD 設置 */
     max-width: 100%; 
     height: auto;
 }
-#fullSizeCanvas {
-    display: block;
-    margin: 0 auto;
-}
-.value-display {
-    min-width: 40px;
-    text-align: left;
+
+/* =================================================================
+   媒體查詢 (針對桌面/平板等較大螢幕)
+   ================================================================= */
+@media (min-width: 768px) {
+    body {
+        margin: 20px;
+    }
+    h1 {
+        font-size: 2em;
+    }
+    
+    /* 桌面版控制面板恢復經典佈局 */
+    #controls {
+        width: 400px; /* 稍寬一點的固定寬度 */
+        display: inline-block;
+    }
+    
+    #controls > div:not(.control-group) {
+        display: flex;
+        flex-wrap: nowrap;
+    }
+    
+    /* 標籤右對齊，滑桿左側有更多空間 */
+    #controls label {
+        min-width: 120px;
+        text-align: right;
+    }
+    
+    /* 下載按鈕恢復水平排列 */
+    .process-buttons {
+        flex-direction: row;
+        justify-content: space-around;
+    }
+    
+    /* 畫布容器並排顯示 (如果空間允許，但這裡我們保持垂直以便長畫布) */
+    .canvas-container {
+        /* 如果想並排，可以改為：
+        flex-direction: row;
+        flex-wrap: wrap; 
+        justify-content: center; */
+    }
+    
+    .canvas-wrapper {
+        max-width: 800px; /* 在大螢幕上允許更大的顯示寬度 */
+    }
 }
