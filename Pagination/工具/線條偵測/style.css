@@ -7,8 +7,39 @@ body {
 h1 {
     color: #fff;
 }
-#controls {
+
+/* --- 新增主佈局容器 --- */
+#main-layout {
+    display: flex;
+    flex-direction: column; /* 預設為垂直堆疊 (手機版) */
+    align-items: center;
+    gap: 20px;
     margin-bottom: 20px;
+}
+
+/* 媒體查詢：當螢幕寬度大於 800px 時，切換為並排佈局 */
+@media (min-width: 800px) {
+    #main-layout {
+        flex-direction: row; /* 寬螢幕下，控制項和縮圖並排 */
+        justify-content: center;
+        align-items: flex-start; /* 讓兩者頂部對齊 */
+    }
+    /* 讓縮圖畫布容器佔據右側剩餘空間 */
+    .thumbnail-wrapper {
+        flex-grow: 1; 
+        max-width: 50%; /* 限制縮圖最大佔用寬度 */
+        margin-top: 0; 
+    }
+    /* 調整畫布容器的寬度 */
+    .canvas-container {
+        max-width: 1000px; /* 限制下方大畫布的寬度 */
+    }
+}
+/* --- 結束主佈局容器設定 --- */
+
+
+#controls {
+    margin-bottom: 0; /* 這裡移除垂直間距，交給 main-layout 的 gap 處理 */
     padding: 15px;
     background-color: rgba(255,255,255,0.5);
     border-radius: 8px;
@@ -17,7 +48,9 @@ h1 {
     text-align: left;
     width: 380px; /* 固定控制面板寬度 */
     max-width: calc(100vw - 40px);
+    flex-shrink: 0; /* 防止它在 flex 佈局中縮小 */
 }
+
 #controls > div { /* 直接子元素div，用於控制項分組 */
     margin-bottom: 10px;
     display: flex;
@@ -36,14 +69,14 @@ h1 {
     font-weight: bold;
     color: #333;
     margin-bottom: 8px;
-    display: block; /* 讓標籤獨立一行 */
+    display: block; 
     text-align: left !important;
-    min-width: unset !important; /* 重置min-width */
+    min-width: unset !important; 
 }
-.control-group > div { /* 內部包裹的div */
+.control-group > div { 
     padding-top: 5px;
 }
-.control-group > div > div { /* 各個獨立的控制項 */
+.control-group > div > div { 
     margin-bottom: 8px;
     display: flex;
     align-items: center;
@@ -70,9 +103,9 @@ h1 {
 
 /* 線條不透明度滑桿的特殊樣式 */
 #lineAlphaControl {
-    margin-top: -5px; /* 稍微向上調整，靠近顏色選擇器 */
-    margin-bottom: 15px; /* 與下一個顏色控制項之間拉開距離 */
-    border-bottom: 1px solid rgba(0,0,0,0.1); /* 與底色控制項區隔開 */
+    margin-top: -5px; 
+    margin-bottom: 15px; 
+    border-bottom: 1px solid rgba(0,0,0,0.1); 
     padding-bottom: 10px;
 }
 #lineAlphaControl label {
@@ -81,8 +114,8 @@ h1 {
 }
 /* 底色不透明度滑桿的特殊樣式 */
 #backgroundAlphaControl {
-    margin-top: -5px; /* 稍微向上調整，靠近顏色選擇器 */
-    border-bottom: 1px solid rgba(0,0,0,0.1); /* 與按鈕區隔開 */
+    margin-top: -5px; 
+    border-bottom: 1px solid rgba(0,0,0,0.1); 
     padding-bottom: 10px;
 }
 #backgroundAlphaControl label {
@@ -96,7 +129,7 @@ h1 {
     gap: 10px;
     margin-top: 10px;
     width: 100%; 
-    padding-top: 15px; /* 保持與上一區塊的間距 */
+    padding-top: 15px; 
 }
 .process-buttons button {
     padding: 8px 15px;
@@ -132,6 +165,7 @@ h1 {
     text-align: center;
     max-width: calc(100vw - 40px);
     
+    /* 棋盤格背景 */
     background-image: linear-gradient(45deg, #eee 25%, transparent 25%), 
                       linear-gradient(-45deg, #eee 25%, transparent 25%),
                       linear-gradient(45deg, transparent 75%, #eee 75%),
