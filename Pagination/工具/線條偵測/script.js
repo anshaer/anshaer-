@@ -1,5 +1,4 @@
-// script.js
-// DOM 元素引用 (保持不變)
+// DOM 元素引用
 const imageLoader = document.getElementById('imageLoader');
 
 const thumbnailCanvas = document.getElementById('thumbnailCanvas');
@@ -11,10 +10,10 @@ const fullSizeCanvas = document.getElementById('fullSizeCanvas');
 const fullSizeCtx = fullSizeCanvas.getContext('2d');
 const downloadFullSizeButton = document.getElementById('downloadFullSizeButton');
 
-// 控制項 (保持不變)
+// 控制項
 const gaussianRadiusSlider = document.getElementById('gaussianRadius');
 const gaussianRadiusDisplay = document.getElementById('gaussianRadiusDisplay');
-// ... (所有其他控制項的引用保持不變)
+
 const redWeightSlider = document.getElementById('redWeight');
 const greenWeightSlider = document.getElementById('greenWeight');
 const blueWeightSlider = document.getElementById('blueWeight');
@@ -22,28 +21,16 @@ const redWeightValueDisplay = document.getElementById('redWeightValue');
 const greenWeightValueDisplay = document.getElementById('greenWeightValue');
 const blueWeightValueDisplay = document.getElementById('blueWeightValue');
 
-const hysteresisToggle = document.getElementById('hysteresisToggle');
-const thresholdValueInputHigh = document.getElementById('thresholdValueInputHigh');
-const thresholdValueDisplayHigh = document.getElementById('thresholdValueDisplayHigh');
-const thresholdValueInputLow = document.getElementById('thresholdValueInputLow');
-const thresholdValueDisplayLow = document.getElementById('thresholdValueDisplayLow');
-const singleThresholdControl = document.getElementById('singleThresholdControl');
-const thresholdValueInputSingle = document.getElementById('thresholdValueInputSingle');
-const thresholdValueDisplaySingle = document.getElementById('thresholdValueDisplaySingle');
+const thresholdValueInput = document.getElementById('thresholdValueInput');
+const thresholdValueDisplay = document.getElementById('thresholdValueDisplay');
 
 const lineColorPicker = document.getElementById('lineColorPicker');
 const lineAlphaSlider = document.getElementById('lineAlpha');
 const lineAlphaDisplay = document.getElementById('lineAlphaDisplay');
 
-const edgeFeatheringToggle = document.getElementById('edgeFeatheringToggle');
-const edgeFeatheringStrengthSlider = document.getElementById('edgeFeatheringStrength');
-const edgeFeatheringStrengthDisplay = document.getElementById('edgeFeatheringStrengthDisplay');
-const edgeFeatheringStrengthControl = document.getElementById('edgeFeatheringStrengthControl');
-
 const bgColorPicker = document.getElementById('bgColorPicker');
 const backgroundAlphaSlider = document.getElementById('backgroundAlpha'); 
 const backgroundAlphaDisplay = document.getElementById('backgroundAlphaDisplay');
-
 
 // 全域變數
 let uploadedImage = null; 
@@ -53,23 +40,14 @@ const MAX_THUMBNAIL_SIZE = 800;
 let thumbnailOriginalImageData = null;
 let thumbnailCachedGrayData = null;
 let thumbnailCachedMagnitudeData = null;
-let thumbnailCachedEdgeMap = null; // 新增：快取最終的二值化邊緣圖
 
 let fullSizeOriginalImageData = null;
 let fullSizeCachedGrayData = null;
 let fullSizeCachedMagnitudeData = null;
-let fullSizeCachedEdgeMap = null; // 新增：快取最終的二值化邊緣圖
 
 thumbnailMaxSizeDisplay.textContent = MAX_THUMBNAIL_SIZE;
 
-
-// --- Web Worker 設定 ---
-let worker = new Worker('worker.js');
-let currentWorkerId = 0; // 用於追蹤 Worker 請求的 ID
-let processingQueue = []; // 處理隊列，確保請求順序
-
-// 輔助函式 (僅用於主執行緒的 UI 處理)
-function hexToRgb(hex) { /* ... 保持不變 ... */ }
+// 將 HEX 顏色碼轉換為 RGB 陣列 [r, g, b]
 function hexToRgb(hex) {
     let r = 0, g = 0, b = 0;
     if (hex.length === 7) { 
@@ -84,171 +62,261 @@ function hexToRgb(hex) {
     return [r, g, b];
 }
 
-/**
- * 核心：向 Worker 發送計算請求
- * @param {string} type - 'TYPE_FULL_RECALCULATION' 或 'TYPE_COLOR_UPDATE'
- * @param {HTMLCanvasElement} canvasEl 
- * @param {CanvasRenderingContext2D} ctxTarget 
- * @param {ImageData} originalImgData 
- * @param {Uint8ClampedArray} cachedGray 
- * @param {Uint8ClampedArray} cachedMagnitude 
- * @param {Uint8ClampedArray} cachedEdgeMap 
- * @param {function} updateCacheFn - 用於更新主執行緒快取的回調函式
- */
-function sendWorkerRequest(type, canvasEl, ctxTarget, originalImgData, 
-                            cachedGray, cachedMagnitude, cachedEdgeMap, updateCacheFn) {
-    if (!originalImgData) return;
+// --- 核心處理邏輯 ---
 
-    currentWorkerId++;
-    const id = currentWorkerId;
-    
-    // 1. 準備參數
-    const width = canvasEl.width;
-    const height = canvasEl.height;
+// 1. 高斯模糊 (預處理)
+function applyGaussianFilter(imageData, radius) {
+    if (radius <= 0) return imageData;
 
-    const weights = [
-        parseFloat(redWeightSlider.value) / 100, 
-        parseFloat(greenWeightSlider.value) / 100, 
-        parseFloat(blueWeightSlider.value) / 100
-    ];
+    const width = imageData.width;
+    const height = imageData.height;
+    // 複製一份數據進行操作，避免直接修改原始圖像數據
+    const data = new Uint8ClampedArray(imageData.data); 
+    const blurredData = new Uint8ClampedArray(imageData.data.length); // 輸出數據，初始為空白
 
-    const thresholdParams = {
-        useHysteresis: hysteresisToggle.checked,
-        highThreshold: parseInt(thresholdValueInputHigh.value),
-        lowThreshold: parseInt(thresholdValueInputLow.value),
-        singleThreshold: parseInt(thresholdValueInputSingle.value),
-        lineColor: hexToRgb(lineColorPicker.value),
-        lineAlpha: parseInt(lineAlphaSlider.value),
-        bgColor: hexToRgb(bgColorPicker.value),
-        backgroundAlpha: parseInt(backgroundAlphaSlider.value),
-        useFeathering: edgeFeatheringToggle.checked,
-        featheringStrength: parseFloat(edgeFeatheringStrengthSlider.value) / 100
-    };
-    
-    // 2. 準備傳輸數據
-    let transferList = [];
-    let dataToSend = {
-        id,
-        type,
-        imageData: originalImgData, // 包含 width/height 和 data array
-        thresholdParams,
-    };
-    
-    if (type === 'TYPE_FULL_RECALCULATION') {
-        dataToSend.gaussianRadius = parseFloat(gaussianRadiusSlider.value);
-        dataToSend.weights = weights;
-        // 由於我們需要原始數據進行高斯模糊，所以傳輸一份拷貝
-        transferList.push(originalImgData.data.buffer.slice(0)); 
-    } else if (type === 'TYPE_COLOR_UPDATE') {
-        dataToSend.cachedGrayData = cachedGray;
-        dataToSend.cachedMagnitudeData = cachedMagnitude;
-        dataToSend.precalculatedEdgeMap = cachedEdgeMap; // 傳輸上次的 Edge Map，避免重新計算
-        
-        // 傳輸快取的 ArrayBuffer，性能更好
-        if (cachedGray) transferList.push(cachedGray.buffer);
-        if (cachedMagnitude) transferList.push(cachedMagnitude.buffer);
-        if (cachedEdgeMap) transferList.push(cachedEdgeMap.buffer);
+    // 確保 sigma 值合理，避免核心過於分散或集中
+    const sigma = radius / 3; 
+    // 核心大小必須是奇數，且至少為 1
+    const kernelSize = Math.ceil(radius * 2 + 1); 
+    const kernel = [];
+    let sum = 0;
+
+    // 計算高斯核心
+    for (let i = 0; i < kernelSize; i++) {
+        const x = i - Math.floor(kernelSize / 2);
+        const val = (1 / (Math.sqrt(2 * Math.PI) * sigma)) * Math.exp(-(x * x) / (2 * sigma * sigma));
+        kernel.push(val);
+        sum += val;
     }
-    
-    // 3. 發送請求
-    worker.postMessage(dataToSend, transferList);
-    
-    // 4. 將回調函式加入隊列
-    processingQueue[id] = { canvasEl, ctxTarget, updateCacheFn };
+    // 歸一化核心，使其總和為 1
+    for (let i = 0; i < kernel.length; i++) {
+        kernel[i] /= sum;
+    }
+
+    // 水平方向模糊
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            let r = 0, g = 0, b = 0, a = 0;
+            for (let i = 0; i < kernelSize; i++) {
+                // 處理邊界，使用 clamp 方式 (限制在圖像範圍內)
+                const x_offset = x - Math.floor(kernelSize / 2) + i;
+                const p = Math.min(Math.max(x_offset, 0), width - 1); 
+                const index = (y * width + p) * 4;
+                r += data[index] * kernel[i];
+                g += data[index + 1] * kernel[i];
+                b += data[index + 2] * kernel[i];
+                a += data[index + 3] * kernel[i];
+            }
+            const outputIndex = (y * width + x) * 4;
+            blurredData[outputIndex] = r;
+            blurredData[outputIndex + 1] = g;
+            blurredData[outputIndex + 2] = b;
+            blurredData[outputIndex + 3] = a;
+        }
+    }
+
+    // 垂直方向模糊 (在水平模糊的結果上進行)
+    for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+            let r = 0, g = 0, b = 0, a = 0;
+            for (let i = 0; i < kernelSize; i++) {
+                // 處理邊界
+                const y_offset = y - Math.floor(kernelSize / 2) + i;
+                const p = Math.min(Math.max(y_offset, 0), height - 1); 
+                const index = (p * width + x) * 4; // 注意這裡使用 blurredData 的數據
+                r += blurredData[index] * kernel[i];
+                g += blurredData[index + 1] * kernel[i];
+                b += blurredData[index + 2] * kernel[i];
+                a += blurredData[index + 3] * kernel[i];
+            }
+            const outputIndex = (y * width + x) * 4;
+            // 將最終結果寫回原始 imageData.data
+            imageData.data[outputIndex] = r;
+            imageData.data[outputIndex + 1] = g;
+            imageData.data[outputIndex + 2] = b;
+            imageData.data[outputIndex + 3] = a;
+        }
+    }
+    return imageData;
 }
 
 
-// Worker 接收消息
-worker.onmessage = function(e) {
-    const { id, result, success, error } = e.data;
+// 2. 灰度化
+function applyGrayscale(imageData, weights) {
+    const data = imageData.data;
+    const grayData = new Uint8ClampedArray(imageData.width * imageData.height);
+    const [wR, wG, wB] = weights;
 
-    if (!processingQueue[id]) return; // 忽略已過時的或不存在的請求
-
-    const { canvasEl, ctxTarget, updateCacheFn } = processingQueue[id];
-    delete processingQueue[id]; // 處理完成，從隊列移除
-
-    if (!success) {
-        console.error(`Worker Error (ID: ${id}): ${error}`);
-        // 可以在畫布上顯示錯誤信息
-        return;
+    for (let i = 0; i < data.length; i += 4) {
+        const avg = wR * data[i] + wG * data[i + 1] + wB * data[i + 2];
+        grayData[i / 4] = avg > 255 ? 255 : (avg < 0 ? 0 : avg);
     }
+    return grayData;
+}
+
+// 3. Sobel 邊緣偵測
+function applySobel(grayData, width, height) {
+    const magnitudeData = new Uint8ClampedArray(width * height);
+    
+    const Gx = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]];
+    const Gy = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]];
+
+    for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+            let sumX = 0;
+            let sumY = 0;
+
+            for (let ky = -1; ky <= 1; ky++) {
+                for (let kx = -1; kx <= 1; kx++) {
+                    const pixelIndex = ((y + ky) * width + (x + kx));
+                    const grayscaleValue = grayData[pixelIndex];
+
+                    sumX += grayscaleValue * Gx[ky + 1][kx + 1];
+                    sumY += grayscaleValue * grayscaleValue * Gy[ky + 1][kx + 1];
+                }
+            }
+
+            const magnitude = Math.sqrt(sumX * sumX + sumY * sumY);    
+            const index = y * width + x;
+            magnitudeData[index] = magnitude > 255 ? 255 : magnitude;
+        }
+    }
+    return magnitudeData;
+}
+
+// 4. 閾值化和著色
+function applyThresholdingAndColoring(magnitudeData, width, height, threshold, lineColor, lineAlpha, bgColor, backgroundAlpha, ctxTarget) {
+    const edgeData = ctxTarget.createImageData(width, height);
+    const edgeDataArr = edgeData.data;
+
+    const [lineR, lineG, lineB] = lineColor;
+    const [bgR, bgG, bgB] = bgColor;
+    
+    for (let i = 0; i < magnitudeData.length; i++) {
+        const magnitude = magnitudeData[i];
+        const outputIndex = i * 4;
+
+        if (magnitude > threshold) {
+            edgeDataArr[outputIndex]        = lineR;  
+            edgeDataArr[outputIndex + 1] = lineG;
+            edgeDataArr[outputIndex + 2] = lineB;
+            edgeDataArr[outputIndex + 3] = lineAlpha; 
+        } else {
+            edgeDataArr[outputIndex]        = bgR;    
+            edgeDataArr[outputIndex + 1] = bgG;    
+            edgeDataArr[outputIndex + 2] = bgB;    
+            edgeDataArr[outputIndex + 3] = backgroundAlpha; 
+        }
+    }
+    return edgeData;
+}
+
+// 偵測執行函式 (更新 runDetectionForCanvas 參數)
+function runDetectionForCanvas(canvasEl, ctxTarget, originalImgData, 
+                                 cachedGray, cachedMagnitude, recalculatePreprocessing = true) {
+    if (!originalImgData) return;
     
     const width = canvasEl.width;
     const height = canvasEl.height;
     
-    // 1. 更新畫布
-    const newImageData = new ImageData(result.imageDataArray, width, height);
-    ctxTarget.putImageData(newImageData, 0, 0);
+    const wR = parseFloat(redWeightSlider.value) / 100;
+    const wG = parseFloat(greenWeightSlider.value) / 100;
+    const wB = parseFloat(blueWeightSlider.value) / 100;
+    const weights = [wR, wG, wB];
+    const gaussianRadius = parseFloat(gaussianRadiusSlider.value);
 
-    // 2. 更新主執行緒快取
-    if (updateCacheFn) {
-        updateCacheFn(result);
+    let currentGrayData = cachedGray;
+    let currentMagnitudeData = cachedMagnitude;
+
+    // 複製一份原始圖像數據，以便應用高斯模糊，而不影響下一次從原始數據開始的計算
+    let currentImageDataForProcessing = new ImageData(new Uint8ClampedArray(originalImgData.data), width, height);
+
+    if (recalculatePreprocessing || !currentGrayData || !currentMagnitudeData) {
+        // 應用高斯模糊
+        if (gaussianRadius > 0) {
+            currentImageDataForProcessing = applyGaussianFilter(currentImageDataForProcessing, gaussianRadius);
+        }
+        
+        currentGrayData = applyGrayscale(currentImageDataForProcessing, weights);
+        currentMagnitudeData = applySobel(currentGrayData, width, height);
     }
     
-    // 3. 處理完一個大圖處理後，嘗試立即處理下一個隊列中的更新（如果有的話）
-    // 這裡我們只處理收到的結果，不主動發起下一個，由 runFullDetection/updateColorAndThresholding 控制發送
-};
+    const threshold = parseInt(thresholdValueInput.value);
+    const lineColor = hexToRgb(lineColorPicker.value);
+    const lineAlpha = parseInt(lineAlphaSlider.value); 
+    const bgColor = hexToRgb(bgColorPicker.value);
+    const backgroundAlpha = parseInt(backgroundAlphaSlider.value); 
+
+    const finalImageData = applyThresholdingAndColoring(
+        currentMagnitudeData, 
+        width, 
+        height, 
+        threshold, 
+        lineColor, 
+        lineAlpha, 
+        bgColor, 
+        backgroundAlpha, 
+        ctxTarget 
+    );
+    
+    ctxTarget.putImageData(finalImageData, 0, 0);
+
+    return { gray: currentGrayData, magnitude: currentMagnitudeData };
+}
 
 // 統籌函式 (當灰度權重或高斯模糊改變時，需要重新計算所有步驟)
 function runFullDetection() {
     if (!uploadedImage) return;
 
-    // 1. 縮圖處理
-    sendWorkerRequest(
-        'TYPE_FULL_RECALCULATION',
-        thumbnailCanvas, thumbnailCtx, thumbnailOriginalImageData, 
-        thumbnailCachedGrayData, thumbnailCachedMagnitudeData, thumbnailCachedEdgeMap,
-        (result) => {
-            // 更新縮圖快取的回調
-            thumbnailCachedGrayData = result.grayData;
-            thumbnailCachedMagnitudeData = result.magnitudeData;
-            thumbnailCachedEdgeMap = result.finalEdgeMap;
-            // 注意：因為 ArrayBuffer 被傳輸到 Worker，我們需要新的 ArrayBuffer 才能再次使用
-            // 所以這裡的 grayData 和 magnitudeData 已經是 Worker 傳回的「新拷貝」
-        }
-    );
+    // 清空所有快取，強制重新計算
+    thumbnailCachedGrayData = null;
+    thumbnailCachedMagnitudeData = null;
+    fullSizeCachedGrayData = null;
+    fullSizeCachedMagnitudeData = null;
 
-    // 2. 原始尺寸圖處理 (最耗時，所以確保它是非同步的)
-    sendWorkerRequest(
-        'TYPE_FULL_RECALCULATION',
-        fullSizeCanvas, fullSizeCtx, fullSizeOriginalImageData, 
-        fullSizeCachedGrayData, fullSizeCachedMagnitudeData, fullSizeCachedEdgeMap,
-        (result) => {
-            // 更新大圖快取的回調
-            fullSizeCachedGrayData = result.grayData;
-            fullSizeCachedMagnitudeData = result.magnitudeData;
-            fullSizeCachedEdgeMap = result.finalEdgeMap;
-        }
+    const thumbResult = runDetectionForCanvas(
+        thumbnailCanvas, thumbnailCtx, thumbnailOriginalImageData, 
+        thumbnailCachedGrayData, thumbnailCachedMagnitudeData, true // 強制重新計算
     );
+    if (thumbResult) {
+        thumbnailCachedGrayData = thumbResult.gray;
+        thumbnailCachedMagnitudeData = thumbResult.magnitude;
+    }
+
+    const fullResult = runDetectionForCanvas(
+        fullSizeCanvas, fullSizeCtx, fullSizeOriginalImageData, 
+        fullSizeCachedGrayData, fullSizeCachedMagnitudeData, true // 強制重新計算
+    );
+    if (fullResult) {
+        fullSizeCachedGrayData = fullResult.gray;
+        fullSizeCachedMagnitudeData = fullResult.magnitude;
+    }
 }
 
 // 統籌函式 (當閾值或顏色參數改變時，只需重新應用閾值和著色，重用之前的灰度和梯度數據)
 function updateColorAndThresholding() {
     if (!uploadedImage) return;
     
-    // 1. 縮圖處理
-    sendWorkerRequest(
-        'TYPE_COLOR_UPDATE',
+    const thumbResult = runDetectionForCanvas(
         thumbnailCanvas, thumbnailCtx, thumbnailOriginalImageData, 
-        thumbnailCachedGrayData, thumbnailCachedMagnitudeData, thumbnailCachedEdgeMap,
-        (result) => {
-            thumbnailCachedEdgeMap = result.finalEdgeMap; // 閾值改變，Edge Map 可能改變
-        }
+        thumbnailCachedGrayData, thumbnailCachedMagnitudeData, false // 不重新計算前處理
     );
+    if (thumbResult) {
+        thumbnailCachedGrayData = thumbResult.gray; // 更新快取
+        thumbnailCachedMagnitudeData = thumbResult.magnitude;
+    }
 
-    // 2. 原始尺寸圖處理 (此時計算量依然較大，所以仍需 Worker)
-    sendWorkerRequest(
-        'TYPE_COLOR_UPDATE',
+    const fullResult = runDetectionForCanvas(
         fullSizeCanvas, fullSizeCtx, fullSizeOriginalImageData, 
-        fullSizeCachedGrayData, fullSizeCachedMagnitudeData, fullSizeCachedEdgeMap,
-        (result) => {
-            fullSizeCachedEdgeMap = result.finalEdgeMap; // 閾值改變，Edge Map 可能改變
-        }
+        fullSizeCachedGrayData, fullSizeCachedMagnitudeData, false // 不重新計算前處理
     );
+    if (fullResult) {
+        fullSizeCachedGrayData = fullResult.gray; // 更新快取
+        fullSizeCachedMagnitudeData = fullResult.magnitude;
+    }
 }
 
-
-// --- 事件處理 (保持不變) ---
+// --- 事件處理 ---
 
 imageLoader.addEventListener('change', handleImage, false);
 downloadThumbnailButton.addEventListener('click', () => downloadImage(thumbnailCanvas, 'thumbnail'), false);
@@ -257,7 +325,6 @@ downloadFullSizeButton.addEventListener('click', () => downloadImage(fullSizeCan
 // 灰度化權重 或 高斯模糊半徑 改變 (需要重新計算 Sobel 梯度，因此觸發 runFullDetection)
 [redWeightSlider, greenWeightSlider, blueWeightSlider, gaussianRadiusSlider].forEach(control => {
     control.addEventListener('input', () => {
-        // ... (更新 UI 顯示值的邏輯保持不變)
         if (control.id === 'gaussianRadius') {
             const radius = parseFloat(gaussianRadiusSlider.value);
             gaussianRadiusDisplay.textContent = radius > 0 ? `${radius.toFixed(1)}` : '0 (關閉)';
@@ -273,35 +340,14 @@ downloadFullSizeButton.addEventListener('click', () => downloadImage(fullSizeCan
 });
 
 
-// 閾值化 (單一/高/低)、顏色或 Alpha 值、邊緣柔化改變 (只需重新應用閾值和著色，觸發 updateColorAndThresholding)
+// 閾值化、顏色或 Alpha 值改變 (只需重新應用閾值和著色，觸發 updateColorAndThresholding)
 [
-    hysteresisToggle, thresholdValueInputHigh, thresholdValueInputLow, thresholdValueInputSingle,
-    lineColorPicker, lineAlphaSlider, bgColorPicker, backgroundAlphaSlider,
-    edgeFeatheringToggle, edgeFeatheringStrengthSlider
+    thresholdValueInput, lineColorPicker, lineAlphaSlider, 
+    bgColorPicker, backgroundAlphaSlider
 ].forEach(control => {
     control.addEventListener('input', () => {
-        // ... (更新 UI 顯示值的邏輯保持不變)
-        if (control.id === 'hysteresisToggle') {
-            thresholdValueInputHigh.parentElement.style.display = hysteresisToggle.checked ? 'flex' : 'none';
-            thresholdValueInputLow.parentElement.style.display = hysteresisToggle.checked ? 'flex' : 'none';
-            singleThresholdControl.style.display = hysteresisToggle.checked ? 'none' : 'flex';
-        }
-        if (control.id === 'thresholdValueInputHigh') {
-            thresholdValueDisplayHigh.textContent = thresholdValueInputHigh.value;
-            if (parseInt(thresholdValueInputHigh.value) < parseInt(thresholdValueInputLow.value)) {
-                thresholdValueInputLow.value = thresholdValueInputHigh.value;
-                thresholdValueDisplayLow.textContent = thresholdValueInputLow.value;
-            }
-        }
-        if (control.id === 'thresholdValueInputLow') {
-            thresholdValueDisplayLow.textContent = thresholdValueInputLow.value;
-            if (parseInt(thresholdValueInputLow.value) > parseInt(thresholdValueInputHigh.value)) {
-                thresholdValueInputHigh.value = thresholdValueInputLow.value;
-                thresholdValueDisplayHigh.textContent = thresholdValueInputHigh.value;
-            }
-        }
-        if (control.id === 'thresholdValueInputSingle') {
-            thresholdValueDisplaySingle.textContent = thresholdValueInputSingle.value;
+        if (control.id === 'thresholdValueInput') {
+            thresholdValueDisplay.textContent = thresholdValueInput.value;
         }
         if (control.id === 'lineAlpha') {
             const alphaValue = parseInt(lineAlphaSlider.value);
@@ -317,20 +363,13 @@ downloadFullSizeButton.addEventListener('click', () => downloadImage(fullSizeCan
             if (alphaValue === 0) display += " (透明)";
             backgroundAlphaDisplay.textContent = display;
         }
-        if (control.id === 'edgeFeatheringToggle') {
-            edgeFeatheringStrengthControl.style.display = edgeFeatheringToggle.checked ? 'flex' : 'none';
-        }
-        if (control.id === 'edgeFeatheringStrength') {
-            edgeFeatheringStrengthDisplay.textContent = `${edgeFeatheringStrengthSlider.value}%`;
-        }
 
         if (uploadedImage) updateColorAndThresholding(); 
     });
 });
 
-// 圖片上傳處理 (保持不變)
+// 圖片上傳處理
 function handleImage(e) {
-    // ... (初始化邏輯保持不變)
     const file = e.target.files[0];
     if (!file) return;
 
@@ -364,29 +403,17 @@ function handleImage(e) {
             // 清空所有快取
             thumbnailCachedGrayData = null; 
             thumbnailCachedMagnitudeData = null;
-            thumbnailCachedEdgeMap = null;
             fullSizeCachedGrayData = null; 
             fullSizeCachedMagnitudeData = null;
-            fullSizeCachedEdgeMap = null;
 
             // 啟用控制項
-            [
-                downloadThumbnailButton, downloadFullSizeButton, 
-                gaussianRadiusSlider,
-                redWeightSlider, greenWeightSlider, blueWeightSlider, 
-                hysteresisToggle, thresholdValueInputHigh, thresholdValueInputLow, thresholdValueInputSingle,
-                lineColorPicker, lineAlphaSlider, 
-                edgeFeatheringToggle, edgeFeatheringStrengthSlider,
-                bgColorPicker, backgroundAlphaSlider
-            ].forEach(el => {
+            [downloadThumbnailButton, downloadFullSizeButton, 
+             gaussianRadiusSlider,
+             redWeightSlider, greenWeightSlider, blueWeightSlider, 
+             thresholdValueInput, lineColorPicker, lineAlphaSlider, 
+             bgColorPicker, backgroundAlphaSlider].forEach(el => {
                 el.disabled = false;
             });
-            
-            // 初始化顯示狀態
-            thresholdValueInputHigh.parentElement.style.display = hysteresisToggle.checked ? 'flex' : 'none';
-            thresholdValueInputLow.parentElement.style.display = hysteresisToggle.checked ? 'flex' : 'none';
-            singleThresholdControl.style.display = hysteresisToggle.checked ? 'none' : 'flex';
-            edgeFeatheringStrengthControl.style.display = edgeFeatheringToggle.checked ? 'flex' : 'none';
             
             runFullDetection(); 
         }
@@ -395,7 +422,7 @@ function handleImage(e) {
     reader.readAsDataURL(file);
 }
 
-// 下載函式 和 初始禁用控制項 (保持不變)
+// 下載函式 
 function downloadImage(canvasTarget, prefix) {
     if (!uploadedImage) return;
     
@@ -411,26 +438,13 @@ function downloadImage(canvasTarget, prefix) {
 }
 
 // 初始禁用控制項
-[
-    downloadThumbnailButton, downloadFullSizeButton, 
-    gaussianRadiusSlider,
-    redWeightSlider, greenWeightSlider, blueWeightSlider, 
-    hysteresisToggle, thresholdValueInputHigh, thresholdValueInputLow, thresholdValueInputSingle,
-    lineColorPicker, lineAlphaSlider, 
-    edgeFeatheringToggle, edgeFeatheringStrengthSlider,
-    bgColorPicker, backgroundAlphaSlider
-].forEach(el => {
+[downloadThumbnailButton, downloadFullSizeButton, 
+ gaussianRadiusSlider,
+ redWeightSlider, greenWeightSlider, blueWeightSlider, 
+ thresholdValueInput, lineColorPicker, lineAlphaSlider, 
+ bgColorPicker, backgroundAlphaSlider].forEach(el => {
     el.disabled = true;
 });
 
 // 初始設定顯示值
-thresholdValueDisplayHigh.textContent = thresholdValueInputHigh.value;
-thresholdValueDisplayLow.textContent = thresholdValueInputLow.value;
-thresholdValueDisplaySingle.textContent = thresholdValueInputSingle.value;
 gaussianRadiusDisplay.textContent = `${parseFloat(gaussianRadiusSlider.value).toFixed(1)} (關閉)`;
-edgeFeatheringStrengthDisplay.textContent = `${edgeFeatheringStrengthSlider.value}%`;
-
-// 初始隱藏單一閾值控制項，因為預設啟用滯後閾值
-singleThresholdControl.style.display = 'none';
-// 初始隱藏邊緣柔化強度控制項，直到啟用
-edgeFeatheringStrengthControl.style.display = edgeFeatheringToggle.checked ? 'flex' : 'none';
