@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS 測速測試 (極端優化)</title>
+    <style>
+        /* 基礎設定與深夜模式配色 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212; /* 深夜背景 */
+            color: #e0e0e0; /* 淺色文字 */
+            text-align: center;
+        }
+        
+        /* 容器與版面 */
+        .container {
+            padding: 20px;
+            max-width: 420px; /* 模擬手機寬度 */
+            margin: 0 auto;
+        }
+
+        /* 標題 */
+        h1 {
+            color: #00bcd4; /* 醒目藍色 */
+            font-size: 1.8em;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        /* 速度顯示區 */
+        #speed-section {
+            background-color: #1e1e1e;
+            padding: 30px 15px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* 時速顯示（大字） */
+        .speed-display {
+            font-size: 5em;
+            font-weight: 700;
+            color: #4caf50; /* 綠色，表示運行正常 */
+            display: block;
+            line-height: 1.1;
+        }
+        
+        .speed-display.stopped {
+            color: #ff9800; /* 橘色，表示已靜止/低速 */
+        }
+        
+        /* 低速提示燈 */
+        #status-light {
+            font-size: 2em;
+            margin-bottom: 10px;
+            height: 30px; 
+        }
+
+        /* 詳細資訊區 (小字) */
+        #details {
+            text-align: left;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #333;
+            font-size: 0.9em;
+        }
+
+        .detail-item {
+            margin-bottom: 8px;
+        }
+        .detail-label {
+            color: #9e9e9e; 
+            width: 120px;
+            display: inline-block;
+        }
+        .detail-value {
+            color: #e0e0e0;
+            font-weight: bold;
+        }
+
+        /* 按鈕區 */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            flex-grow: 1;
+            padding: 15px 10px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s, opacity 0.3s;
+        }
+        #startBtn {
+            background-color: #4caf50;
+            color: white;
+        }
+        #stopBtn {
+            background-color: #f44336;
+            color: white;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>GPS 測速測試</h1>
+
+        <div id="speed-section">
+            <div id="status-light"></div>
+            
+            <span class="speed-display">--.- km/h</span>
+
+            <div id="details">
+                <div class="detail-item"><span class="detail-label">計算時速 (原始)：</span><span id="calc-speed" class="detail-value">--.- km/h</span></div>
+                <div class="detail-item"><span class="detail-label">定位精度：</span><span id="accuracy-value" class="detail-value">--.- 公尺</span></div>
+                <div class="detail-item"><span class="detail-label">訊號來源：</span><span id="source-value" class="detail-value">N/A</span></div>
+                <div class="detail-item"><span class="detail-label">當前位置：</span><span id="location-value" class="detail-value">N/A</span></div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="startBtn" onclick="startTracking()">開始追蹤</button>
+            <button id="stopBtn" onclick="stopTracking()" disabled>停止追蹤</button>
+        </div>
+    </div>
+
+    <script>
+        let watchID;
+        let lastPosition = null;
+        let smoothedSpeed_m_s = 0;
+
+        // --- 配置參數 ---
+        const SMOOTHING_FACTOR = 0.2;       // 平滑係數 α (用於 > 3.0 km/h)
+        const SMOOTHING_FACTOR_LOW = 0.5;   // 較高平滑係數 (用於 0.2 ~ 3.0 km/h 過渡區間)
+        const ZERO_THRESHOLD_KMH = 0.2;     // 極限靜止判斷閾值 (km/h)
+        const HIGH_SPEED_THRESHOLD_KMH = 3.0; // 快速移動判斷閾值 (km/h)
+        const EARTH_RADIUS_M = 6371000;
+        // ------------------
+
+        // 數學函式：將角度轉為弧度
+        function toRad(degrees) {
+            return degrees * Math.PI / 180;
+        }
+
+        // 數學函式：計算兩點之間的球面距離 (Haversine 公式)
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = EARTH_RADIUS_M; 
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // 核心邏輯：成功獲取位置時執行
+        function success(position) {
+            const currentPosition = position;
+            let calculatedSpeed_m_s = 0;
+            let speedSource = "計算值 (Haversine)";
+
+            // 1. 嘗試使用 Geolocation API 內建的 speed 屬性
+            if (currentPosition.coords.speed !== null && currentPosition.coords.speed >= 0) {
+                calculatedSpeed_m_s = currentPosition.coords.speed;
+                speedSource = "內建值 (裝置 GPS)";
+            } 
+            // 2. 如果沒有內建 speed，則手動計算
+            else if (lastPosition) {
+                const distance = getDistance(
+                    lastPosition.coords.latitude, lastPosition.coords.longitude,
+                    currentPosition.coords.latitude, currentPosition.coords.longitude
+                );
+                
+                const timeDiff_s = (currentPosition.timestamp - lastPosition.timestamp) / 1000;
+
+                if (timeDiff_s > 0.5) {
+                    calculatedSpeed_m_s = distance / timeDiff_s;
+                }
+            }
+
+            const calculatedSpeed_kmh = calculatedSpeed_m_s * 3.6;
+
+            let speed_kmh;
+            let displayClass = "";
+            let statusLight = "🔴"; // 預設為移動/變動狀態
+            let smoothingAlpha = SMOOTHING_FACTOR; // 預設使用較小 alpha (強平滑)
+
+            // ===========================================
+            // 3. 極端化速度判斷與平滑邏輯
+            // ===========================================
+            if (calculatedSpeed_kmh <= ZERO_THRESHOLD_KMH) {
+                // 區間 1: 極低速 (<= 0.2 km/h) -> 直接歸零
+                smoothedSpeed_m_s = 0;
+                speed_kmh = 0.0;
+                displayClass = "stopped";
+                statusLight = "🟢"; // 靜止顯示綠燈
+            } else {
+                // 區間 2 & 3: 移動或過渡
+
+                if (calculatedSpeed_kmh <= HIGH_SPEED_THRESHOLD_KMH) {
+                     // 區間 2: 過渡區間 (0.2 < V <= 3.0 km/h)
+                     // 使用較大的平滑係數，讓速度更快地歸零，但又不會在微小移動時跳動
+                     smoothingAlpha = SMOOTHING_FACTOR_LOW; 
+                } else {
+                    // 區間 3: 快速移動 (> 3.0 km/h)
+                    // 使用預設的小平滑係數，確保高速穩定
+                    smoothingAlpha = SMOOTHING_FACTOR;
+                }
+
+                // 進行指數加權平滑處理
+                smoothedSpeed_m_s = (smoothingAlpha * calculatedSpeed_m_s) + 
+                                    ((1 - smoothingAlpha) * smoothedSpeed_m_s);
+                speed_kmh = smoothedSpeed_m_s * 3.6;
+            }
+            // ===========================================
+
+            // 4. 更新介面元素
+            const speedDisplay = document.querySelector('.speed-display');
+            speedDisplay.textContent = `${speed_kmh.toFixed(1)} km/h`;
+            speedDisplay.className = `speed-display ${displayClass}`;
+
+            document.getElementById('status-light').textContent = statusLight;
+            document.getElementById('calc-speed').textContent = `${calculatedSpeed_kmh.toFixed(1)} km/h (α:${smoothingAlpha.toFixed(2)})`;
+            document.getElementById('accuracy-value').textContent = `${currentPosition.coords.accuracy.toFixed(1)} 公尺`;
+            document.getElementById('source-value').textContent = speedSource;
+            document.getElementById('location-value').textContent = `${currentPosition.coords.latitude.toFixed(4)}, ${currentPosition.coords.longitude.toFixed(4)}`;
+            
+            // 5. 更新上一筆資料
+            lastPosition = currentPosition;
+        }
+
+        // 錯誤處理
+        function error(err) {
+            let errorMessage = "N/A";
+            switch(err.code) {
+                case err.PERMISSION_DENIED:
+                    errorMessage = "拒絕授權 (請允許存取)";
+                    break;
+                case err.POSITION_UNAVAILABLE:
+                    errorMessage = "訊號不可用";
+                    break;
+                case err.TIMEOUT:
+                    errorMessage = "定位超時";
+                    break;
+                default:
+                    errorMessage = "未知錯誤";
+            }
+            
+            // 更新介面為錯誤狀態
+            document.querySelector('.speed-display').textContent = "ERROR";
+            document.getElementById('status-light').textContent = "❌";
+            document.getElementById('source-value').textContent = errorMessage;
+            
+            stopTracking();
+        }
+
+        // 開始持續追蹤
+        function startTracking() {
+            if (!navigator.geolocation) {
+                alert("您的瀏覽器不支援地理定位 API。");
+                return;
+            }
+
+            document.getElementById("startBtn").disabled = true;
+            document.getElementById("stopBtn").disabled = false;
+
+            document.querySelector('.speed-display').textContent = "定位中...";
+            document.getElementById('status-light').textContent = "";
+            document.getElementById('calc-speed').textContent = "--.- km/h";
+            document.getElementById('accuracy-value').textContent = "--.- 公尺";
+            document.getElementById('source-value').textContent = "等待訊號...";
+            document.getElementById('location-value').textContent = "N/A";
+
+            lastPosition = null; 
+            smoothedSpeed_m_s = 0; 
+
+            watchID = navigator.geolocation.watchPosition(success, error, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
+        }
+
+        // 停止持續追蹤
+        function stopTracking() {
+            if (watchID !== undefined) {
+                navigator.geolocation.clearWatch(watchID);
+                watchID = undefined;
+                document.getElementById("startBtn").disabled = false;
+                document.getElementById("stopBtn").disabled = true;
+
+                document.querySelector('.speed-display').textContent = "已停止";
+                document.getElementById('status-light').textContent = "⏸️";
+            }
+        }
+    </script>
+
+</body>
+</html>
