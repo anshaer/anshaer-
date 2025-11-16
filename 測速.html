@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="title-text">GPS 測速測試 (多語言)</title>
     <style>
-        /* 基礎設定與深夜模式配色 (沿用 V5) */
+        /* 基礎設定與深夜模式配色 (沿用 V6) */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -67,15 +67,14 @@
             font-weight: bold;
         }
 
-        /* 語言和單位切換區塊 (新位置) */
+        /* 語言和單位切換區塊 (沿用 V6) */
         #settings-group {
             margin-top: 10px;
             margin-bottom: 20px;
-            display: flex; /* 讓語言和單位區塊並排或堆疊 */
+            display: flex;
             flex-direction: column;
             gap: 10px;
         }
-
         .selector-group {
             background-color: #2a2a2a;
             padding: 10px;
@@ -98,7 +97,7 @@
             accent-color: #00bcd4;
         }
         
-        /* 按鈕區 (沿用 V5) */
+        /* 按鈕區 (沿用 V6) */
         .button-group {
             display: flex;
             gap: 10px;
@@ -115,9 +114,55 @@
         #startBtn { background-color: #4caf50; color: white; }
         #stopBtn { background-color: #f44336; color: white; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* 廣告輪播區塊 */
+        #ad-carousel {
+            position: relative;
+            width: 100%;
+            height: 120px; /* 廣告高度 */
+            background-color: #333;
+            margin-top: 20px;
+            border-radius: 12px;
+            overflow: hidden; /* 確保圖片不超出邊界 */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+        }
+        #ad-carousel img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 圖片填滿容器 */
+            display: none; /* 預設隱藏所有圖片 */
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #ad-carousel img.active {
+            display: block; /* 顯示當前活躍圖片 */
+        }
+        .ad-dots {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+        }
+        .ad-dot {
+            width: 8px;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .ad-dot.active {
+            background-color: #00bcd4;
+            width: 18px; /* 活躍點變長 */
+            border-radius: 4px;
+        }
     </style>
 </head>
-<body onload="setLanguage('zh-TW')">
+<body onload="initApp()">
 
     <div class="container">
         <h1 id="main-title">GPS 測速測試</h1>
@@ -172,6 +217,12 @@
             <button id="startBtn" onclick="startTracking()">開始追蹤</button>
             <button id="stopBtn" onclick="stopTracking()" disabled>停止追蹤</button>
         </div>
+
+        <div id="ad-carousel" onclick="goToAdLink()">
+            <div class="ad-dots">
+                </div>
+        </div>
+
     </div>
 
     <script>
@@ -272,7 +323,24 @@
 
         let currentLang = 'zh-TW';
 
-        // 設定語言函式
+        // --- 廣告輪播相關變數 ---
+        const ads = [
+            { img: 'https://via.placeholder.com/400x120/007bff/ffffff?text=Ad+1', link: 'https://www.google.com' },
+            { img: 'https://via.placeholder.com/400x120/28a745/ffffff?text=Ad+2', link: 'https://www.youtube.com' },
+            { img: 'https://via.placeholder.com/400x120/ffc107/000000?text=Ad+3', link: 'https://www.bing.com' }
+        ];
+        let currentAdIndex = 0;
+        let adInterval;
+        const AD_ROTATION_INTERVAL = 5000; // 廣告切換間隔 (毫秒)
+        // ------------------
+
+        // 初始化應用程式 (頁面載入時呼叫)
+        function initApp() {
+            setLanguage('zh-TW'); // 預設語言
+            initAdCarousel();     // 初始化廣告
+        }
+
+        // 設定語言函式 (略)
         function setLanguage(lang) {
             currentLang = lang;
             const dict = translations[lang];
@@ -290,13 +358,10 @@
             document.getElementById('startBtn').textContent = dict['startBtn'];
             document.getElementById('stopBtn').textContent = dict['stopBtn'];
 
-            // 更新單位標籤 (海里/節)
             document.querySelector('label[for="unit_kn"]').textContent = lang === 'en-US' ? 'kn' : (lang === 'ja-JP' ? 'kn (ノット)' : 'kn (節)');
 
-            // 重新整理顯示內容（如果正在追蹤）
             if (watchID !== undefined) {
                 if (lastPosition) {
-                    // 傳入 true 表示僅更新顯示，不重複計算
                     success(lastPosition, true); 
                 } else {
                     document.querySelector('.speed-display').textContent = dict['msg-locating'];
@@ -308,42 +373,29 @@
             }
         }
         
-        // 數學函式：將角度轉為弧度 (略)
+        // 數學函式 (略)
         function toRad(degrees) { return degrees * Math.PI / 180; }
+        function getDistance(lat1, lon1, lat2, lon2) { /* ... */ }
 
-        // 數學函式：計算兩點之間的球面距離 (略)
-        function getDistance(lat1, lon1, lat2, lon2) {
-            const R = EARTH_RADIUS_M; 
-            const dLat = toRad(lat2 - lat1);
-            const dLon = toRad(lon2 - lon1);
-            
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
-        }
-
-        // 轉換速度單位
+        // 轉換速度單位 (略)
         function convertSpeed(speed_m_s, unit) {
             const factor = CONVERSION_FACTORS[unit] || CONVERSION_FACTORS['km/h'];
             return speed_m_s * factor;
         }
         
-        // 獲取當前選定的單位
+        // 獲取當前選定的單位 (略)
         function getSelectedUnit() {
             return document.querySelector('input[name="speed_unit"]:checked').value;
         }
 
-        // 單位切換時，強制更新顯示
+        // 單位切換時，強制更新顯示 (略)
         function updateDisplayUnit() {
             if (watchID !== undefined && lastPosition) {
                  success(lastPosition, true);
             }
         }
         
-        // 核心邏輯：成功獲取位置時執行
-        // isDisplayOnly: 僅用於更新語言/單位顯示，不進行新的速度計算
+        // 核心邏輯：成功獲取位置時執行 (略)
         function success(position, isDisplayOnly = false) {
             const currentPosition = position;
             const dict = translations[currentLang];
@@ -355,9 +407,6 @@
             let statusLight = "🔴";
 
             if (!isDisplayOnly) {
-                // *** 僅在非顯示模式下執行計算與平滑處理 ***
-                
-                // 1. & 2. 計算原始速度
                 if (currentPosition.coords.speed !== null && currentPosition.coords.speed >= 0) {
                     calculatedSpeed_m_s = currentPosition.coords.speed;
                     speedSourceKey = 'speed-source-gps';
@@ -373,9 +422,7 @@
 
                 const calculatedSpeed_kmh = calculatedSpeed_m_s * 3.6; 
                 
-                // 3. 極端化速度判斷與平滑邏輯 (V3 邏輯)
                 if (calculatedSpeed_kmh <= ZERO_THRESHOLD_KMH) {
-                    // 極低速 -> 強制歸零
                     smoothedSpeed_m_s = 0;
                 } else {
                     if (calculatedSpeed_kmh <= HIGH_SPEED_THRESHOLD_KMH) {
@@ -383,36 +430,27 @@
                     } else {
                         smoothingAlpha = SMOOTHING_FACTOR;
                     }
-                    // 進行指數加權平滑處理
                     smoothedSpeed_m_s = (smoothingAlpha * calculatedSpeed_m_s) + 
                                         ((1 - smoothingAlpha) * smoothedSpeed_m_s);
                 }
 
-                // 5. 更新上一筆資料
                 lastPosition = currentPosition;
             } else {
-                // 如果只是顯示更新，則使用上次計算的結果
                 if (lastPosition) {
                      if (lastPosition.coords.speed !== null && lastPosition.coords.speed >= 0) {
                         calculatedSpeed_m_s = lastPosition.coords.speed;
                         speedSourceKey = 'speed-source-gps';
                     } else {
-                         // 在 DisplayOnly 模式下，如果沒有內建 speed，則假設平滑前的原始速度接近當前平滑速度
                          calculatedSpeed_m_s = smoothedSpeed_m_s; 
                     }
                 } else {
                      calculatedSpeed_m_s = 0;
                 }
             }
-
-
-            // 4. 更新介面元素 (使用選定的語言和單位)
             
-            // 速度計算
             const speed_display_value = convertSpeed(smoothedSpeed_m_s, currentUnit);
             const calculated_display_value = convertSpeed(calculatedSpeed_m_s, currentUnit);
             
-            // 狀態燈號判斷
             if (smoothedSpeed_m_s === 0) {
                 displayClass = "stopped";
                 statusLight = "🟢"; 
@@ -420,7 +458,6 @@
                  displayClass = "";
                  statusLight = "🔴"; 
             }
-
 
             const speedDisplay = document.querySelector('.speed-display');
             speedDisplay.textContent = `${speed_display_value.toFixed(1)} ${currentUnit}`;
@@ -443,56 +480,30 @@
                 case err.TIMEOUT: errorMessage = dict['err-timeout']; break;
                 default: errorMessage = dict['err-unknown'];
             }
-            
             document.querySelector('.speed-display').textContent = "ERROR";
             document.getElementById('status-light').textContent = "❌";
             document.getElementById('source-value').textContent = errorMessage;
-            
             stopTracking();
         }
 
-        // 開始持續追蹤
+        // 開始持續追蹤 (略)
         function startTracking() {
             if (!navigator.geolocation) {
                 alert("您的瀏覽器不支援地理定位 API。");
                 return;
             }
-            
             const dict = translations[currentLang];
-
             document.getElementById("startBtn").disabled = true;
             document.getElementById("stopBtn").disabled = false;
-
             document.querySelector('.speed-display').textContent = dict['msg-locating'];
             document.getElementById('status-light').textContent = "";
             document.getElementById('calc-speed').textContent = "--.- km/h";
             document.getElementById('accuracy-value').textContent = "--.- " + dict['unit-accuracy'];
             document.getElementById('source-value').textContent = dict['msg-waiting'];
             document.getElementById('location-value').textContent = "N/A";
-
             lastPosition = null; 
             smoothedSpeed_m_s = 0; 
-
             watchID = navigator.geolocation.watchPosition(success, error, {
                 enableHighAccuracy: true,
                 timeout: 10000,
-                maximumAge: 0
-            });
-        }
-
-        // 停止持續追蹤
-        function stopTracking() {
-            if (watchID !== undefined) {
-                navigator.geolocation.clearWatch(watchID);
-                watchID = undefined;
-                document.getElementById("startBtn").disabled = false;
-                document.getElementById("stopBtn").disabled = true;
-
-                document.querySelector('.speed-display').textContent = translations[currentLang]['msg-stopped'];
-                document.getElementById('status-light').textContent = "⏸️";
-            }
-        }
-    </script>
-
-</body>
-</html>
+           
