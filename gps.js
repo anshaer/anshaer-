@@ -20,8 +20,11 @@ const CONVERSION_FACTORS = {
 const ads = [
     { img: 'https://via.placeholder.com/400x120/007bff/ffffff?text=Ad+1', link: 'https://www.google.com' },
     { img: 'https://via.placeholder.com/400x120/28a745/ffffff?text=Ad+2', link: 'https://www.youtube.com' },
-    { img: 'https://via.placeholder.com/400x120/ffc107/000000?text=Ad+3', link: 'https://www.bing.com' }
-];
+    { img: 'https://via.placeholder.com/400x120/28a745/ffffff?text=Ad+3', link: 'https://www.youtube.com' },
+    { img: 'https://via.placeholder.com/400x120/28a745/ffffff?text=Ad+4', link: 'https://www.youtube.com' },
+    { img: 'https://via.placeholder.com/400x120/28a745/ffffff?text=Ad+5', link: 'https://www.youtube.com' },
+    { img: 'https://via.placeholder.com/400x120/ffc107/000000?text=Ad+6', link: 'https://www.bing.com' }
+]
 let currentAdIndex = 0;
 let adInterval;
 const AD_ROTATION_INTERVAL = 5000; // 廣告切換間隔 (毫秒)
