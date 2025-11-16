@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPS 測速測試 (單位切換)</title>
+    <title id="title-text">GPS 測速測試 (多語言)</title>
     <style>
-        /* 基礎設定與深夜模式配色 (沿用 V3) */
+        /* 基礎設定與深夜模式配色 (沿用 V4) */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -64,6 +64,31 @@
             color: #e0e0e0;
             font-weight: bold;
         }
+
+        /* 語言和單位切換區塊 */
+        .selector-group {
+            background-color: #2a2a2a;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 0.95em;
+        }
+        .selector-group h4 {
+            margin: 0 0 8px 0;
+            color: #bdbdbd;
+        }
+        .radio-item {
+            display: inline-flex;
+            align-items: center;
+            margin: 0 6px;
+            cursor: pointer;
+        }
+        .radio-item input[type="radio"] {
+            margin-right: 4px;
+            accent-color: #00bcd4;
+        }
+        /* 按鈕區 (沿用 V4) */
         .button-group {
             display: flex;
             gap: 10px;
@@ -75,62 +100,49 @@
             font-size: 1.1em;
             border: none;
             border-radius: 8px;
-            transition: background-color 0.3s, opacity 0.3s;
             font-weight: bold;
         }
-        #startBtn {
-            background-color: #4caf50;
-            color: white;
-        }
-        #stopBtn {
-            background-color: #f44336;
-            color: white;
-        }
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* 單位切換樣式 */
-        #unit-selector {
-            background-color: #2a2a2a;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .radio-item {
-            display: inline-flex;
-            align-items: center;
-            margin: 0 10px;
-            cursor: pointer;
-            font-size: 0.95em;
-        }
-        .radio-item input[type="radio"] {
-            margin-right: 5px;
-            accent-color: #00bcd4; /* 設定圓圈顏色 */
-        }
+        #startBtn { background-color: #4caf50; color: white; }
+        #stopBtn { background-color: #f44336; color: white; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
     </style>
 </head>
-<body>
+<body onload="setLanguage('zh-TW')">
 
     <div class="container">
-        <h1>GPS 測速測試</h1>
-
-        <div id="unit-selector">
+        <div class="selector-group">
+            <h4 id="lang-select-title">切換語言</h4>
+            <div class="radio-item">
+                <input type="radio" name="language" value="zh-TW" checked onclick="setLanguage('zh-TW')">
+                <label>中文</label>
+            </div>
+            <div class="radio-item">
+                <input type="radio" name="language" value="en-US" onclick="setLanguage('en-US')">
+                <label>English</label>
+            </div>
+            <div class="radio-item">
+                <input type="radio" name="language" value="ja-JP" onclick="setLanguage('ja-JP')">
+                <label>日本語</label>
+            </div>
+        </div>
+        
+        <div class="selector-group">
+            <h4 id="unit-select-title">速度單位</h4>
             <div class="radio-item">
                 <input type="radio" id="unit_kmh" name="speed_unit" value="km/h" checked onchange="updateDisplayUnit()">
-                <label for="unit_kmh">公里/時</label>
+                <label for="unit_kmh">km/h</label>
             </div>
             <div class="radio-item">
                 <input type="radio" id="unit_mph" name="speed_unit" value="mph" onchange="updateDisplayUnit()">
-                <label for="unit_mph">英里/時</label>
+                <label for="unit_mph">mph</label>
             </div>
             <div class="radio-item">
                 <input type="radio" id="unit_kn" name="speed_unit" value="kn" onchange="updateDisplayUnit()">
-                <label for="unit_kn">節 (海里/時)</label>
+                <label for="unit_kn">kn (節)</label>
             </div>
         </div>
+
+        <h1 id="main-title">GPS 測速測試</h1>
 
         <div id="speed-section">
             <div id="status-light"></div>
@@ -138,10 +150,10 @@
             <span class="speed-display">--.- km/h</span>
 
             <div id="details">
-                <div class="detail-item"><span class="detail-label">計算時速 (原始)：</span><span id="calc-speed" class="detail-value">--.- km/h</span></div>
-                <div class="detail-item"><span class="detail-label">定位精度：</span><span id="accuracy-value" class="detail-value">--.- 公尺</span></div>
-                <div class="detail-item"><span class="detail-label">訊號來源：</span><span id="source-value" class="detail-value">N/A</span></div>
-                <div class="detail-item"><span class="detail-label">當前位置：</span><span id="location-value" class="detail-value">N/A</span></div>
+                <div class="detail-item"><span id="label-calc-speed" class="detail-label">計算時速 (原始)：</span><span id="calc-speed" class="detail-value">--.- km/h</span></div>
+                <div class="detail-item"><span id="label-accuracy" class="detail-label">定位精度：</span><span id="accuracy-value" class="detail-value">--.- 公尺</span></div>
+                <div class="detail-item"><span id="label-source" class="detail-label">訊號來源：</span><span id="source-value" class="detail-value">N/A</span></div>
+                <div class="detail-item"><span id="label-location" class="detail-label">當前位置：</span><span id="location-value" class="detail-value">N/A</span></div>
             </div>
         </div>
 
@@ -154,23 +166,139 @@
     <script>
         let watchID;
         let lastPosition = null;
-        let smoothedSpeed_m_s = 0; // 基礎單位 (米/秒)
+        let smoothedSpeed_m_s = 0;
         
-        // --- 配置參數 (沿用 V3) ---
+        // --- 核心邏輯配置 (沿用 V3) ---
         const SMOOTHING_FACTOR = 0.2;
         const SMOOTHING_FACTOR_LOW = 0.5;
         const ZERO_THRESHOLD_KMH = 0.2;
         const HIGH_SPEED_THRESHOLD_KMH = 3.0;
         const EARTH_RADIUS_M = 6371000;
-        // ------------------
-
-        // --- 單位轉換常數 (從 m/s 轉換為目標單位) ---
+        
+        // 單位轉換常數 (從 m/s 轉換為目標單位)
         const CONVERSION_FACTORS = {
-            'km/h': 3.6,        // m/s * 3.6 = km/h
-            'mph': 2.23694,     // m/s * 2.23694 = mph
-            'kn': 1.94384      // m/s * 1.94384 = 節 (knots)
+            'km/h': 3.6,        
+            'mph': 2.23694,     
+            'kn': 1.94384      
         };
         // ------------------
+        
+        // --- 多語言翻譯文本 ---
+        const translations = {
+            'zh-TW': {
+                'title': 'GPS 測速測試 (多語言)',
+                'lang-select-title': '切換語言',
+                'unit-select-title': '速度單位',
+                'main-title': 'GPS 測速測試',
+                'label-calc-speed': '計算時速 (原始)：',
+                'label-accuracy': '定位精度：',
+                'label-source': '訊號來源：',
+                'label-location': '當前位置：',
+                'startBtn': '開始追蹤',
+                'stopBtn': '停止追蹤',
+                'status-on': '移動中',
+                'status-off': '已靜止',
+                'speed-source-calc': '計算值 (Haversine)',
+                'speed-source-gps': '內建值 (裝置 GPS)',
+                'unit-accuracy': '公尺',
+                'msg-locating': '定位中...',
+                'msg-stopped': '已停止',
+                'msg-waiting': '等待訊號...',
+                'err-perm': '拒絕授權 (請允許存取)',
+                'err-signal': '訊號不可用',
+                'err-timeout': '定位超時',
+                'err-unknown': '未知錯誤'
+            },
+            'en-US': {
+                'title': 'GPS Speed Test (Multi-language)',
+                'lang-select-title': 'Select Language',
+                'unit-select-title': 'Speed Unit',
+                'main-title': 'GPS Speed Test',
+                'label-calc-speed': 'Calculated Speed (Raw):',
+                'label-accuracy': 'Accuracy:',
+                'label-source': 'Source:',
+                'label-location': 'Location:',
+                'startBtn': 'Start Tracking',
+                'stopBtn': 'Stop Tracking',
+                'status-on': 'Moving',
+                'status-off': 'Stopped',
+                'speed-source-calc': 'Calculated (Haversine)',
+                'speed-source-gps': 'Built-in (Device GPS)',
+                'unit-accuracy': 'Meters',
+                'msg-locating': 'Locating...',
+                'msg-stopped': 'Stopped',
+                'msg-waiting': 'Waiting for signal...',
+                'err-perm': 'Permission Denied',
+                'err-signal': 'Signal Unavailable',
+                'err-timeout': 'Timeout',
+                'err-unknown': 'Unknown Error'
+            },
+            'ja-JP': {
+                'title': 'GPS 速度テスト (多言語)',
+                'lang-select-title': '言語切り替え',
+                'unit-select-title': '速度単位',
+                'main-title': 'GPS 速度テスト',
+                'label-calc-speed': '計算速度 (生データ):',
+                'label-accuracy': '精度:',
+                'label-source': '信号源:',
+                'label-location': '現在地:',
+                'startBtn': '追跡開始',
+                'stopBtn': '追跡停止',
+                'status-on': '移動中',
+                'status-off': '停止中',
+                'speed-source-calc': '計算値 (Haversine)',
+                'speed-source-gps': '内蔵値 (デバイス GPS)',
+                'unit-accuracy': 'メートル',
+                'msg-locating': '測位中...',
+                'msg-stopped': '停止しました',
+                'msg-waiting': '信号待機中...',
+                'err-perm': 'アクセス拒否',
+                'err-signal': '信号利用不可',
+                'err-timeout': 'タイムアウト',
+                'err-unknown': '不明なエラー'
+            }
+        };
+
+        let currentLang = 'zh-TW';
+
+        // 設定語言函式
+        function setLanguage(lang) {
+            currentLang = lang;
+            const dict = translations[lang];
+
+            document.getElementById('title-text').textContent = dict['title'];
+            document.getElementById('lang-select-title').textContent = dict['lang-select-title'];
+            document.getElementById('unit-select-title').textContent = dict['unit-select-title'];
+            document.getElementById('main-title').textContent = dict['main-title'];
+            
+            document.getElementById('label-calc-speed').textContent = dict['label-calc-speed'];
+            document.getElementById('label-accuracy').textContent = dict['label-accuracy'];
+            document.getElementById('label-source').textContent = dict['label-source'];
+            document.getElementById('label-location').textContent = dict['label-location'];
+
+            document.getElementById('startBtn').textContent = dict['startBtn'];
+            document.getElementById('stopBtn').textContent = dict['stopBtn'];
+
+            // 更新單位標籤 (海里/節)
+            document.querySelector('label[for="unit_kn"]').textContent = lang === 'en-US' ? 'kn' : (lang === 'ja-JP' ? 'kn (ノット)' : 'kn (節)');
+
+            // 重新整理顯示內容（如果正在追蹤）
+            if (watchID !== undefined) {
+                // 如果正在追蹤，使用上次的位置數據來更新顯示語言/單位
+                if (lastPosition) {
+                    // 重新運行 success 邏輯來更新所有文本
+                    success(lastPosition, true); // 傳入 true 表示僅更新顯示，不重複計算
+                } else {
+                    // 處於定位中狀態
+                    document.querySelector('.speed-display').textContent = dict['msg-locating'];
+                    document.getElementById('source-value').textContent = dict['msg-waiting'];
+                }
+            } else {
+                 // 處於停止狀態
+                 document.querySelector('.speed-display').textContent = dict['msg-stopped'];
+                 document.getElementById('source-value').textContent = "N/A";
+            }
+        }
         
         // 數學函式：將角度轉為弧度 (略)
         function toRad(degrees) { return degrees * Math.PI / 180; }
@@ -188,9 +316,9 @@
             return R * c;
         }
 
-        // 新增：將 m/s 轉換為選定單位的速度
+        // 轉換速度單位
         function convertSpeed(speed_m_s, unit) {
-            const factor = CONVERSION_FACTORS[unit] || CONVERSION_FACTORS['km/h']; // 預設 km/h
+            const factor = CONVERSION_FACTORS[unit] || CONVERSION_FACTORS['km/h'];
             return speed_m_s * factor;
         }
         
@@ -199,76 +327,94 @@
             return document.querySelector('input[name="speed_unit"]:checked').value;
         }
 
-        // 當單位被切換時，強制重新顯示當前速度 (如果正在追蹤)
+        // 單位切換時，強制更新顯示
         function updateDisplayUnit() {
             if (watchID !== undefined && lastPosition) {
-                 // 重新呼叫 success 函式，但使用緩存的 lastPosition 進行顯示更新
-                 // 注意：這裡我們需要一個機制來僅更新顯示，而不觸發新的計算或 watchPosition
-                 
-                 // 由於我們只用 smoothedSpeed_m_s 儲存 m/s，所以只需更新顯示即可
-                 const currentUnit = getSelectedUnit();
-                 const speed_kmh = convertSpeed(smoothedSpeed_m_s, currentUnit);
-
-                 const speedDisplay = document.querySelector('.speed-display');
-                 speedDisplay.textContent = `${speed_kmh.toFixed(1)} ${currentUnit}`;
+                 success(lastPosition, true);
             }
         }
         
         // 核心邏輯：成功獲取位置時執行
-        function success(position) {
+        // isDisplayOnly: 僅用於更新語言/單位顯示，不進行新的速度計算
+        function success(position, isDisplayOnly = false) {
             const currentPosition = position;
+            const dict = translations[currentLang];
             const currentUnit = getSelectedUnit();
             let calculatedSpeed_m_s = 0;
-            let speedSource = "計算值 (Haversine)";
-
-            // 1. & 2. 計算原始速度 (calculatedSpeed_m_s) (邏輯與 V3 相同)
-            if (currentPosition.coords.speed !== null && currentPosition.coords.speed >= 0) {
-                calculatedSpeed_m_s = currentPosition.coords.speed;
-                speedSource = "內建值 (裝置 GPS)";
-            } 
-            else if (lastPosition) {
-                const distance = getDistance(
-                    lastPosition.coords.latitude, lastPosition.coords.longitude,
-                    currentPosition.coords.latitude, currentPosition.coords.longitude
-                );
-                const timeDiff_s = (currentPosition.timestamp - lastPosition.timestamp) / 1000;
-                if (timeDiff_s > 0.5) {
-                    calculatedSpeed_m_s = distance / timeDiff_s;
-                }
-            }
-
-            const calculatedSpeed_kmh = calculatedSpeed_m_s * 3.6; // 始終使用 km/h 進行判斷
-            
+            let speedSourceKey = 'speed-source-calc';
             let smoothingAlpha = SMOOTHING_FACTOR;
             let displayClass = "";
             let statusLight = "🔴";
 
-            // ===========================================
-            // 3. 極端化速度判斷與平滑邏輯 (V3 邏輯)
-            // ===========================================
-            if (calculatedSpeed_kmh <= ZERO_THRESHOLD_KMH) {
-                // 極低速 -> 強制歸零
-                smoothedSpeed_m_s = 0;
-                displayClass = "stopped";
-                statusLight = "🟢";
-            } else {
-                if (calculatedSpeed_kmh <= HIGH_SPEED_THRESHOLD_KMH) {
-                     // 過渡區間
-                     smoothingAlpha = SMOOTHING_FACTOR_LOW; 
-                } else {
-                    // 快速移動
-                    smoothingAlpha = SMOOTHING_FACTOR;
+            if (!isDisplayOnly) {
+                // *** 僅在非顯示模式下執行計算與平滑處理 ***
+                
+                // 1. & 2. 計算原始速度
+                if (currentPosition.coords.speed !== null && currentPosition.coords.speed >= 0) {
+                    calculatedSpeed_m_s = currentPosition.coords.speed;
+                    speedSourceKey = 'speed-source-gps';
+                } 
+                else if (lastPosition) {
+                    const distance = getDistance(
+                        lastPosition.coords.latitude, lastPosition.coords.longitude,
+                        currentPosition.coords.latitude, currentPosition.coords.longitude
+                    );
+                    const timeDiff_s = (currentPosition.timestamp - lastPosition.timestamp) / 1000;
+                    if (timeDiff_s > 0.5) { calculatedSpeed_m_s = distance / timeDiff_s; }
                 }
 
-                // 進行指數加權平滑處理
-                smoothedSpeed_m_s = (smoothingAlpha * calculatedSpeed_m_s) + 
-                                    ((1 - smoothingAlpha) * smoothedSpeed_m_s);
-            }
-            // ===========================================
+                const calculatedSpeed_kmh = calculatedSpeed_m_s * 3.6; 
+                
+                // 3. 極端化速度判斷與平滑邏輯 (V3 邏輯)
+                if (calculatedSpeed_kmh <= ZERO_THRESHOLD_KMH) {
+                    // 極低速 -> 強制歸零
+                    smoothedSpeed_m_s = 0;
+                } else {
+                    if (calculatedSpeed_kmh <= HIGH_SPEED_THRESHOLD_KMH) {
+                         smoothingAlpha = SMOOTHING_FACTOR_LOW; 
+                    } else {
+                        smoothingAlpha = SMOOTHING_FACTOR;
+                    }
+                    // 進行指數加權平滑處理
+                    smoothedSpeed_m_s = (smoothingAlpha * calculatedSpeed_m_s) + 
+                                        ((1 - smoothingAlpha) * smoothedSpeed_m_s);
+                }
 
-            // 4. 更新介面元素 (使用選定的單位)
+                // 5. 更新上一筆資料
+                lastPosition = currentPosition;
+            } else {
+                // 如果只是顯示更新，則使用上次計算的結果
+                if (lastPosition) {
+                     // 再次計算上次的原始速度 (僅用於顯示)
+                     if (lastPosition.coords.speed !== null && lastPosition.coords.speed >= 0) {
+                        calculatedSpeed_m_s = lastPosition.coords.speed;
+                        speedSourceKey = 'speed-source-gps';
+                    } else {
+                         // 在 DisplayOnly 模式下無法可靠計算 Haversine 原始速度，直接使用平滑值做判斷
+                         calculatedSpeed_m_s = smoothedSpeed_m_s / 1; 
+                    }
+                } else {
+                     calculatedSpeed_m_s = 0;
+                }
+            }
+
+
+            // 4. 更新介面元素 (使用選定的語言和單位)
+            
+            // 速度計算
             const speed_display_value = convertSpeed(smoothedSpeed_m_s, currentUnit);
             const calculated_display_value = convertSpeed(calculatedSpeed_m_s, currentUnit);
+            
+            // 狀態燈號判斷
+            if (smoothedSpeed_m_s === 0) {
+                displayClass = "stopped";
+                statusLight = "🟢"; 
+            } else {
+                 // 小於 0.1 則顯示為 0.0，但顏色為移動色
+                 displayClass = "";
+                 statusLight = "🔴"; 
+            }
+
 
             const speedDisplay = document.querySelector('.speed-display');
             speedDisplay.textContent = `${speed_display_value.toFixed(1)} ${currentUnit}`;
@@ -276,26 +422,26 @@
 
             document.getElementById('status-light').textContent = statusLight;
             document.getElementById('calc-speed').textContent = `${calculated_display_value.toFixed(1)} ${currentUnit} (α:${smoothingAlpha.toFixed(2)})`;
-            document.getElementById('accuracy-value').textContent = `${currentPosition.coords.accuracy.toFixed(1)} 公尺`;
-            document.getElementById('source-value').textContent = speedSource;
+            document.getElementById('accuracy-value').textContent = `${currentPosition.coords.accuracy.toFixed(1)} ${dict['unit-accuracy']}`;
+            document.getElementById('source-value').textContent = dict[speedSourceKey];
             document.getElementById('location-value').textContent = `${currentPosition.coords.latitude.toFixed(4)}, ${currentPosition.coords.longitude.toFixed(4)}`;
-            
-            // 5. 更新上一筆資料
-            lastPosition = currentPosition;
         }
 
-        // 錯誤處理 (略)
+        // 錯誤處理
         function error(err) {
+            const dict = translations[currentLang];
             let errorMessage;
             switch(err.code) {
-                case err.PERMISSION_DENIED: errorMessage = "拒絕授權 (請允許存取)"; break;
-                case err.POSITION_UNAVAILABLE: errorMessage = "訊號不可用"; break;
-                case err.TIMEOUT: errorMessage = "定位超時"; break;
-                default: errorMessage = "未知錯誤";
+                case err.PERMISSION_DENIED: errorMessage = dict['err-perm']; break;
+                case err.POSITION_UNAVAILABLE: errorMessage = dict['err-signal']; break;
+                case err.TIMEOUT: errorMessage = dict['err-timeout']; break;
+                default: errorMessage = dict['err-unknown'];
             }
+            
             document.querySelector('.speed-display').textContent = "ERROR";
             document.getElementById('status-light').textContent = "❌";
             document.getElementById('source-value').textContent = errorMessage;
+            
             stopTracking();
         }
 
@@ -305,15 +451,17 @@
                 alert("您的瀏覽器不支援地理定位 API。");
                 return;
             }
+            
+            const dict = translations[currentLang];
 
             document.getElementById("startBtn").disabled = true;
             document.getElementById("stopBtn").disabled = false;
 
-            document.querySelector('.speed-display').textContent = "定位中...";
+            document.querySelector('.speed-display').textContent = dict['msg-locating'];
             document.getElementById('status-light').textContent = "";
             document.getElementById('calc-speed').textContent = "--.- km/h";
-            document.getElementById('accuracy-value').textContent = "--.- 公尺";
-            document.getElementById('source-value').textContent = "等待訊號...";
+            document.getElementById('accuracy-value').textContent = "--.- " + dict['unit-accuracy'];
+            document.getElementById('source-value').textContent = dict['msg-waiting'];
             document.getElementById('location-value').textContent = "N/A";
 
             lastPosition = null; 
@@ -334,7 +482,7 @@
                 document.getElementById("startBtn").disabled = false;
                 document.getElementById("stopBtn").disabled = true;
 
-                document.querySelector('.speed-display').textContent = "已停止";
+                document.querySelector('.speed-display').textContent = translations[currentLang]['msg-stopped'];
                 document.getElementById('status-light').textContent = "⏸️";
             }
         }
