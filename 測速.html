@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="title-text">GPS 測速測試 (多語言)</title>
     <style>
-        /* 基礎設定與深夜模式配色 (沿用 V4) */
+        /* 基礎設定與深夜模式配色 (沿用 V5) */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -25,6 +25,7 @@
             padding-bottom: 10px;
             border-bottom: 1px solid #333;
         }
+        /* 速度顯示區 */
         #speed-section {
             background-color: #1e1e1e;
             padding: 30px 15px;
@@ -47,6 +48,7 @@
             margin-bottom: 10px;
             height: 30px; 
         }
+        /* 詳細資訊區 (小字) */
         #details {
             text-align: left;
             margin-top: 20px;
@@ -65,12 +67,19 @@
             font-weight: bold;
         }
 
-        /* 語言和單位切換區塊 */
+        /* 語言和單位切換區塊 (新位置) */
+        #settings-group {
+            margin-top: 10px;
+            margin-bottom: 20px;
+            display: flex; /* 讓語言和單位區塊並排或堆疊 */
+            flex-direction: column;
+            gap: 10px;
+        }
+
         .selector-group {
             background-color: #2a2a2a;
             padding: 10px;
             border-radius: 8px;
-            margin-bottom: 10px;
             text-align: center;
             font-size: 0.95em;
         }
@@ -88,7 +97,8 @@
             margin-right: 4px;
             accent-color: #00bcd4;
         }
-        /* 按鈕區 (沿用 V4) */
+        
+        /* 按鈕區 (沿用 V5) */
         .button-group {
             display: flex;
             gap: 10px;
@@ -110,38 +120,6 @@
 <body onload="setLanguage('zh-TW')">
 
     <div class="container">
-        <div class="selector-group">
-            <h4 id="lang-select-title">切換語言</h4>
-            <div class="radio-item">
-                <input type="radio" name="language" value="zh-TW" checked onclick="setLanguage('zh-TW')">
-                <label>中文</label>
-            </div>
-            <div class="radio-item">
-                <input type="radio" name="language" value="en-US" onclick="setLanguage('en-US')">
-                <label>English</label>
-            </div>
-            <div class="radio-item">
-                <input type="radio" name="language" value="ja-JP" onclick="setLanguage('ja-JP')">
-                <label>日本語</label>
-            </div>
-        </div>
-        
-        <div class="selector-group">
-            <h4 id="unit-select-title">速度單位</h4>
-            <div class="radio-item">
-                <input type="radio" id="unit_kmh" name="speed_unit" value="km/h" checked onchange="updateDisplayUnit()">
-                <label for="unit_kmh">km/h</label>
-            </div>
-            <div class="radio-item">
-                <input type="radio" id="unit_mph" name="speed_unit" value="mph" onchange="updateDisplayUnit()">
-                <label for="unit_mph">mph</label>
-            </div>
-            <div class="radio-item">
-                <input type="radio" id="unit_kn" name="speed_unit" value="kn" onchange="updateDisplayUnit()">
-                <label for="unit_kn">kn (節)</label>
-            </div>
-        </div>
-
         <h1 id="main-title">GPS 測速測試</h1>
 
         <div id="speed-section">
@@ -156,7 +134,40 @@
                 <div class="detail-item"><span id="label-location" class="detail-label">當前位置：</span><span id="location-value" class="detail-value">N/A</span></div>
             </div>
         </div>
+        
+        <div id="settings-group">
+            <div class="selector-group">
+                <h4 id="lang-select-title">切換語言</h4>
+                <div class="radio-item">
+                    <input type="radio" name="language" value="zh-TW" checked onclick="setLanguage('zh-TW')">
+                    <label>中文</label>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" name="language" value="en-US" onclick="setLanguage('en-US')">
+                    <label>English</label>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" name="language" value="ja-JP" onclick="setLanguage('ja-JP')">
+                    <label>日本語</label>
+                </div>
+            </div>
 
+            <div class="selector-group">
+                <h4 id="unit-select-title">速度單位</h4>
+                <div class="radio-item">
+                    <input type="radio" id="unit_kmh" name="speed_unit" value="km/h" checked onchange="updateDisplayUnit()">
+                    <label for="unit_kmh">km/h</label>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" id="unit_mph" name="speed_unit" value="mph" onchange="updateDisplayUnit()">
+                    <label for="unit_mph">mph</label>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" id="unit_kn" name="speed_unit" value="kn" onchange="updateDisplayUnit()">
+                    <label for="unit_kn">kn (節)</label>
+                </div>
+            </div>
+        </div>
         <div class="button-group">
             <button id="startBtn" onclick="startTracking()">開始追蹤</button>
             <button id="stopBtn" onclick="stopTracking()" disabled>停止追蹤</button>
@@ -168,7 +179,7 @@
         let lastPosition = null;
         let smoothedSpeed_m_s = 0;
         
-        // --- 核心邏輯配置 (沿用 V3) ---
+        // --- 核心邏輯配置 (沿用 V5) ---
         const SMOOTHING_FACTOR = 0.2;
         const SMOOTHING_FACTOR_LOW = 0.5;
         const ZERO_THRESHOLD_KMH = 0.2;
@@ -284,17 +295,14 @@
 
             // 重新整理顯示內容（如果正在追蹤）
             if (watchID !== undefined) {
-                // 如果正在追蹤，使用上次的位置數據來更新顯示語言/單位
                 if (lastPosition) {
-                    // 重新運行 success 邏輯來更新所有文本
-                    success(lastPosition, true); // 傳入 true 表示僅更新顯示，不重複計算
+                    // 傳入 true 表示僅更新顯示，不重複計算
+                    success(lastPosition, true); 
                 } else {
-                    // 處於定位中狀態
                     document.querySelector('.speed-display').textContent = dict['msg-locating'];
                     document.getElementById('source-value').textContent = dict['msg-waiting'];
                 }
             } else {
-                 // 處於停止狀態
                  document.querySelector('.speed-display').textContent = dict['msg-stopped'];
                  document.getElementById('source-value').textContent = "N/A";
             }
@@ -385,13 +393,12 @@
             } else {
                 // 如果只是顯示更新，則使用上次計算的結果
                 if (lastPosition) {
-                     // 再次計算上次的原始速度 (僅用於顯示)
                      if (lastPosition.coords.speed !== null && lastPosition.coords.speed >= 0) {
                         calculatedSpeed_m_s = lastPosition.coords.speed;
                         speedSourceKey = 'speed-source-gps';
                     } else {
-                         // 在 DisplayOnly 模式下無法可靠計算 Haversine 原始速度，直接使用平滑值做判斷
-                         calculatedSpeed_m_s = smoothedSpeed_m_s / 1; 
+                         // 在 DisplayOnly 模式下，如果沒有內建 speed，則假設平滑前的原始速度接近當前平滑速度
+                         calculatedSpeed_m_s = smoothedSpeed_m_s; 
                     }
                 } else {
                      calculatedSpeed_m_s = 0;
@@ -410,7 +417,6 @@
                 displayClass = "stopped";
                 statusLight = "🟢"; 
             } else {
-                 // 小於 0.1 則顯示為 0.0，但顏色為移動色
                  displayClass = "";
                  statusLight = "🔴"; 
             }
@@ -427,7 +433,7 @@
             document.getElementById('location-value').textContent = `${currentPosition.coords.latitude.toFixed(4)}, ${currentPosition.coords.longitude.toFixed(4)}`;
         }
 
-        // 錯誤處理
+        // 錯誤處理 (略)
         function error(err) {
             const dict = translations[currentLang];
             let errorMessage;
