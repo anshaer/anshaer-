@@ -1,0 +1,156 @@
+/* 基礎設定與深夜模式配色 */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #121212; /* 深夜背景 */
+    color: #e0e0e0; /* 淺色文字 */
+    text-align: center;
+}
+.container {
+    padding: 20px;
+    max-width: 420px; /* 模擬手機寬度 */
+    margin: 0 auto;
+}
+h1 {
+    color: #00bcd4; /* 醒目藍色 */
+    font-size: 1.8em;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #333;
+}
+/* 速度顯示區 */
+#speed-section {
+    background-color: #1e1e1e;
+    padding: 30px 15px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+.speed-display {
+    font-size: 5em;
+    font-weight: 700;
+    color: #4caf50; /* 綠色，表示運行正常 */
+    display: block;
+    line-height: 1.1;
+}
+.speed-display.stopped {
+    color: #ff9800; /* 橘色，表示已靜止/低速 */
+}
+#status-light {
+    font-size: 2em;
+    margin-bottom: 10px;
+    height: 30px; 
+}
+/* 詳細資訊區 (小字) */
+#details {
+    text-align: left;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px dashed #333;
+    font-size: 0.9em;
+}
+.detail-item { margin-bottom: 8px; }
+.detail-label {
+    color: #9e9e9e; 
+    width: 120px;
+    display: inline-block;
+}
+.detail-value {
+    color: #e0e0e0;
+    font-weight: bold;
+}
+
+/* 語言和單位切換區塊 */
+#settings-group {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.selector-group {
+    background-color: #2a2a2a;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.95em;
+}
+.selector-group h4 {
+    margin: 0 0 8px 0;
+    color: #bdbdbd;
+}
+.radio-item {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 6px;
+    cursor: pointer;
+}
+.radio-item input[type="radio"] {
+    margin-right: 4px;
+    accent-color: #00bcd4;
+}
+
+/* 按鈕區 */
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+button {
+    flex-grow: 1;
+    padding: 15px 10px;
+    font-size: 1.1em;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+#startBtn { background-color: #4caf50; color: white; }
+#stopBtn { background-color: #f44336; color: white; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* 廣告輪播區塊 */
+#ad-carousel {
+    position: relative;
+    width: 100%;
+    height: 120px; /* 廣告高度 */
+    background-color: #333;
+    margin-top: 20px;
+    border-radius: 12px;
+    overflow: hidden; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+}
+#ad-carousel img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; 
+    display: none; 
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+#ad-carousel img.active {
+    display: block; 
+}
+.ad-dots {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+}
+.ad-dot {
+    width: 8px;
+    height: 8px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.ad-dot.active {
+    background-color: #00bcd4;
+    width: 18px; /* 活躍點變長 */
+    border-radius: 4px;
+}
