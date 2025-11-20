@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="title-text">GPS 測速測試 (多語言)</title>
+    <link rel="stylesheet" href="gps.css">
+</head>
+<body onload="initApp()">
+
+    <div class="container">
+        <h1 id="main-title">GPS 測速測試</h1>
+
+        <div id="speed-section">
+            <div id="status-light"></div>
+            
+            <span class="speed-display">--.- km/h</span>
+
+            <div id="details">
+                <div class="detail-item"><span id="label-calc-speed" class="detail-label">計算時速 (原始)：</span><span id="calc-speed" class="detail-value">--.- km/h</span></div>
+                <div class="detail-item"><span id="label-accuracy" class="detail-label">定位精度：</span><span id="accuracy-value" class="detail-value">--.- 公尺</span></div>
+                <div class="detail-item"><span id="label-source" class="detail-label">訊號來源：</span><span id="source-value" class="detail-value">N/A</span></div>
+                <div class="detail-item"><span id="label-location" class="detail-label">當前位置：</span><span id="location-value" class="detail-value">N/A</span></div>
+            </div>
+        </div>
+        
+        <div id="settings-group">
+            <div class="selector-group">
+                <h4 id="lang-select-title">切換語言</h4>
+                <div class="radio-item">
+                    <input type="radio" name="language" value="zh-TW" checked onclick="setLanguage('zh-TW')">
+                    <label>中文</label>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" name="language" value="en-US" onclick="setLanguage('en-US')">
+                    <label>English</label>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" name="language" value="ja-JP" onclick="setLanguage('ja-JP')">
+                    <label>日本語</label>
+                </div>
+            </div>
+
+            <div class="selector-group">
+                <h4 id="unit-select-title">速度單位</h4>
+                <div class="radio-item">
+                    <input type="radio" id="unit_kmh" name="speed_unit" value="km/h" checked onchange="updateDisplayUnit()">
+                    <label for="unit_kmh">km/h</label>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" id="unit_mph" name="speed_unit" value="mph" onchange="updateDisplayUnit()">
+                    <label for="unit_mph">mph</label>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" id="unit_kn" name="speed_unit" value="kn" onchange="updateDisplayUnit()">
+                    <label for="unit_kn">kn (節)</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button id="startBtn" onclick="startTracking()">開始追蹤</button>
+            <button id="stopBtn" onclick="stopTracking()" disabled>停止追蹤</button>
+        </div>
+
+        <div id="ad-carousel" onclick="goToAdLink()">
+            <div class="ad-dots">
+                </div>
+        </div>
+    </div>
+
+    <script src="gps.js"></script>
+</body>
+</html>
