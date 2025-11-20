@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圖片色彩處理工作台 - 分離版</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <h1>🔄 圖片色彩處理工作台 🎨</h1>
+
+    <div class="controls">
+        <div class="control-group">
+            <p class="group-title">步驟 1: 檔案操作</p>
+            <input type="file" id="image-upload" accept="image/*">
+            <label for="image-upload" class="custom-file-upload action-button">
+                🖼️ 上傳圖片
+            </label>
+            <button id="reset-button" class="action-button" disabled>↩️ 重置圖像</button>
+        </div>
+
+        <div class="control-group">
+            <p class="group-title">步驟 2: 紋路調整</p>
+            <button id="invert-luminosity-button" class="action-button" disabled>🔄 反轉紋路</button>
+        </div>
+
+        <div class="control-group">
+            <p class="group-title">步驟 3: 顏色替換 (基於當前圖像)</p>
+            <button id="blue-button" class="preset-color-button action-button" disabled data-rgb="30, 136, 229">藍色系</button>
+            <button id="green-button" class="preset-color-button action-button" disabled data-rgb="67, 160, 71">綠色系</button>
+            <button id="red-button" class="preset-color-button action-button" disabled data-rgb="229, 57, 53">紅色系</button>
+            <button id="yellow-button" class="preset-color-button action-button" disabled data-rgb="255, 179, 0">黃色系</button>
+            <button id="gray-button" class="preset-color-button action-button" disabled data-rgb="158, 158, 158">灰色系</button>
+            <button id="white-button" class="preset-color-button action-button" disabled data-rgb="255, 255, 255">白色系</button>
+        </div>
+        
+        <div class="control-group">
+            <p class="group-title">步驟 4: 自訂與下載</p>
+            <div class="color-picker-group">
+                <p style="margin: 0;">自訂目標色:</p>
+                <input type="color" id="custom-color-picker" value="#ff00ff">
+                <button id="custom-color-button" class="action-button" disabled>應用自訂色</button>
+            </div>
+            <button id="download-button" class="action-button" disabled>⬇️ 下載圖片</button>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="image-canvas">您的瀏覽器不支援 HTML 畫布。</canvas>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
