@@ -1,0 +1,211 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #1f1e1e;
+}
+
+.container {
+    text-align: center;
+    padding: 30px;
+    border-radius: 10px;
+    background-color: #1f1e1e;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    width: 90%;
+    max-width: 950px; /* 增加寬度以容納三排按鍵 */
+}
+
+h1 {
+    color: #fff;
+    margin-bottom: 30px;
+}
+
+/* 調整鍵盤佈局以容納三排 */
+.keyboard {
+    display: flex;
+    flex-direction: column; /* 垂直排列三排 */
+    gap: 10px; /* 每排之間的間距 */
+    margin-bottom: 30px;
+    justify-content: center;
+}
+
+.octave-row {
+    display: flex;
+    gap: 5px; /* 按鍵之間的間距 */
+    justify-content: center;
+}
+
+.key {
+    padding: 15px 12px;
+    width: 85px; /* 調整寬度以適應三排 */
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background-color: #3498db;
+    color: white;
+    transition: background-color 0.1s ease, transform 0.05s ease;
+    box-shadow: 0 3px 0 #2980b9;
+}
+
+.key:active {
+    background-color: #2980b9;
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #151145;
+}
+ 
+/* 特定八度顏色的微調 */
+.high-octave { background-color: #99190c; box-shadow: 0 3px 0 #360702; }
+.high-octave:active { background-color: #360702; }
+ 
+.normal-octave { background-color: #0b4e7a; box-shadow: 0 3px 0 #093959; }
+.normal-octave:active { background-color: #093959; }
+ 
+.low-octave { background-color: #086e33; box-shadow: 0 3px 0 #0b4724; }
+.low-octave:active { background-color: #0b4724; }
+ 
+
+.controls-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #363535;
+    border-radius: 8px;
+    background-color: #363535;
+}
+
+.bpm-control, .pedal-control {
+    display: flex;
+    align-items: center;
+
+color: #d7dde0;
+
+}
+
+.pedal-control button {
+    padding: 8px 15px;
+    font-size: 0.9em;
+    font-weight: bold;
+    cursor: pointer;
+    border: 1px solid #555;
+    border-radius: 3px;
+    margin-left: 5px;
+    background-color: #1f3940;
+    color: #b5d7eb;
+    transition: background-color 0.1s;
+}
+
+.pedal-control button.active {
+    background-color: #b5d7eb;
+    color: white;
+}
+
+.sequence-player {
+    padding-top: 20px;
+    border-top: 1px solid #b5d7eb;
+color: #82989e;
+}
+
+.note-legend {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 15px;
+    text-align: left;
+    font-size: 0.9em;
+    color: #627b8a;
+}
+ 
+.sequence-input-group {
+    display: flex;
+border-top: 1px solid #b5d7eb;
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 15px;
+}
+
+/* -------------------------- 輸入框和顯示框 -------------------------- */
+ 
+#playbackDisplay {
+    min-height: 30px;
+    padding: 10px 5px; 
+    margin-bottom: 10px; 
+    border: 2px solid #0b612f; 
+    border-radius: 5px;
+    background-color: #0d4224; 
+    text-align: center;
+    
+    font-size: 1.8em; 
+    font-family: monospace; 
+    display: inline-block; 
+    min-width: 8em; 
+    
+    font-weight: bold;
+    color: #27ae60;
+    user-select: none; 
+    transition: background-color 0.1s;
+    align-self: center; 
+}
+ 
+#playbackDisplay.active {
+    background-color: #d1ffde;
+}
+ 
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 10px; 
+}
+
+#noteSequenceInput {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    margin-bottom: 10px; 
+    border: 1px solid #ccc;
+
+    border-radius: 5px;
+    font-size: 1em;
+    font-family: monospace; 
+    line-height: 1.4;
+    resize: none;
+    box-sizing: border-box;
+    box-shadow: none;
+background-color: #383838;
+color: #d7dde0;
+}
+ 
+/* ---------------------------------------------------------------- */
+
+.sequence-player button {
+    padding: 10px 20px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    transition: background-color 0.1s ease;
+    flex-grow: 1;
+    max-width: 120px;
+}
+ 
+#playButton { background-color: #2ecc71; }
+#playButton:hover { background-color: #27ae60; }
+ 
+#pauseButton { background-color: #f39c12; }
+#pauseButton:hover { background-color: #e67e22; }
+ 
+#stopButton { background-color: #e74c3c; }
+#stopButton:hover { background-color: #c0392b; }
+
+.sequence-player button:disabled {
+    background-color: #313e47;
+    cursor: not-allowed;
+}

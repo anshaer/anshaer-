@@ -1,0 +1,71 @@
+<div class="container">
+    <h1>🎹 簡易序列鋼琴 🎶</h1>
+    
+    <div class="controls-panel">
+        <div class="bpm-control">
+            <label for="bpmInput">BPM:</label>
+            <input type="number" id="bpmInput" value="120" min="40" max="300">
+        </div>
+
+        <div class="pedal-control">
+            <button id="softPedal">左 (弱音)</button>
+            <button id="sostenutoPedal">中 (柔音)</button>
+            <button id="sustainPedal">右 (延音)</button>
+        </div>
+    </div>
+
+    <div class="keyboard">
+        <div class="octave-row high-octave-row">
+            <button class="key high-octave" data-note="A">⭡Do</br> (A)</button>
+            <button class="key high-octave" data-note="B">⭡Re</br> (B)</button>
+            <button class="key high-octave" data-note="C">⭡Mi</br> (C)</button>
+            <button class="key high-octave" data-note="D">⭡Fa</br> (D)</button>
+            <button class="key high-octave" data-note="E">⭡Sol</br> (E)</button>
+            <button class="key high-octave" data-note="F">⭡La</br> (F)</button>
+            <button class="key high-octave" data-note="G">⭡Si</br> (G)</button>
+        </div>
+        <div class="octave-row normal-octave-row">
+            <button class="key normal-octave" data-note="1">Do</br> (1)</button>
+            <button class="key normal-octave" data-note="2">Re</br> (2)</button>
+            <button class="key normal-octave" data-note="3">Mi</br> (3)</button>
+            <button class="key normal-octave" data-note="4">Fa</br> (4)</button>
+            <button class="key normal-octave" data-note="5">Sol</br> (5)</button>
+            <button class="key normal-octave" data-note="6">La</br> (6)</button>
+            <button class="key normal-octave" data-note="7">Si</br> (7)</button>
+        </div>
+        <div class="octave-row low-octave-row">
+            <button class="key low-octave" data-note="a">⭣Do</br> (a)</button>
+            <button class="key low-octave" data-note="b">⭣Re</br> (b)</button>
+            <button class="key low-octave" data-note="c">⭣Mi</br> (c)</button>
+            <button class="key low-octave" data-note="d">⭣Fa</br> (d)</button>
+            <button class="key low-octave" data-note="e">⭣Sol</br> (e)</button>
+            <button class="key low-octave" data-note="f">⭣La</br> (f)</button>
+            <button class="key low-octave" data-note="g">⭣Si</br> (g)</button>
+        </div>
+    </div>
+
+    <div class="sequence-player">
+        <p>輸入 **字母/數字代號** 建立旋律。</p>
+        <ul class="note-legend">
+            <li>**高音 (A-G):** A=Do, B=Re, C=Mi, D=Fa, E=Sol, F=La, G=Si</li>
+            <li>**中音 (1-7):** 1=Do, 2=Re, 3=Mi, 4=Fa, 5=Sol, 6=La, 7=Si</li>
+            <li>**低音 (a-g):** a=Do, b=Re, c=Mi, d=Fa, e=Sol, f=La, g=Si</li>
+            <li>**休止符:** **0** (一拍), **9** (半拍), **8** (四分之一拍)</li>
+            <li>**重音:** **音符前加上 > 符號**。</li>
+            <li>**時長延長:** **音符/休止符後加上 . (點)**。</li>
+        </ul>
+        
+        <div class="sequence-input-group">
+            <div id="playbackDisplay">-- 待播放序列 --</div>
+            
+            <div class="button-group">
+                <button id="playButton">播放</button>
+                <button id="pauseButton" disabled>暫停</button>
+                <button id="stopButton" disabled>停止</button>
+                <button id="exportWavButton" style="background-color: #6e235b;">匯出 WAV</button>
+            </div>
+
+            <textarea id="noteSequenceInput" placeholder="例如：>A B C 4 5 6 a b c&#10;1. 0 >2. 9 8 7"></textarea>
+        </div>
+    </div>
+</div>
