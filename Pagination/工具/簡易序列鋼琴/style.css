@@ -1,3 +1,25 @@
+/* CSS 樣式 - 深色模式 */
+:root {
+    /* 主色調 */
+    --color-background: #1e1e1e; /* 主要背景色 */
+    --color-container: #2c2c2c; /* 容器背景色 */
+    --color-text-light: #f4f4f4; /* 淺色文字 */
+    --color-text-dark: #bbbbbb; /* 深色輔助文字 */
+    --color-shadow: rgba(0, 0, 0, 0.4); /* 陰影色 */
+    --color-border: #444444; /* 邊框線 */
+
+    /* 八度色 */
+    --color-high-octave: #e74c3c; /* 紅色 (高音) */
+    --color-normal-octave: #3498db; /* 藍色 (中音) */
+    --color-low-octave: #2ecc71; /* 綠色 (低音) */
+
+    /* 播放控制色 */
+    --color-play: var(--color-low-octave);
+    --color-pause: #f39c12; /* 橘色 */
+    --color-stop: var(--color-high-octave);
+    --color-export: #9b59b6; /* 紫色 */
+}
+
 body {
     font-family: Arial, sans-serif;
     display: flex;
@@ -5,111 +27,110 @@ body {
     align-items: center;
     min-height: 100vh;
     margin: 0;
-    background-color: #1f1e1e;
+    background-color: var(--color-background); /* 應用深色背景 */
+    color: var(--color-text-light);
 }
 
 .container {
     text-align: center;
     padding: 30px;
-    border-radius: 10px;
-    background-color: #1f1e1e;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    background-color: var(--color-container); /* 應用深色容器 */
+    box-shadow: 0 8px 16px var(--color-shadow);
     width: 90%;
-    max-width: 950px; /* 增加寬度以容納三排按鍵 */
+    max-width: 950px;
 }
 
 h1 {
-    color: #fff;
+    color: var(--color-text-light);
     margin-bottom: 30px;
+    text-shadow: 0 1px 2px var(--color-shadow);
 }
 
-/* 調整鍵盤佈局以容納三排 */
+/* 鍵盤佈局 */
 .keyboard {
     display: flex;
-    flex-direction: column; /* 垂直排列三排 */
-    gap: 10px; /* 每排之間的間距 */
+    flex-direction: column;
+    gap: 10px;
     margin-bottom: 30px;
     justify-content: center;
 }
 
 .octave-row {
     display: flex;
-    gap: 5px; /* 按鍵之間的間距 */
+    gap: 5px;
     justify-content: center;
 }
 
 .key {
     padding: 15px 12px;
-    width: 85px; /* 調整寬度以適應三排 */
+    width: 85px;
     font-size: 1.1em;
     font-weight: bold;
     cursor: pointer;
     border: none;
     border-radius: 5px;
-    background-color: #3498db;
     color: white;
     transition: background-color 0.1s ease, transform 0.05s ease;
-    box-shadow: 0 3px 0 #2980b9;
+    box-shadow: 0 3px 0 var(--color-shadow);
 }
 
-.key:active {
-    background-color: #2980b9;
-    transform: translateY(2px);
-    box-shadow: 0 1px 0 #151145;
-}
- 
-/* 特定八度顏色的微調 */
-.high-octave { background-color: #99190c; box-shadow: 0 3px 0 #360702; }
-.high-octave:active { background-color: #360702; }
- 
-.normal-octave { background-color: #0b4e7a; box-shadow: 0 3px 0 #093959; }
-.normal-octave:active { background-color: #093959; }
- 
-.low-octave { background-color: #086e33; box-shadow: 0 3px 0 #0b4724; }
-.low-octave:active { background-color: #0b4724; }
- 
+/* 鍵盤顏色覆寫 */
+.high-octave { background-color: var(--color-high-octave); box-shadow: 0 3px 0 #a93a31; }
+.high-octave:active { background-color: #a93a31; transform: translateY(2px); box-shadow: 0 1px 0 #a93a31; }
 
+.normal-octave { background-color: var(--color-normal-octave); box-shadow: 0 3px 0 #2071a9; }
+.normal-octave:active { background-color: #2071a9; transform: translateY(2px); box-shadow: 0 1px 0 #2071a9; }
+
+.low-octave { background-color: var(--color-low-octave); box-shadow: 0 3px 0 #1e8449; }
+.low-octave:active { background-color: #1e8449; transform: translateY(2px); box-shadow: 0 1px 0 #1e8449; }
+
+/* 控制面板 */
 .controls-panel {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
     padding: 15px;
-    border: 1px solid #363535;
+    border: 1px solid var(--color-border);
     border-radius: 8px;
-    background-color: #363535;
+    background-color: #363636; /* 略淺於容器的背景 */
 }
 
-.bpm-control, .pedal-control {
-    display: flex;
-    align-items: center;
-
-color: #d7dde0;
-
+.bpm-control label, .bpm-control input {
+    color: var(--color-text-light);
+}
+.bpm-control input {
+    background-color: #4f4f4f;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 5px;
+    color: white;
 }
 
+/* 踏板控制 */
 .pedal-control button {
     padding: 8px 15px;
     font-size: 0.9em;
     font-weight: bold;
     cursor: pointer;
-    border: 1px solid #555;
+    border: 1px solid var(--color-border);
     border-radius: 3px;
     margin-left: 5px;
-    background-color: #1f3940;
-    color: #b5d7eb;
+    background-color: #555;
+    color: var(--color-text-light);
     transition: background-color 0.1s;
 }
 
 .pedal-control button.active {
-    background-color: #b5d7eb;
-    color: white;
+    background-color: #00bcd4; /* 啟用時使用亮青色 */
+    color: black;
+    font-weight: bolder;
 }
 
 .sequence-player {
     padding-top: 20px;
-    border-top: 1px solid #b5d7eb;
-color: #82989e;
+    border-top: 1px solid var(--color-border);
 }
 
 .note-legend {
@@ -118,26 +139,25 @@ color: #82989e;
     margin-bottom: 15px;
     text-align: left;
     font-size: 0.9em;
-    color: #627b8a;
+    color: var(--color-text-dark); /* 輔助文字使用較暗顏色 */
 }
- 
+
 .sequence-input-group {
     display: flex;
-border-top: 1px solid #b5d7eb;
     flex-direction: column;
     align-items: stretch;
     margin-bottom: 15px;
 }
 
 /* -------------------------- 輸入框和顯示框 -------------------------- */
- 
+
 #playbackDisplay {
     min-height: 30px;
     padding: 10px 5px; 
     margin-bottom: 10px; 
-    border: 2px solid #0b612f; 
+    border: 2px solid var(--color-play); 
     border-radius: 5px;
-    background-color: #0d4224; 
+    background-color: #3d3d3d; /* 顯示區塊使用較亮的深灰 */
     text-align: center;
     
     font-size: 1.8em; 
@@ -146,16 +166,17 @@ border-top: 1px solid #b5d7eb;
     min-width: 8em; 
     
     font-weight: bold;
-    color: #27ae60;
+    color: var(--color-play);
     user-select: none; 
     transition: background-color 0.1s;
     align-self: center; 
+    box-shadow: inset 0 0 5px rgba(46, 204, 113, 0.5); /* 內陰影強調 */
 }
- 
+
 #playbackDisplay.active {
-    background-color: #d1ffde;
+    background-color: #4f4f4f;
 }
- 
+
 .button-group {
     display: flex;
     justify-content: center;
@@ -168,19 +189,18 @@ border-top: 1px solid #b5d7eb;
     min-height: 80px;
     padding: 10px;
     margin-bottom: 10px; 
-    border: 1px solid #ccc;
-
+    border: 1px solid var(--color-border);
     border-radius: 5px;
     font-size: 1em;
     font-family: monospace; 
     line-height: 1.4;
     resize: none;
     box-sizing: border-box;
+    background-color: #363636; /* 與控制面板背景一致 */
+    color: var(--color-text-light);
     box-shadow: none;
-background-color: #383838;
-color: #d7dde0;
 }
- 
+
 /* ---------------------------------------------------------------- */
 
 .sequence-player button {
@@ -194,18 +214,23 @@ color: #d7dde0;
     transition: background-color 0.1s ease;
     flex-grow: 1;
     max-width: 120px;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
 }
- 
-#playButton { background-color: #2ecc71; }
+
+#playButton { background-color: var(--color-play); }
 #playButton:hover { background-color: #27ae60; }
- 
-#pauseButton { background-color: #f39c12; }
+
+#pauseButton { background-color: var(--color-pause); }
 #pauseButton:hover { background-color: #e67e22; }
- 
-#stopButton { background-color: #e74c3c; }
+
+#stopButton { background-color: var(--color-stop); }
 #stopButton:hover { background-color: #c0392b; }
 
+#exportWavButton { background-color: var(--color-export); }
+#exportWavButton:hover { background-color: #8e44ad; }
+
 .sequence-player button:disabled {
-    background-color: #313e47;
+    background-color: #5d6d7e;
+    color: #aeb6bf;
     cursor: not-allowed;
 }
