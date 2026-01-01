@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEON_SHIELD | 賽博保密系統</title>
+    <style>
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-pink: #ff0055;
+            --dark-bg: #050505;
+            --glass: rgba(20, 20, 20, 0.85);
+            --border: #1a1a1a;
+        }
+
+        body {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background-color: var(--dark-bg);
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: var(--neon-blue);
+            margin: 0; padding: 15px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .container { width: 100%; max-width: 600px; }
+
+        .header {
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            text-shadow: 0 0 10px var(--neon-blue);
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--glass);
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .card::after {
+            content: "SECURED";
+            position: absolute; top: -10px; right: 10px;
+            background: var(--neon-blue); color: #000;
+            font-size: 10px; padding: 2px 5px; font-weight: bold;
+        }
+
+        .grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 15px; }
+        
+        /* 手機適應：在較寬螢幕切換雙欄 */
+        @media (min-width: 480px) { .grid { grid-template-columns: 1fr 1fr; } }
+
+        .box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border);
+            padding: 12px;
+            text-align: center;
+        }
+
+        label { font-size: 10px; color: var(--neon-pink); display: block; margin-bottom: 5px; text-align: left; }
+
+        input {
+            background: #000; border: 1px solid var(--neon-blue);
+            color: #fff; padding: 12px; width: 100%;
+            box-sizing: border-box; font-size: 16px; /* 防止 iOS 自動放大 */
+            outline: none;
+        }
+
+        input:focus { border-color: var(--neon-pink); box-shadow: 0 0 8px var(--neon-pink); }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 15px;
+            font-weight: bold; width: 100%;
+            cursor: pointer; margin-top: 15px;
+            text-transform: uppercase;
+            transition: 0.3s;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+        }
+
+        button:active { background: var(--neon-blue); color: #000; }
+
+        .code-display {
+            color: var(--neon-pink);
+            font-size: 1.2em; border: 1px dashed var(--neon-pink);
+            padding: 10px; margin-top: 5px; word-break: break-all;
+        }
+
+        canvas { 
+            width: 100%; height: auto; border: 1px solid #333; margin-top: 15px; 
+            background: #000;
+        }
+
+        #timer { 
+            color: var(--neon-pink); font-size: 14px; text-align: center; 
+            margin-bottom: 10px; display: none; font-weight: bold;
+        }
+
+        .download-btn {
+            display: inline-block; margin-top: 10px; padding: 8px;
+            border: 1px solid var(--neon-pink); color: var(--neon-pink);
+            text-decoration: none; font-size: 10px; width: 100%; box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>NEON_SHIELD v4.0</h1>
+        <div style="font-size: 8px;">ENCRYPTED LOCAL PROTOCOL // NO CLOUD TRACE</div>
+    </div>
+
+    <div class="card">
+        <label>// STEP_01: SOURCE_DATA</label>
+        <input type="file" id="srcImg" accept="image/*">
+        
+        <label style="margin-top:15px;">// STEP_02: PASSKEY_8_DIGITS</label>
+        <input type="number" id="offset" value="88888888" placeholder="輸入8位數字">
+        
+        <button onclick="encrypt()">啟動數據封裝</button>
+
+        <div id="resultArea" style="display:none; margin-top:20px;">
+            <label>// GENERATED_ACCESS_CODES</label>
+            <div class="code-display" id="codes"></div>
+            <div class="grid" id="fileOutputs"></div>
+        </div>
+    </div>
+
+    <div class="card" style="border-color: var(--neon-pink);">
+        <label>// STEP_03: DECRYPTION_KEYS</label>
+        <div id="timer">TERMINAL SELF-DESTRUCT IN: <span id="seconds">10</span>s</div>
+        
+        <div class="grid">
+            <div class="box"><label>ENC_IMAGE</label><input type="file" id="inEnc"></div>
+            <div class="box"><label>KEY_IMAGE</label><input type="file" id="inKey"></div>
+        </div>
+        
+        <div class="grid" style="grid-template-columns: repeat(2, 1fr);">
+            <input type="text" id="inA" placeholder="密碼A" maxlength="8">
+            <input type="text" id="inB" placeholder="密碼B" maxlength="8">
+            <input type="text" id="inC" placeholder="密碼C" maxlength="8">
+            <input type="number" id="inOffset" placeholder="8位明碼">
+        </div>
+
+        <button onclick="decrypt()" style="border-color: var(--neon-pink); color: var(--neon-pink);">驗證並同步還原</button>
+        
+        <div class="box" style="margin-top:20px; border: 1px solid var(--neon-pink);">
+            <canvas id="resCanvas"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * ANTI-DEBUGGER: 防止電腦端調試
+     */
+    (function() {
+        const block = () => {
+            const t = Date.now();
+            debugger;
+            if (Date.now() - t > 100) {
+                document.body.innerHTML = "<div style='color:#ff0055; padding:50px; text-align:center;'><h1>ACCESS DENIED</h1><p>SECURITY BREACH DETECTED.</p></div>";
+            }
+        };
+        setInterval(block, 1000);
+    })();
+
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    /**
+     * CORE LOGIC
+     */
+    let correctToken = ""; 
+    const genS = () => Math.random().toString(36).substring(2, 10).toUpperCase();
+
+    function getNoise(seed, len) {
+        let h = Array.from(seed).reduce((s, c) => Math.imul(31, s) + c.charCodeAt(0) | 0, 0);
+        const n = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            h = Math.imul(48271, h) | 0 % 2147483647;
+            n[i] = (h & 0xFF);
+        }
+        return n;
+    }
+
+    async function encrypt() {
+        const f = document.getElementById('srcImg').files[0];
+        const off = document.getElementById('offset').value;
+        if (!f || off.length < 1) return alert("MISSING_DATA");
+
+        const img = await loadImage(f);
+        const w = img.width, h = img.height;
+        const cvs = document.createElement('canvas');
+        cvs.width = w; cvs.height = h;
+        const ctx = cvs.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const ori = ctx.getImageData(0, 0, w, h);
+
+        const A = genS(), B = genS(), C = genS();
+        document.getElementById('codes').innerText = `${A} - ${B} - ${C}`;
+        
+        correctToken = btoa(A + B + C + off);
+        const noise = getNoise(A + B + C + off, ori.data.length);
+        const encData = new ImageData(w, h);
+        const keyData = new ImageData(w, h);
+
+        for (let i = 0; i < ori.data.length; i += 4) {
+            const rK = Math.random()*256, gK = Math.random()*256, bK = Math.random()*256;
+            keyData.data.set([rK, gK, bK, 255], i);
+            encData.data.set([
+                ori.data[i] ^ rK ^ noise[i],
+                ori.data[i+1] ^ gK ^ noise[i+1],
+                ori.data[i+2] ^ bK ^ noise[i+2],
+                255
+            ], i);
+        }
+
+        document.getElementById('resultArea').style.display = 'block';
+        const out = document.getElementById('fileOutputs');
+        out.innerHTML = '';
+        render(out, encData, "ENC_DATA", "enc.png");
+        render(out, keyData, "KEY_DATA", "key.png");
+    }
+
+    async function decrypt() {
+        const fE = document.getElementById('inEnc').files[0];
+        const fK = document.getElementById('inKey').files[0];
+        const A = document.getElementById('inA').value, B = document.getElementById('inB').value, C = document.getElementById('inC').value;
+        const off = document.getElementById('inOffset').value;
+
+        if (!fE || !fK) return alert("MISSING_FILES");
+
+        const dE = await getImageDataFromFile(fE);
+        const dK = await getImageDataFromFile(fK);
+        const cvs = document.getElementById('resCanvas');
+        cvs.width = dE.width; cvs.height = dE.height;
+        const ctx = cvs.getContext('2d');
+
+        if (correctToken !== "" && btoa(A+B+C+off) !== correctToken) {
+            ctx.clearRect(0, 0, cvs.width, cvs.height);
+            alert("AUTH_FAILED: RETURN_NULL");
+            return;
+        }
+
+        const noise = getNoise(A+B+C+off, dE.data.length);
+        const res = ctx.createImageData(dE.width, dE.height);
+
+        for (let i = 0; i < dE.data.length; i += 4) {
+            res.data.set([
+                dE.data[i] ^ dK.data[i] ^ noise[i],
+                dE.data[i+1] ^ dK.data[i+1] ^ noise[i+1],
+                dE.data[i+2] ^ dK.data[i+2] ^ noise[i+2],
+                255
+            ], i);
+        }
+        ctx.putImageData(res, 0, 0);
+        startBurn(ctx, dE.width, dE.height);
+    }
+
+    function startBurn(ctx, w, h) {
+        const tDiv = document.getElementById('timer'), sSp = document.getElementById('seconds');
+        tDiv.style.display = 'block';
+        let left = 10;
+        sSp.innerText = left;
+        const iv = setInterval(() => {
+            left--; sSp.innerText = left;
+            if (left <= 0) {
+                clearInterval(iv); ctx.clearRect(0,0,w,h);
+                tDiv.style.display = 'none';
+                alert("DATA_PURGED");
+            }
+        }, 1000);
+    }
+
+    function render(parent, data, label, name) {
+        const b = document.createElement('div'); b.className = 'box';
+        b.innerHTML = `<label>${label}</label>`;
+        const c = document.createElement('canvas');
+        c.width = data.width; c.height = data.height;
+        c.getContext('2d').putImageData(data, 0, 0);
+        const a = document.createElement('a');
+        a.className = "download-btn"; a.innerText = "DL_PNG";
+        a.download = name; a.href = c.toDataURL();
+        b.appendChild(c); b.appendChild(a);
+        parent.appendChild(b);
+    }
+
+    function loadImage(f) { return new Promise(r => { const i = new Image(); i.onload = () => r(i); i.src = URL.createObjectURL(f); }); }
+    async function getImageDataFromFile(f) { const i = await loadImage(f); const c = document.createElement('canvas'); c.width = i.width; c.height = i.height; const ctx = c.getContext('2d'); ctx.drawImage(i, 0, 0); return ctx.getImageData(0, 0, i.width, i.height); }
+</script>
+</body>
+</html>
