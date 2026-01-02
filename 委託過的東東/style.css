@@ -2,92 +2,66 @@
     --neon: #00f2ff;
     --pink: #ff0055;
     --bg: #050505;
-    --card: #111111;
+    --card: #121212;
+    --text: #e0e0e0;
 }
 
 body {
-    background: var(--bg);
-    color: #eee;
+    background-color: var(--bg);
+    color: var(--text);
     margin: 0; padding: 0;
-    font-family: -apple-system, system-ui, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    overflow-x: hidden;
 }
 
-/* 燈箱容器 */
-#lightbox {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 1000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(10px);
-    transition: opacity 0.3s;
-}
-
-#lightbox.hidden {
-    display: none;
-    opacity: 0;
-}
-
-.lightbox-content {
-    position: relative;
-    width: 95vw;
-    max-height: 90vh;
-}
-
-#lightbox-canvas {
-    width: 100%;
-    height: auto;
-    max-height: 90vh;
-    object-fit: contain;
-}
-
-.lightbox-close {
-    position: absolute;
-    top: 20px; right: 20px;
-    color: var(--neon);
-    font-family: monospace;
-    cursor: pointer;
-    padding: 10px;
-    border: 1px solid var(--neon);
-}
-
+/* 主容器 */
 #gallery-stream {
     max-width: 600px;
     margin: 0 auto;
-    padding: 15px;
+    padding: 10px;
 }
 
+/* 貼文卡片 */
 .post-card {
     background: var(--card);
     border-radius: 12px;
     padding: 16px;
-    margin-bottom: 25px;
+    margin-bottom: 24px;
     border: 1px solid #222;
+    transition: transform 0.2s;
 }
 
 .post-header {
     color: var(--pink);
     font-size: 11px;
-    font-family: monospace;
+    font-family: 'Consolas', monospace;
     margin-bottom: 12px;
     letter-spacing: 1px;
 }
 
 .post-description {
     font-size: 16px;
-    line-height: 1.6;
+    line-height: 1.5;
     margin-bottom: 16px;
     white-space: pre-wrap;
 }
 
-/* 動態網格佈局 */
-.post-grid { display: grid; gap: 4px; border-radius: 8px; overflow: hidden; }
+/* 動態網格佈局系統 */
+.post-grid {
+    display: grid;
+    gap: 4px;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%;
+}
+
 .grid-1 { grid-template-columns: 1fr; }
 .grid-2 { grid-template-columns: 1fr 1fr; }
-.grid-3 { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; height: 350px; }
+.grid-3 { 
+    grid-template-columns: 2fr 1fr; 
+    grid-template-rows: 1fr 1fr; 
+    height: 380px; 
+}
 .grid-3 .canvas-container:nth-child(1) { grid-row: span 2; }
 .grid-4 { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
 
@@ -95,19 +69,67 @@ body {
     position: relative;
     background: #000;
     aspect-ratio: 1/1;
+    cursor: zoom-in;
 }
 
-canvas { width: 100%; height: 100%; object-fit: cover; }
+canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
 
+/* 圖片覆蓋文字 */
 .overlay-desc {
-    position: absolute; top: 50%; left: 50%;
+    position: absolute;
+    top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 90%; text-align: center;
-    pointer-events: none; opacity: 0;
+    width: 90%;
+    text-align: center;
+    pointer-events: none;
+    font-weight: bold;
+    text-shadow: 0 0 10px #000;
+    opacity: 0;
     transition: opacity 0.8s ease;
-    font-weight: bold; text-shadow: 0 0 8px #000;
 }
 
-.post-card.active .overlay-desc { opacity: 1; }
+.active .overlay-desc { opacity: 1; }
 
-#loading-status { text-align: center; padding: 20px; color: var(--neon); font-size: 10px; }
+/* 燈箱系統 */
+#lightbox {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.98);
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(8px);
+}
+
+#lightbox.show { display: flex; }
+
+.lightbox-content {
+    position: relative;
+    width: 95vw;
+    max-height: 85vh;
+}
+
+#lightbox-canvas {
+    width: 100%;
+    height: auto;
+    max-height: 85vh;
+    object-fit: contain;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 30px; right: 30px;
+    color: var(--neon);
+    font-family: monospace;
+    border: 1px solid var(--neon);
+    padding: 8px 16px;
+    cursor: pointer;
+}
