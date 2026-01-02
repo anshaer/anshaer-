@@ -1,4 +1,17 @@
 {
-  "88888888": { "codeC": "PASS_C01", "text": "NEON_DISTRICT", "color": "#00f2ff", "size": "24px" },
-  "20241001": { "codeC": "33WBTL8W", "text": "CYBER_PUNK_GIRL", "color": "#ff0055", "size": "26px" }
+  "88888888": { 
+    "codeC": "PASS_C01", 
+    "longDesc": "這是一段很長很長的敘述...\n可以包含換行符號，展示在圖片上方。",
+    "text": "圖片中心文字", 
+    "color": "#00f2ff", 
+    "size": "24px" 
+  },
+"20241001": { 
+    "codeC": "33WBTL8W", 
+    "longDesc": "這是一段很長很長的敘述...\n可以包含換行符號，展示在圖片上方。",
+    "text": "圖片中心文字", 
+    "color": "#00f2ff", 
+    "size": "24px" 
+  }
+
 }
