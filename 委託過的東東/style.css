@@ -1,66 +1,82 @@
 :root {
     --neon: #00f2ff;
     --pink: #ff0055;
-    --bg: #050505;
+    --bg: #0a0a0a;
+    --card-bg: #161616;
 }
 
 body {
     background-color: var(--bg);
     margin: 0; padding: 0;
-    overflow: hidden;
-    font-family: 'Consolas', 'Courier New', monospace;
+    color: #eee;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 #gallery-stream {
-    height: 100vh;
-    overflow-y: scroll;
-    scroll-snap-type: y mandatory;
-    scrollbar-width: none; /* Firefox */
+    max-width: 600px; /* 限制寬度像社群 App */
+    margin: 0 auto;
+    padding: 10px;
 }
 
-#gallery-stream::-webkit-scrollbar { display: none; }
-
-.section-block {
-    width: 100vw; height: 100vh;
-    scroll-snap-align: start;
-    display: flex; flex-direction: column;
-    justify-content: center; align-items: center;
-    position: relative;
-    border-bottom: 1px solid #111;
-}
-
-.canvas-container {
-    position: relative;
-    width: 85vw; max-width: 500px;
-    aspect-ratio: 3 / 4;
+.post-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    padding: 15px;
     border: 1px solid #222;
 }
 
-canvas {
-    width: 100%; height: 100%;
-    display: block;
+/* 貼文頭部：ID 標籤 */
+.post-header {
+    font-size: 12px;
+    color: var(--pink);
+    margin-bottom: 12px;
+    font-family: 'Consolas', monospace;
+}
+
+/* 敘述文字區域 */
+.post-description {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    color: #ccc;
+    white-space: pre-wrap; /* 保留換行 */
+}
+
+/* 圖片容器 */
+.canvas-container {
+    position: relative;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
     background: #000;
 }
 
+canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* 圖片上的覆蓋文字 */
 .overlay-desc {
     position: absolute;
-    bottom: 30px; left: 0; width: 100%;
-    padding: 0 20px; box-sizing: border-box;
-    text-shadow: 0 0 10px #000;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    text-align: center;
     pointer-events: none;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(0,0,0,0.8);
     opacity: 0;
-    transition: opacity 1s ease;
+    transition: opacity 0.8s ease;
 }
 
 .active .overlay-desc { opacity: 1; }
 
-.id-tag {
-    position: absolute; top: 20px; left: 20px;
-    font-size: 10px; color: var(--pink);
-    letter-spacing: 2px;
-}
-
-.loading-trigger {
-    height: 50px; color: var(--neon);
-    text-align: center; font-size: 10px;
+#sentinel {
+    text-align: center;
+    padding: 30px;
+    color: var(--neon);
+    font-size: 12px;
 }
