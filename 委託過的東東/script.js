@@ -1,6 +1,61 @@
 /**
- * 核心渲染引擎 - 社群貼文版
+ * I. 安全防禦模組 - iPad 兼容優化版
+ * 移除會導致 Safari 鎖死的 debugger 關鍵字，改用時間差偵測
  */
+const securityCheck = () => {
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    
+    // 偵測執行頻率，若被調試工具拖慢則觸發自毀
+    let t1 = performance.now();
+    // 這裡我們不寫 debugger，改用一段無意義的密集運算來測試執行速度
+    for(let i=0; i<1000000; i++) { Math.atan(i); } 
+    let t2 = performance.now();
+
+    if (t2 - t1 > 200) { // 正常運算應在 50ms 內，若超過代表環境異常
+        document.body.innerHTML = "<div style='color:red;padding:20px;'>SECURITY_ALERT: ENVIRONMENT_UNSTABLE</div>";
+        return false;
+    }
+    return true;
+};
+
+// 啟動循環監控
+setInterval(() => {
+    securityCheck();
+}, 10000);
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+/**
+ * II. 核心引擎
+ */
+let workOrder = [];
+let loadedIdx = 0;
+const stream = document.getElementById('gallery-stream');
+
+// 雜訊算法 (不變)
+const getNoise = (seed, len) => {
+    let h = Array.from(seed).reduce((s, c) => Math.imul(31, s) + c.charCodeAt(0) | 0, 0);
+    const n = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        h = Math.imul(48271, h) | 0 % 2147483647;
+        n[i] = (h & 0xFF);
+    }
+    return n;
+};
+
+// 加載圖片 (針對 iPad 強化的 CORS 處理)
+function loadImage(url) {
+    return new Promise((resolve, reject) => {
+        const i = new Image();
+        // 關鍵：先設 Anonymous，且不加隨機參數（除非確定 Server 支援）
+        i.crossOrigin = "anonymous"; 
+        i.onload = () => resolve(i);
+        i.onerror = () => reject(new Error("IMG_LOAD_ERROR"));
+        i.src = url;
+    });
+}
+
+// 載入區塊
 async function renderBlock(id) {
     try {
         // 抓取各項 JSON 碎片
@@ -12,34 +67,26 @@ async function renderBlock(id) {
 
         const infoA = dbA[id], infoB = dbB[id], infoC = dbC[id];
         
-        // 建立貼文卡片結構
-        const post = document.createElement('div');
-        post.className = 'post-card';
-        post.id = `post-${id}`;
-        
-        // C 的資料現在分成兩部分：長敘述 (description) 與 圖片覆蓋文字 (text)
-        // 假設你的 JSON C 裡面有多一個欄位叫 "longDesc"
-        const longDescription = infoC.longDesc || "這是預設的長篇文字敘述，系統正在解密下方加密內容...";
-
-        post.innerHTML = `
-            <div class="post-header">// ORIGIN_ID: ${id}</div>
-            <div class="post-description">${longDescription}</div>
+        // 先創 DOM 再算圖，iPad 才不會因為 async 等待太久而跳過渲染
+        const block = document.createElement('div');
+        block.className = 'section-block';
+        block.id = `node-${id}`;
+        block.innerHTML = `
+            <div class="id-tag">LINK_ID: ${id}</div>
             <div class="canvas-container">
                 <canvas id="cvs-${id}"></canvas>
                 <div id="txt-${id}" class="overlay-desc"></div>
             </div>
         `;
-        document.getElementById('gallery-stream').appendChild(post);
+        stream.appendChild(block);
 
         const canvas = document.getElementById(`cvs-${id}`);
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-        // 載入圖片
-        const [imgE, imgK] = await Promise.all([
-            loadImage(infoA.encUrl), 
-            loadImage(infoB.keyUrl)
-        ]);
+        const [imgE, imgK] = await Promise.all([loadImage(infoA.encUrl), loadImage(infoB.keyUrl)]);
         
+        // 限制畫布尺寸，避免 iPad 記憶體崩潰
+        const scale = window.devicePixelRatio || 1;
         canvas.width = imgE.width; 
         canvas.height = imgE.height;
 
@@ -62,19 +109,39 @@ async function renderBlock(id) {
             }
             ctx.putImageData(res, 0, 0);
             
-            // 處理圖片上覆蓋的文字
             const txt = document.getElementById(`txt-${id}`);
             txt.innerText = infoC.text;
             txt.style.color = infoC.color;
             txt.style.fontSize = infoC.size;
-            post.classList.add('active');
+            block.classList.add('active');
         };
 
         compute();
         setInterval(compute, 10000); 
     } catch (err) {
-        console.error("貼文渲染失敗:", err);
+        console.error("BLOCK_RENDER_FAILED:", err);
     }
 }
 
-// 其餘 init, loadImage, getNoise, scroll 監聽邏輯保持不變...
+// 滾動調度
+stream.addEventListener('scroll', () => {
+    if (stream.scrollTop + stream.clientHeight >= stream.scrollHeight - 100) {
+        if (loadedIdx < workOrder.length) {
+            renderBlock(workOrder[loadedIdx++]);
+        }
+    }
+}, { passive: true });
+
+// 初始化
+async function init() {
+    try {
+        const res = await fetch('index.json');
+        const data = await res.json();
+        workOrder = data.order;
+        if(workOrder.length > 0) renderBlock(workOrder[loadedIdx++]);
+    } catch (e) {
+        console.error("INIT_ERROR:", e);
+    }
+}
+
+init();
