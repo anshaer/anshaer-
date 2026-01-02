@@ -11,6 +11,7 @@ body {
     color: var(--text);
     margin: 0; padding: 0;
     font-family: -apple-system, system-ui, sans-serif;
+    min-height: 100vh; /* 確保 body 至少有一屏高 */
 }
 
 #gallery-stream {
@@ -19,13 +20,13 @@ body {
     padding: 10px;
 }
 
-/* 貼文卡片設計 */
 .post-card {
     background: var(--card);
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 24px;
     border: 1px solid #222;
+    opacity: 1; /* 確保貼文顯示 */
 }
 
 .post-header {
@@ -42,7 +43,6 @@ body {
     white-space: pre-wrap;
 }
 
-/* 多圖網格系統 */
 .post-grid { display: grid; gap: 4px; border-radius: 8px; overflow: hidden; }
 .grid-1 { grid-template-columns: 1fr; }
 .grid-2 { grid-template-columns: 1fr 1fr; }
@@ -59,7 +59,6 @@ body {
 
 canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* 圖片上的文字浮層 */
 .overlay-desc {
     position: absolute;
     top: 50%; left: 50%;
@@ -69,20 +68,19 @@ canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
     pointer-events: none;
     font-weight: bold;
     text-shadow: 0 0 10px #000;
-    opacity: 0; /* 預設隱藏，解密後漸顯 */
+    opacity: 0;
     transition: opacity 0.8s ease;
 }
 
 .active .overlay-desc { opacity: 1; }
 
-/* 燈箱全螢幕系統 */
 #lightbox {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
     background: rgba(0, 0, 0, 0.98);
     z-index: 9999;
-    display: none; /* JS 切換為 flex */
+    display: none;
     justify-content: center;
     align-items: center;
     backdrop-filter: blur(8px);
@@ -103,10 +101,9 @@ canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
     z-index: 10000;
 }
 
-/* 燈箱文字：強制最高層級 */
 #lightbox .overlay-desc {
     z-index: 10001;
-    opacity: 1 !important; /* 燈箱內不等待動畫 */
+    opacity: 1 !important;
     font-size: 32px;
 }
 
