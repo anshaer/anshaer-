@@ -12,6 +12,48 @@ body {
     font-family: -apple-system, system-ui, sans-serif;
 }
 
+/* 燈箱容器 */
+#lightbox {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    transition: opacity 0.3s;
+}
+
+#lightbox.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.lightbox-content {
+    position: relative;
+    width: 95vw;
+    max-height: 90vh;
+}
+
+#lightbox-canvas {
+    width: 100%;
+    height: auto;
+    max-height: 90vh;
+    object-fit: contain;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    color: var(--neon);
+    font-family: monospace;
+    cursor: pointer;
+    padding: 10px;
+    border: 1px solid var(--neon);
+}
+
 #gallery-stream {
     max-width: 600px;
     margin: 0 auto;
