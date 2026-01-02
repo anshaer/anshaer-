@@ -1,19 +1,15 @@
-// 全域變數
 let allPosts = [];
 let loadedIdx = 0;
 let dbCache = { A: null, B: null, C: null };
 let lbInterval = null;
 
-// 工具：顯示螢幕錯誤訊息 (診斷用)
+// 工具：顯示診斷錯誤
 const showError = (msg) => {
     const status = document.getElementById('loading-status');
-    if (status) {
-        status.style.color = "#ff0055";
-        status.innerHTML = `ERROR: ${msg}`;
-    }
+    if (status) { status.style.color = "#ff0055"; status.innerHTML = `ERROR: ${msg}`; }
 };
 
-// 工具：雜訊算法
+// 工具：雜訊生成
 const getNoise = (seed, len) => {
     let h = Array.from(seed).reduce((s, c) => Math.imul(31, s) + c.charCodeAt(0) | 0, 0);
     const n = new Uint8Array(len);
@@ -24,33 +20,31 @@ const getNoise = (seed, len) => {
     return n;
 };
 
-// 工具：圖片加載 (加上跨域與防快取)
+// 工具：圖片加載
 const loadImage = (url) => new Promise((resolve, reject) => {
     const i = new Image();
     i.crossOrigin = "anonymous";
     i.onload = () => resolve(i);
-    i.onerror = () => reject(new Error(`無法讀取圖片: ${url}`));
+    i.onerror = () => reject(new Error(`IMAGE_LOST: ${url}`));
     i.src = url;
 });
 
-// 核心：抓取資料庫
+// 1. 抓取資源庫
 async function getDB() {
     if (!dbCache.A) {
         try {
             const [a, b, c] = await Promise.all([
-                fetch('data_A.json').then(r => { if(!r.ok) throw 'A'; return r.json(); }),
-                fetch('data_B.json').then(r => { if(!r.ok) throw 'B'; return r.json(); }),
-                fetch('data_C.json').then(r => { if(!r.ok) throw 'C'; return r.json(); })
+                fetch('data_A.json').then(r => r.json()),
+                fetch('data_B.json').then(r => r.json()),
+                fetch('data_C.json').then(r => r.json())
             ]);
             dbCache = { A: a, B: b, C: c };
-        } catch (e) {
-            throw new Error(`資料庫檔案讀取失敗 (data_${e}.json)`);
-        }
+        } catch (e) { throw new Error("DATABASE_LOAD_FAILED"); }
     }
     return dbCache;
 }
 
-// 核心：渲染單一貼文
+// 2. 渲染貼文
 async function renderPost(postData) {
     const stream = document.getElementById('gallery-stream');
     const { A, B, C } = await getDB();
@@ -60,7 +54,7 @@ async function renderPost(postData) {
     const displayIDs = postData.imageIDs.slice(0, 4);
 
     post.innerHTML = `
-        <div class="post-header">// SIGNAL: ${postData.postID}</div>
+        <div class="post-header">// SIGNAL_RECIEVED: ${postData.postID}</div>
         <div class="post-description">${postData.description}</div>
         <div class="post-grid grid-${displayIDs.length}" id="grid-${postData.postID}"></div>
     `;
@@ -79,21 +73,18 @@ async function renderPost(postData) {
 
         if (A[resId] && B[resId] && C[resId]) {
             initImageLogic(cvsId, txtId, A[resId], B[resId], C[resId], resId, post);
-        } else {
-            console.error(`找不到資源 ID: ${resId}`);
         }
     });
 }
 
-// 核心：Canvas 解密邏輯
+// 3. 核心解密與燈箱連動
 async function initImageLogic(cvsId, txtId, rA, rB, rC, resId, parentPost) {
     const canvas = document.getElementById(cvsId);
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     
     try {
         const [imgE, imgK] = await Promise.all([loadImage(rA.encUrl), loadImage(rB.keyUrl)]);
-        canvas.width = imgE.width; 
-        canvas.height = imgE.height;
+        canvas.width = imgE.width; canvas.height = imgE.height;
 
         const decrypt = (targetCtx, targetTxtId, isLightbox = false) => {
             if (!targetCtx) return;
@@ -118,7 +109,8 @@ async function initImageLogic(cvsId, txtId, rA, rB, rC, resId, parentPost) {
             if (overlay) {
                 overlay.innerText = rC.text;
                 overlay.style.color = rC.color;
-                overlay.style.fontSize = isLightbox ? '32px' : rC.size;
+                overlay.style.fontSize = isLightbox ? '36px' : rC.size;
+                if (isLightbox) overlay.style.opacity = "1";
             }
             parentPost.classList.add('active');
         };
@@ -126,54 +118,45 @@ async function initImageLogic(cvsId, txtId, rA, rB, rC, resId, parentPost) {
         decrypt(ctx, txtId);
         setInterval(() => decrypt(ctx, txtId), 10000);
 
-        // 燈箱點擊
+        // 點擊放大
         canvas.addEventListener('click', () => {
             const lb = document.getElementById('lightbox');
             const lbCanvas = document.getElementById('lightbox-canvas');
             const lbCtx = lbCanvas.getContext('2d', { willReadFrequently: true });
-            lbCanvas.width = imgE.width; 
-            lbCanvas.height = imgE.height;
-            lb.classList.add('show');
+            
+            lbCanvas.width = imgE.width; lbCanvas.height = imgE.height;
+            lb.style.display = 'flex';
+            
             decrypt(lbCtx, 'lightbox-text', true);
             if(lbInterval) clearInterval(lbInterval);
             lbInterval = setInterval(() => decrypt(lbCtx, 'lightbox-text', true), 10000);
         });
 
-    } catch (e) {
-        console.error(e.message);
-    }
+    } catch (e) { console.error(e); }
 }
 
-// 燈箱關閉
+// 4. 系統初始化
 document.querySelector('.lightbox-close').addEventListener('click', () => {
-    document.getElementById('lightbox').classList.remove('show');
+    document.getElementById('lightbox').style.display = 'none';
     if(lbInterval) clearInterval(lbInterval);
 });
 
-// 初始化入口
 async function main() {
     try {
         const res = await fetch('posts.json');
-        if (!res.ok) throw new Error("找不到 posts.json");
+        if (!res.ok) throw new Error("MISSING_POSTS_JSON");
         allPosts = (await res.json()).reverse(); 
         
         if (allPosts.length > 0) {
             await renderPost(allPosts[loadedIdx++]);
             document.getElementById('loading-status').style.display = 'none';
-        } else {
-            showError("posts.json 內沒有貼文數據");
         }
-    } catch (e) { 
-        showError(e.message);
-    }
+    } catch (e) { showError(e.message); }
 }
 
-// 無限捲動
 window.addEventListener('scroll', () => {
     if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
-        if (loadedIdx < allPosts.length) {
-            renderPost(allPosts[loadedIdx++]);
-        }
+        if (loadedIdx < allPosts.length) renderPost(allPosts[loadedIdx++]);
     }
 }, { passive: true });
 
