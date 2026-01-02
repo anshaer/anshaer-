@@ -46,6 +46,7 @@ async function getDB() {
 
 // 2. 渲染貼文
 async function renderPost(postData) {
+    if (!postData) return;
     const stream = document.getElementById('gallery-stream');
     const { A, B, C } = await getDB();
     
@@ -118,15 +119,12 @@ async function initImageLogic(cvsId, txtId, rA, rB, rC, resId, parentPost) {
         decrypt(ctx, txtId);
         setInterval(() => decrypt(ctx, txtId), 10000);
 
-        // 點擊放大
         canvas.addEventListener('click', () => {
             const lb = document.getElementById('lightbox');
             const lbCanvas = document.getElementById('lightbox-canvas');
             const lbCtx = lbCanvas.getContext('2d', { willReadFrequently: true });
-            
             lbCanvas.width = imgE.width; lbCanvas.height = imgE.height;
             lb.style.display = 'flex';
-            
             decrypt(lbCtx, 'lightbox-text', true);
             if(lbInterval) clearInterval(lbInterval);
             lbInterval = setInterval(() => decrypt(lbCtx, 'lightbox-text', true), 10000);
@@ -135,7 +133,7 @@ async function initImageLogic(cvsId, txtId, rA, rB, rC, resId, parentPost) {
     } catch (e) { console.error(e); }
 }
 
-// 4. 系統初始化
+// 4. 系統初始化 (強化版)
 document.querySelector('.lightbox-close').addEventListener('click', () => {
     document.getElementById('lightbox').style.display = 'none';
     if(lbInterval) clearInterval(lbInterval);
@@ -145,18 +143,29 @@ async function main() {
     try {
         const res = await fetch('posts.json');
         if (!res.ok) throw new Error("MISSING_POSTS_JSON");
-        allPosts = (await res.json()).reverse(); 
+        const rawData = await res.json();
+        allPosts = rawData.reverse(); 
         
-        if (allPosts.length > 0) {
+        // 初始先加載前 3 則 (或全部，如果不足 3 則)
+        const initialCount = Math.min(allPosts.length, 3);
+        for (let i = 0; i < initialCount; i++) {
             await renderPost(allPosts[loadedIdx++]);
-            document.getElementById('loading-status').style.display = 'none';
         }
+        
+        document.getElementById('loading-status').style.display = 'none';
     } catch (e) { showError(e.message); }
 }
 
+// 捲動監聽 (優化觸發距離)
 window.addEventListener('scroll', () => {
-    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
-        if (loadedIdx < allPosts.length) renderPost(allPosts[loadedIdx++]);
+    const scrollBottom = window.innerHeight + window.scrollY;
+    const pageHeight = document.documentElement.scrollHeight;
+    
+    // 距離底部 600px 且還有未載入的貼文時觸發
+    if (scrollBottom >= pageHeight - 600) {
+        if (loadedIdx < allPosts.length) {
+            renderPost(allPosts[loadedIdx++]);
+        }
     }
 }, { passive: true });
 
