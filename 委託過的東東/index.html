@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEON_SYNC | 賽博動態牆</title>
+    <title>NEON_SYNC</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="gallery-stream"></div>
+    <div id="loading-status">SYSTEM_INITIALIZING...</div>
 
-    <div id="loading-status">SYSTEM_STREAMING...</div>
+    <div id="lightbox">
+        <div class="lightbox-close">CLOSE [X]</div>
+        <div class="lightbox-content">
+            <canvas id="lightbox-canvas"></canvas>
+            <div id="lightbox-text" class="overlay-desc"></div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
-    <div id="lightbox" class="hidden">
-    <div class="lightbox-content">
-        <canvas id="lightbox-canvas"></canvas>
-        <div id="lightbox-text" class="overlay-desc"></div>
-    </div>
-    <div class="lightbox-close">CLOSE [X]</div>
-</div>
 </body>
 </html>
