@@ -1,17 +1,20 @@
 {
-  "88888888": { 
-    "codeC": "PASS_C01", 
-    "longDesc": "這是一段很長很長的敘述...\n可以包含換行符號，展示在圖片上方。",
-    "text": "圖片中心文字", 
-    "color": "#00f2ff", 
-    "size": "24px" 
+  "88888888": {
+    "codeC": "SECRET_KEY_C_01",
+    "text": "NEON_DISTRICT_TYPE_A",
+    "color": "#00f2ff",
+    "size": "24px"
   },
-"20241001": { 
-    "codeC": "33WBTL8W", 
-    "longDesc": "這是一段很長很長的敘述...\n可以包含換行符號，展示在圖片上方。",
-    "text": "圖片中心文字", 
-    "color": "#00f2ff", 
-    "size": "24px" 
+  "20241001": {
+    "codeC": "33WBTL8",
+    "text": "CYBER_GIRL_UNIT_02",
+    "color": "#ff0055",
+    "size": "26px"
+  },
+  "img_9999": {
+    "codeC": "X_KEY_99",
+    "text": "SYSTEM_CRITICAL_ERROR",
+    "color": "#ffffff",
+    "size": "30px"
   }
-
 }
