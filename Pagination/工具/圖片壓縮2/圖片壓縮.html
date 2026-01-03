@@ -5,15 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>圖片等比例壓縮工具</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; line-height: 1.6; }
-        .container { border: 2px dashed #ccc; padding: 20px; border-radius: 10px; text-align: center; }
-        .info { margin: 20px 0; display: flex; justify-content: space-around; background: #f4f4f4; padding: 10px; border-radius: 5px; }
-        .preview-container { margin-top: 20px; }
-        canvas { max-width: 100%; height: auto; border: 1px solid #ddd; margin-top: 10px; }
-        .controls { margin: 20px 0; }
-        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        input[type="number"] { width: 80px; padding: 5px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 700px; margin: 20px auto; padding: 20px; color: #333; }
+        .container { border: 2px dashed #bbb; padding: 30px; border-radius: 12px; text-align: center; background: #fafafa; }
+        .controls { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .control-group { display: flex; flex-direction: column; }
+        .info { margin: 20px 0; display: flex; justify-content: space-around; background: #e9ecef; padding: 15px; border-radius: 8px; font-weight: bold; }
+        .preview-container { margin-top: 20px; text-align: center; border-top: 1px solid #eee; pt: 20px; }
+        canvas { max-width: 100%; height: auto; border: 1px solid #ddd; margin: 15px 0; border-radius: 4px; }
+        button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .btn-refresh { background-color: #28a745; color: white; width: 100%; margin-top: 10px; }
+        .btn-refresh:hover { background-color: #218838; }
+        .btn-download { background-color: #007bff; color: white; font-size: 16px; width: 100%; padding: 12px; }
+        .btn-download:hover { background-color: #0069d9; }
+        input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-top: 5px; }
+        label { font-size: 0.9em; color: #666; }
     </style>
 </head>
 <body>
@@ -22,23 +27,33 @@
     
     <div class="container">
         <input type="file" id="upload" accept="image/*">
+        
         <div class="controls">
-            <label>壓縮比例 (0.1 - 1.0): </label>
-            <input type="number" id="quality" step="0.1" min="0.1" max="1.0" value="0.7">
-            <p><small>* 比例越低，檔案越小但畫質越差</small></p>
+            <div class="control-group">
+                <label>縮放比例 (0.1 - 1.0)</label>
+                <input type="number" id="scale" step="0.1" min="0.1" max="1.0" value="0.8">
+                <small>0.5 表示長寬各減半</small>
+            </div>
+            <div class="control-group">
+                <label>壓縮品質 (1-100)</label>
+                <input type="number" id="quality" min="1" max="100" value="80">
+                <small>數值越低檔案越小</small>
+            </div>
+            <div style="grid-column: span 2;">
+                <button class="btn-refresh" id="refreshBtn">🔄 刷新預覽與尺寸</button>
+            </div>
         </div>
     </div>
 
     <div class="info" id="sizeInfo" style="display: none;">
-        <div><strong>原始尺寸：</strong> <span id="originalRes">--</span></div>
-        <div><strong>新尺寸：</strong> <span id="newRes">--</span></div>
+        <div>原始：<span id="originalRes" style="color: #666;">--</span></div>
+        <div>➡️</div>
+        <div>新尺寸：<span id="newRes" style="color: #d9534f;">--</span></div>
     </div>
 
     <div class="preview-container" id="previewArea" style="display: none;">
-        <h3>壓縮預覽：</h3>
         <canvas id="canvas"></canvas>
-        <br>
-        <button id="downloadBtn">下載壓縮後的圖片</button>
+        <button class="btn-download" id="downloadBtn">💾 下載壓縮圖片</button>
     </div>
 
     <script>
@@ -49,50 +64,70 @@
         const newRes = document.getElementById('newRes');
         const sizeInfo = document.getElementById('sizeInfo');
         const previewArea = document.getElementById('previewArea');
+        const refreshBtn = document.getElementById('refreshBtn');
         const downloadBtn = document.getElementById('downloadBtn');
+        
+        const scaleInput = document.getElementById('scale');
         const qualityInput = document.getElementById('quality');
 
+        let currentImg = null;
+
+        // 當選擇檔案時
         upload.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.readAsDataURL(file);
-
             reader.onload = function(event) {
-                const img = new Image();
-                img.src = event.target.result;
-
-                img.onload = function() {
-                    // 顯示原始尺寸
-                    originalRes.innerText = `${img.width} x ${img.height}`;
-
-                    // 設定壓縮後的比例 (維持等比例)
-                    const scale = 0.8; // 你也可以根據需要讓使用者調整寬度
-                    canvas.width = img.width * scale;
-                    canvas.height = img.height * scale;
-
-                    // 顯示新尺寸
-                    newRes.innerText = `${Math.round(canvas.width)} x ${Math.round(canvas.height)}`;
-
-                    // 繪製圖片到 Canvas
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                    // 顯示資訊與預覽
-                    sizeInfo.style.display = 'flex';
-                    previewArea.style.display = 'block';
-
-                    // 下載按鈕功能
-                    downloadBtn.onclick = function() {
-                        const quality = parseFloat(qualityInput.value);
-                        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-                        const link = document.createElement('a');
-                        link.download = 'compressed-image.jpg';
-                        link.href = dataUrl;
-                        link.click();
-                    };
-                };
+                currentImg = new Image();
+                currentImg.src = event.target.result;
+                currentImg.onload = processImage; // 載入後自動執行第一次處理
             };
+            reader.readAsDataURL(file);
+        });
+
+        // 刷新按鈕點擊事件
+        refreshBtn.addEventListener('click', function() {
+            if (currentImg) {
+                processImage();
+            } else {
+                alert("請先上傳圖片！");
+            }
+        });
+
+        function processImage() {
+            if (!currentImg) return;
+
+            // 讀取設定值
+            const scale = parseFloat(scaleInput.value) || 0.8;
+            
+            // 顯示原始尺寸
+            originalRes.innerText = `${currentImg.width} * ${currentImg.height}`;
+
+            // 計算並設定新尺寸 (等比例)
+            canvas.width = Math.round(currentImg.width * scale);
+            canvas.height = Math.round(currentImg.height * scale);
+
+            // 顯示新尺寸文字
+            newRes.innerText = `${canvas.width} * ${canvas.height}`;
+
+            // 繪圖
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(currentImg, 0, 0, canvas.width, canvas.height);
+
+            // 顯示區塊
+            sizeInfo.style.display = 'flex';
+            previewArea.style.display = 'block';
+        }
+
+        // 下載功能
+        downloadBtn.addEventListener('click', function() {
+            const quality = parseInt(qualityInput.value) / 100;
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            const link = document.createElement('a');
+            link.download = `compressed_${canvas.width}x${canvas.height}.jpg`;
+            link.href = dataUrl;
+            link.click();
         });
     </script>
 </body>
