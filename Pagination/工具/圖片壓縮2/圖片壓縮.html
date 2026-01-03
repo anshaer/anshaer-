@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圖片等比例壓縮工具</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; line-height: 1.6; }
+        .container { border: 2px dashed #ccc; padding: 20px; border-radius: 10px; text-align: center; }
+        .info { margin: 20px 0; display: flex; justify-content: space-around; background: #f4f4f4; padding: 10px; border-radius: 5px; }
+        .preview-container { margin-top: 20px; }
+        canvas { max-width: 100%; height: auto; border: 1px solid #ddd; margin-top: 10px; }
+        .controls { margin: 20px 0; }
+        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        input[type="number"] { width: 80px; padding: 5px; }
+    </style>
+</head>
+<body>
+
+    <h2>🖼️ 圖片等比例壓縮器</h2>
+    
+    <div class="container">
+        <input type="file" id="upload" accept="image/*">
+        <div class="controls">
+            <label>壓縮比例 (0.1 - 1.0): </label>
+            <input type="number" id="quality" step="0.1" min="0.1" max="1.0" value="0.7">
+            <p><small>* 比例越低，檔案越小但畫質越差</small></p>
+        </div>
+    </div>
+
+    <div class="info" id="sizeInfo" style="display: none;">
+        <div><strong>原始尺寸：</strong> <span id="originalRes">--</span></div>
+        <div><strong>新尺寸：</strong> <span id="newRes">--</span></div>
+    </div>
+
+    <div class="preview-container" id="previewArea" style="display: none;">
+        <h3>壓縮預覽：</h3>
+        <canvas id="canvas"></canvas>
+        <br>
+        <button id="downloadBtn">下載壓縮後的圖片</button>
+    </div>
+
+    <script>
+        const upload = document.getElementById('upload');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const originalRes = document.getElementById('originalRes');
+        const newRes = document.getElementById('newRes');
+        const sizeInfo = document.getElementById('sizeInfo');
+        const previewArea = document.getElementById('previewArea');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const qualityInput = document.getElementById('quality');
+
+        upload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+
+            reader.onload = function(event) {
+                const img = new Image();
+                img.src = event.target.result;
+
+                img.onload = function() {
+                    // 顯示原始尺寸
+                    originalRes.innerText = `${img.width} x ${img.height}`;
+
+                    // 設定壓縮後的比例 (維持等比例)
+                    const scale = 0.8; // 你也可以根據需要讓使用者調整寬度
+                    canvas.width = img.width * scale;
+                    canvas.height = img.height * scale;
+
+                    // 顯示新尺寸
+                    newRes.innerText = `${Math.round(canvas.width)} x ${Math.round(canvas.height)}`;
+
+                    // 繪製圖片到 Canvas
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    // 顯示資訊與預覽
+                    sizeInfo.style.display = 'flex';
+                    previewArea.style.display = 'block';
+
+                    // 下載按鈕功能
+                    downloadBtn.onclick = function() {
+                        const quality = parseFloat(qualityInput.value);
+                        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                        const link = document.createElement('a');
+                        link.download = 'compressed-image.jpg';
+                        link.href = dataUrl;
+                        link.click();
+                    };
+                };
+            };
+        });
+    </script>
+</body>
+</html>
