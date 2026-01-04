@@ -1,20 +1,172 @@
 {
-  "88888888": {
-    "codeC": "SECRET_KEY_C_01",
-    "text": "NEON_DISTRICT_TYPE_A",
+  "20261001": {
+    "codeC": "YO9U54AC",
+    "text": "禁止AI使用",
     "color": "#00f2ff",
-    "size": "24px"
+    "size": "42px"
   },
-  "20240001": {
-    "codeC": "7T6Z0BGF",
-    "text": "測試",
-    "color": "#ff0055",
-    "size": "26px"
+  "20261002": {
+    "codeC": "AM6YE1K9",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
   },
-  "img_9999": {
-    "codeC": "X_KEY_99",
-    "text": "SYSTEM_CRITICAL_ERROR",
-    "color": "#ffffff",
-    "size": "30px"
+
+  "20261003": {
+    "codeC": "RBBVJNHJ",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261004": {
+    "codeC": "DNQ1AFPS",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261005": {
+    "codeC": "0YB0EQS0",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261006": {
+    "codeC": "SN0RGJT2",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261007": {
+    "codeC": "K2B2EXUB",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261008": {
+    "codeC": "JQAGRVOU",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261009": {
+    "codeC": "LZC0OHEZ",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261010": {
+    "codeC": "CHEAIEEC",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261011": {
+    "codeC": "KGLSPUFM",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261012": {
+    "codeC": "KT4W0HA2",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261013": {
+    "codeC": "07SC07DH",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261014": {
+    "codeC": "FOCZNNRP",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261015": {
+    "codeC": "GVV2TXXU",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261016": {
+    "codeC": "AY8LGUI5",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261017": {
+    "codeC": "F2ID0STK",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261018": {
+    "codeC": "38XFKWPS",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261019": {
+    "codeC": "ZT9HAJ51",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261020": {
+    "codeC": "X16BZT0G",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261021": {
+    "codeC": "Q9IJB61Y",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261022": {
+    "codeC": "Y3NVFFCT",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261023": {
+    "codeC": "LE20MXH5",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261024": {
+    "codeC": "6GRPKVUQ",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261025": {
+    "codeC": "E5DRTRHW",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261026": {
+    "codeC": "K6WEDSSF",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261026": {
+    "codeC": "3EC9TI2T",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
+  },
+  "20261028": {
+    "codeC": "XA9E04OV",
+    "text": "禁止AI使用",
+    "color": "#00f2ff",
+    "size": "42px"
   }
+
 }
