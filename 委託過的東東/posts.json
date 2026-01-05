@@ -1,43 +1,42 @@
 [
-     {
+  {
     "postID": "P001",
-    "description": "果咩🥹",
-    "imageIDs": ["20261001","20261002","20261003","20261004"]
+    "description": "果咩🥹\n[繪師 卯前Aro|https://x.com/usagi1923]",
+    "imageIDs": ["20261001", "20261002", "20261003", "20261004"]
   },
-    {
+  {
     "postID": "P002",
-    "description": "朔和望",
-    "imageIDs": ["20261014","20261015"]
+    "description": "朔和望\n[繪師 Yomi|https://x.com/yamizaki_yomi]",
+    "imageIDs": ["20261014", "20261015"]
   },
-    {
+  {
     "postID": "P003",
-    "description": "萬聖節薄巧",
+    "description": "萬聖節薄巧\n[繪師 卯前Aro|https://x.com/usagi1923]",
     "imageIDs": ["20261019"]
   },
-    {
+  {
     "postID": "P004",
-    "description": "2025新年",
-    "imageIDs": ["20261009","20261017","20261010","20261022"]
+    "description": "2025新年\n[繪師 Yomi|https://x.com/yamizaki_yomi]",
+    "imageIDs": ["20261009", "20261017", "20261010", "20261022"]
   },
-    {
+  {
     "postID": "P005",
-    "description": "中秋",
-    "imageIDs": ["20261020","20261018","20261006","20261007"]
+    "description": "中秋\n[繪師 羌莞|https://x.com/100010zero]",
+    "imageIDs": ["20261020", "20261018", "20261006", "20261007"]
   },
-    {
+  {
     "postID": "P006",
-    "description": "中秋兔兔",
-    "imageIDs": ["20261023","20261024","20261026","20261027"]
+    "description": "中秋兔兔\n[繪師 潔諾|https://x.com/Jessroin]",
+    "imageIDs": ["20261023", "20261024", "20261026", "20261027"]
   },
-    {
+  {
     "postID": "P007",
-    "description": "萬聖節巫毒娃娃",
-    "imageIDs": ["20261008","20261016","20261021","20261005"]
+    "description": "萬聖節巫毒娃娃\n[繪師 兎棲tosui|https://www.tutucocoma.com/]",
+    "imageIDs": ["20261008", "20261016", "20261021", "20261005"]
   },
-
-    {
+  {
     "postID": "P008",
-    "description": "柚子",
-    "imageIDs": ["20261011","20261012","20261013"]
-  }  
+    "description": "柚子\n[繪師 gelaierblack|https://x.com/Gelaier_Black]",
+    "imageIDs": ["20261011", "20261012", "20261013"]
+  }
 ]
