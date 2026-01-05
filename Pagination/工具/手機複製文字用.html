@@ -3,121 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>臨時記事板 - 取代功能版</title>
+    <title>臨時記事板 - 手機優化版</title>
     <style>
         body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
+            margin: 0; padding: 0; height: 100%;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f0f2f5;
-            overflow: hidden; 
+            background-color: #f0f2f5; overflow: hidden;
         }
-
         .container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            padding: 12px;
-            box-sizing: border-box;
-            gap: 12px;
+            display: flex; flex-direction: column;
+            height: 100vh; padding: 10px; box-sizing: border-box; gap: 10px;
         }
 
-        /* --- 上方 1/3 區塊 --- */
+        /* --- 上方區塊 (1/3) --- */
         .top-section {
-            flex: 1; 
-            display: flex;
-            flex-direction: column;
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            min-height: 0;
+            flex: 1.2; /* 稍微增加比例以容納下方按鈕 */
+            display: flex; flex-direction: column;
+            background: white; border-radius: 12px; padding: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); min-height: 0;
         }
-
-        /* 取代功能欄 */
-        .replace-bar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-            align-items: center;
+        .top-main {
+            display: flex; flex: 1; gap: 8px; min-height: 0; margin-bottom: 8px;
         }
-
-        .replace-bar input {
-            flex: 1;
-            padding: 6px 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 13px;
-        }
-
-        .top-content {
-            display: flex;
-            flex: 1;
-            gap: 10px;
-            min-height: 0;
-        }
-
         #main-note {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            line-height: 1.5;
-            resize: none;
-            background-color: #fafafa;
+            flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 16px; resize: none; background-color: #fafafa;
         }
 
-        /* --- 下方 2/3 區塊 --- */
+        /* 取代功能區域 (改至下方) */
+        .replace-area {
+            display: flex; flex-direction: column; gap: 6px;
+            border-top: 1px solid #eee; pt: 8px;
+        }
+        .replace-inputs {
+            display: flex; gap: 6px;
+        }
+        .replace-inputs input {
+            flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;
+        }
+        .replace-btns {
+            display: flex; gap: 6px;
+        }
+        .replace-btns button { flex: 1; }
+
+        /* --- 下方區塊 (2/3) --- */
         .bottom-section {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            overflow-y: auto;
+            flex: 2; display: flex; flex-direction: column; gap: 8px;
+            background: #ffffff; border-radius: 12px; padding: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-y: auto;
         }
 
-        /* --- 按鈕樣式 --- */
-        .input-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 15px;
-        }
-
-        .btn-group-v {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
+        /* 通用按鈕 */
+        .input-group { display: flex; gap: 6px; margin-bottom: 4px; }
+        .input-group input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        
         button {
-            padding: 8px 14px;
-            cursor: pointer;
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-weight: 500;
-            white-space: nowrap;
+            padding: 8px 12px; cursor: pointer; border: none; border-radius: 6px;
+            color: white; font-weight: 500; font-size: 14px;
         }
-
         .copy-btn { background-color: #4361ee; }
         .clear-btn { background-color: #ef476f; }
-        .replace-btn { background-color: #06d6a0; color: #fff; }
-        button:hover { opacity: 0.85; }
+        .search-btn { background-color: #f7b801; color: #333; }
+        .exec-btn { background-color: #06d6a0; }
+        button:active { opacity: 0.7; }
         
-        h3 { margin: 0 0 10px 0; font-size: 14px; color: #888; letter-spacing: 1px; }
+        h3 { margin: 0 0 8px 0; font-size: 13px; color: #888; }
     </style>
 </head>
 <body>
@@ -125,25 +75,28 @@
 <div class="container">
     <div class="top-section">
         <h3>大型記事區</h3>
-        
-        <div class="replace-bar">
-            <input type="text" id="find-str" placeholder="尋找內容...">
-            <span>→</span>
-            <input type="text" id="replace-str" placeholder="取代為...">
-            <button class="replace-btn" onclick="executeReplace()">執行取代</button>
-        </div>
-
-        <div class="top-content">
+        <div class="top-main">
             <textarea id="main-note" placeholder="在此輸入內容..."></textarea>
-            <div class="btn-group-v">
+            <div style="display:flex; flex-direction:column; gap:8px;">
                 <button class="copy-btn" onclick="copyText('main-note')">複製</button>
                 <button class="clear-btn" onclick="clearText('main-note')">清除</button>
+            </div>
+        </div>
+
+        <div class="replace-area">
+            <div class="replace-inputs">
+                <input type="text" id="find-str" placeholder="尋找內容...">
+                <input type="text" id="replace-str" placeholder="取代為...">
+            </div>
+            <div class="replace-btns">
+                <button class="search-btn" onclick="searchToggle()">搜尋/標記</button>
+                <button class="exec-btn" onclick="executeReplace()">執行取代</button>
             </div>
         </div>
     </div>
 
     <div class="bottom-section">
-        <h3>單行快速記事</h3>
+        <h3>單行記事</h3>
         <div class="input-group"><input type="text" id="line-1" placeholder="記事 1"><button class="copy-btn" onclick="copyText('line-1')">複製</button><button class="clear-btn" onclick="clearText('line-1')">清除</button></div>
         <div class="input-group"><input type="text" id="line-2" placeholder="記事 2"><button class="copy-btn" onclick="copyText('line-2')">複製</button><button class="clear-btn" onclick="clearText('line-2')">清除</button></div>
         <div class="input-group"><input type="text" id="line-3" placeholder="記事 3"><button class="copy-btn" onclick="copyText('line-3')">複製</button><button class="clear-btn" onclick="clearText('line-3')">清除</button></div>
@@ -153,42 +106,43 @@
 </div>
 
 <script>
-    // 執行取代功能 (全部取代)
+    // 搜尋功能：選取找到的第一個目標
+    function searchToggle() {
+        const txt = document.getElementById('main-note');
+        const find = document.getElementById('find-str').value;
+        if (!find) return;
+        
+        const index = txt.value.indexOf(find);
+        if (index !== -1) {
+            txt.focus();
+            txt.setSelectionRange(index, index + find.length);
+        } else {
+            alert("找不到內容");
+        }
+    }
+
     function executeReplace() {
         const mainNote = document.getElementById('main-note');
         const findStr = document.getElementById('find-str').value;
         const replaceStr = document.getElementById('replace-str').value;
-
-        if (!findStr) {
-            alert("請輸入要尋找的內容");
-            return;
-        }
-
-        // 使用正則表達式進行全域取代 (g)
-        const escapedFindStr = findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // 處理特殊字元
-        const re = new RegExp(escapedFindStr, 'g');
-        const newValue = mainNote.value.replace(re, replaceStr);
-        
-        mainNote.value = newValue;
+        if (!findStr) return;
+        const re = new RegExp(findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+        mainNote.value = mainNote.value.replace(re, replaceStr);
     }
 
-    // 複製功能
     function copyText(id) {
         const el = document.getElementById(id);
         el.select();
         navigator.clipboard.writeText(el.value).then(() => {
             const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = "已複製";
-            setTimeout(() => { btn.innerText = originalText; }, 800);
+            const old = btn.innerText;
+            btn.innerText = "OK";
+            setTimeout(() => btn.innerText = old, 800);
         });
     }
 
-    // 清除功能
     function clearText(id) {
-        if(confirm("確定清除？")) {
-            document.getElementById(id).value = "";
-        }
+        if(confirm("清除？")) document.getElementById(id).value = "";
     }
 </script>
 
