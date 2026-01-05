@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub 御神籤系統</title>
+    <style>
+        :root { --primary-red: #b22d15; }
+        body {
+            background: #121212; /* 深色背景更專業 */
+            font-family: 'Noto Serif TC', serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+        }
+
+        /* 籤筒 */
+        .shrine-box {
+            width: 140px;
+            height: 200px;
+            background: var(--primary-red);
+            border: 4px solid #d4af37;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            writing-mode: vertical-rl;
+            letter-spacing: 8px;
+            box-shadow: 0 0 20px rgba(212,175,55,0.4);
+        }
+
+        .shaking { animation: shake 0.1s infinite; }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            50% { transform: translate(-1px, -2px) rotate(-1deg); }
+            100% { transform: translate(1px, -1px) rotate(1deg); }
+        }
+
+        /* 隱藏與結果顯示 */
+        #result-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .paper-card {
+            width: 300px;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            color: #333;
+            transform: scale(0.5);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .paper-card.active { transform: scale(1); }
+
+        .q-image {
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
+            margin-bottom: 20px;
+        }
+
+        .rank-title {
+            font-size: 3rem;
+            font-weight: 900;
+            margin: 10px 0;
+            border-bottom: 2px solid #333;
+            display: inline-block;
+        }
+
+        .message { font-size: 1.2rem; margin: 20px 0; }
+
+        .btn-retry {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="draw-view">
+        <div id="box" class="shrine-box" onclick="draw()">點擊抽籤</div>
+    </div>
+
+    <div id="result-overlay">
+        <div id="card" class="paper-card">
+            <img id="res-img" class="q-image" src="" alt="Q-Version">
+            <div id="res-rank" class="rank-title"></div>
+            <div id="res-msg" class="message"></div>
+            <button class="btn-retry" onclick="location.reload()">重新求籤</button>
+        </div>
+    </div>
+
+<script>
+    let fortuneData = [];
+
+    // 從外部 JSON 讀取設定
+    fetch('data.json')
+        .then(response => response.json())
+        .then(data => fortuneData = data);
+
+    function draw() {
+        if (fortuneData.length === 0) return;
+
+        const box = document.getElementById('box');
+        box.classList.add('shaking');
+
+        // 隨機權重邏輯
+        const totalWeight = fortuneData.reduce((s, i) => s + i.weight, 0);
+        let random = Math.random() * totalWeight;
+        let selected = fortuneData[0];
+
+        for (let item of fortuneData) {
+            if (random < item.weight) {
+                selected = item;
+                break;
+            }
+            random -= item.weight;
+        }
+
+        // 隨機選一張圖與一個底色
+        const finalImg = selected.images[Math.floor(Math.random() * selected.images.length)];
+        const finalBg = selected.colors[Math.floor(Math.random() * selected.colors.length)];
+
+        setTimeout(() => {
+            box.classList.remove('shaking');
+            
+            // 填入資料
+            document.getElementById('res-img').src = finalImg;
+            document.getElementById('res-rank').innerText = selected.rank;
+            document.getElementById('res-msg').innerText = selected.msg;
+            
+            const card = document.getElementById('card');
+            card.style.backgroundColor = finalBg;
+            
+            document.getElementById('result-overlay').style.display = 'flex';
+            setTimeout(() => card.classList.add('active'), 50);
+        }, 1200);
+    }
+</script>
+</body>
+</html>
