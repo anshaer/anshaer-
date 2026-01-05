@@ -11,7 +11,7 @@ body {
     color: var(--text);
     margin: 0; padding: 0;
     font-family: -apple-system, system-ui, sans-serif;
-    min-height: 100vh; /* 確保 body 至少有一屏高 */
+    min-height: 100vh;
 }
 
 #gallery-stream {
@@ -20,13 +20,13 @@ body {
     padding: 10px;
 }
 
+/* 貼文卡片 */
 .post-card {
     background: var(--card);
     border-radius: 12px;
     padding: 16px;
     margin-bottom: 24px;
     border: 1px solid #222;
-    opacity: 1; /* 確保貼文顯示 */
 }
 
 .post-header {
@@ -36,13 +36,23 @@ body {
     margin-bottom: 12px;
 }
 
+/* 貼文文字區：支援換行與連結 */
 .post-description {
     font-size: 16px;
-    line-height: 1.5;
+    line-height: 1.6;
     margin-bottom: 16px;
-    white-space: pre-wrap;
+    white-space: pre-line;
+    color: #ccc;
 }
 
+.post-description a {
+    color: var(--neon);
+    text-decoration: none;
+    border-bottom: 1px solid var(--neon);
+    font-weight: bold;
+}
+
+/* 網格系統 */
 .post-grid { display: grid; gap: 4px; border-radius: 8px; overflow: hidden; }
 .grid-1 { grid-template-columns: 1fr; }
 .grid-2 { grid-template-columns: 1fr 1fr; }
@@ -59,6 +69,7 @@ body {
 
 canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+/* 圖片內浮層文字 */
 .overlay-desc {
     position: absolute;
     top: 50%; left: 50%;
@@ -70,10 +81,12 @@ canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
     text-shadow: 0 0 10px #000;
     opacity: 0;
     transition: opacity 0.8s ease;
+    white-space: pre-line; /* 支援 C 資料內的換行 */
 }
 
 .active .overlay-desc { opacity: 1; }
 
+/* 燈箱 */
 #lightbox {
     position: fixed;
     top: 0; left: 0;
@@ -86,36 +99,8 @@ canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
     backdrop-filter: blur(8px);
 }
 
-.lightbox-content {
-    position: relative;
-    width: 95vw;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#lightbox-canvas {
-    max-width: 100%;
-    max-height: 85vh;
-    object-fit: contain;
-    z-index: 10000;
-}
-
-#lightbox .overlay-desc {
-    z-index: 10001;
-    opacity: 1 !important;
-    font-size: 32px;
-}
-
-.lightbox-close {
-    position: absolute;
-    top: 30px; right: 30px;
-    color: var(--neon);
-    font-family: monospace;
-    border: 1px solid var(--neon);
-    padding: 8px 16px;
-    cursor: pointer;
-    z-index: 10002;
-}
-
+.lightbox-content { position: relative; width: 95vw; display: flex; justify-content: center; align-items: center; }
+#lightbox-canvas { max-width: 100%; max-height: 85vh; object-fit: contain; z-index: 10000; }
+#lightbox .overlay-desc { z-index: 10001; opacity: 1 !important; font-size: 32px; }
+.lightbox-close { position: absolute; top: 30px; right: 30px; color: var(--neon); padding: 8px 16px; cursor: pointer; z-index: 10002; border: 1px solid var(--neon); }
 #loading-status { text-align: center; padding: 20px; color: var(--neon); font-size: 12px; }
