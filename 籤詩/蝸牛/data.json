@@ -1,0 +1,51 @@
+[
+  {
+    "rank": "大吉",
+    "weight": 2,
+    "images": ["Q1.png", "Q2.png"],
+    "colors": ["#FFD700", "#F5F5DC", "#FF4500", "#800080"],
+    "msg": "神光普照，萬事亨通。"
+  },
+  {
+    "rank": "吉",
+    "weight": 5,
+    "images": ["Q1.png", "Q2.png"],
+    "colors": ["#FFD700", "#F5F5DC", "#FF4500", "#800080"],
+    "msg": "順風順水，必有所獲。"
+  },
+  {
+    "rank": "中吉",
+    "weight": 30,
+    "images": ["Q3.png", "Q4.png"],
+    "colors": ["#F5F5DC", "#ADD8E6"],
+    "msg": "穩步前行，好運隨行。"
+  },
+  {
+    "rank": "小吉",
+    "weight": 60,
+    "images": ["Q3.png", "Q4.png"],
+    "colors": ["#F5F5DC", "#ADD8E6"],
+    "msg": "微小幸福，盈滿心頭。"
+  },
+  {
+    "rank": "末吉",
+    "weight": 2,
+    "images": ["Q5.png", "Q6.png"],
+    "colors": ["#F5F5DC", "#FFFFFF"],
+    "msg": "耐心守候，終見曙光。"
+  },
+  {
+    "rank": "凶",
+    "weight": 0.9,
+    "images": ["Q7.png", "Q8.png"],
+    "colors": ["#FFFFFF", "#D3D3D3"],
+    "msg": "謹言慎行，靜待轉機。"
+  },
+  {
+    "rank": "大凶",
+    "weight": 0.1,
+    "images": ["Q7.png", "Q8.png"],
+    "colors": ["#FFFFFF", "#808080"],
+    "msg": "物極必反，否極泰來。"
+  }
+]
