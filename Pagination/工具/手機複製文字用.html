@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>臨時記事板</title>
+    <title>臨時記事板 - 取代功能版</title>
     <style>
-        /* 基礎設定：確保頁面佔滿全螢幕且不出現捲軸 */
         body, html {
             margin: 0;
             padding: 0;
@@ -33,24 +32,40 @@
             border-radius: 12px;
             padding: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            min-height: 0; /* 防止 Flex 子元素溢出 */
+            min-height: 0;
+        }
+
+        /* 取代功能欄 */
+        .replace-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .replace-bar input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 13px;
         }
 
         .top-content {
             display: flex;
-            flex: 1; /* 讓內容容器撐開 */
+            flex: 1;
             gap: 10px;
             min-height: 0;
         }
 
         #main-note {
-            flex: 1; /* 讓輸入框自動填滿所有剩餘高度與寬度 */
+            flex: 1;
             padding: 12px;
             border: 1px solid #ddd;
             border-radius: 8px;
             font-size: 16px;
             line-height: 1.5;
-            resize: none; /* 禁用手動調整大小，改由 Flex 控制 */
+            resize: none;
             background-color: #fafafa;
         }
 
@@ -64,10 +79,10 @@
             border-radius: 12px;
             padding: 15px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            overflow-y: auto; /* 若項目多於畫面則內部捲動 */
+            overflow-y: auto;
         }
 
-        /* --- 通用元件樣式 --- */
+        /* --- 按鈕樣式 --- */
         .input-group {
             display: flex;
             gap: 8px;
@@ -88,7 +103,7 @@
         }
 
         button {
-            padding: 10px 16px;
+            padding: 8px 14px;
             cursor: pointer;
             border: none;
             border-radius: 6px;
@@ -99,18 +114,27 @@
 
         .copy-btn { background-color: #4361ee; }
         .clear-btn { background-color: #ef476f; }
+        .replace-btn { background-color: #06d6a0; color: #fff; }
         button:hover { opacity: 0.85; }
         
-        h3 { margin: 0 0 10px 0; font-size: 14px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        h3 { margin: 0 0 10px 0; font-size: 14px; color: #888; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="top-section">
-        <h3>大型記事區 (自動撐開)</h3>
+        <h3>大型記事區</h3>
+        
+        <div class="replace-bar">
+            <input type="text" id="find-str" placeholder="尋找內容...">
+            <span>→</span>
+            <input type="text" id="replace-str" placeholder="取代為...">
+            <button class="replace-btn" onclick="executeReplace()">執行取代</button>
+        </div>
+
         <div class="top-content">
-            <textarea id="main-note" placeholder="在此輸入內容，輸入框會隨區塊自動調整高度..."></textarea>
+            <textarea id="main-note" placeholder="在此輸入內容..."></textarea>
             <div class="btn-group-v">
                 <button class="copy-btn" onclick="copyText('main-note')">複製</button>
                 <button class="clear-btn" onclick="clearText('main-note')">清除</button>
@@ -119,48 +143,48 @@
     </div>
 
     <div class="bottom-section">
-        <h3>單行快速記事 (5條)</h3>
-        <div class="input-group">
-            <input type="text" id="line-1" placeholder="記事 1">
-            <button class="copy-btn" onclick="copyText('line-1')">複製</button>
-            <button class="clear-btn" onclick="clearText('line-1')">清除</button>
-        </div>
-        <div class="input-group">
-            <input type="text" id="line-2" placeholder="記事 2">
-            <button class="copy-btn" onclick="copyText('line-2')">複製</button>
-            <button class="clear-btn" onclick="clearText('line-2')">清除</button>
-        </div>
-        <div class="input-group">
-            <input type="text" id="line-3" placeholder="記事 3">
-            <button class="copy-btn" onclick="copyText('line-3')">複製</button>
-            <button class="clear-btn" onclick="clearText('line-3')">清除</button>
-        </div>
-        <div class="input-group">
-            <input type="text" id="line-4" placeholder="記事 4">
-            <button class="copy-btn" onclick="copyText('line-4')">複製</button>
-            <button class="clear-btn" onclick="clearText('line-4')">清除</button>
-        </div>
-        <div class="input-group">
-            <input type="text" id="line-5" placeholder="記事 5">
-            <button class="copy-btn" onclick="copyText('line-5')">複製</button>
-            <button class="clear-btn" onclick="clearText('line-5')">清除</button>
-        </div>
+        <h3>單行快速記事</h3>
+        <div class="input-group"><input type="text" id="line-1" placeholder="記事 1"><button class="copy-btn" onclick="copyText('line-1')">複製</button><button class="clear-btn" onclick="clearText('line-1')">清除</button></div>
+        <div class="input-group"><input type="text" id="line-2" placeholder="記事 2"><button class="copy-btn" onclick="copyText('line-2')">複製</button><button class="clear-btn" onclick="clearText('line-2')">清除</button></div>
+        <div class="input-group"><input type="text" id="line-3" placeholder="記事 3"><button class="copy-btn" onclick="copyText('line-3')">複製</button><button class="clear-btn" onclick="clearText('line-3')">清除</button></div>
+        <div class="input-group"><input type="text" id="line-4" placeholder="記事 4"><button class="copy-btn" onclick="copyText('line-4')">複製</button><button class="clear-btn" onclick="clearText('line-4')">清除</button></div>
+        <div class="input-group"><input type="text" id="line-5" placeholder="記事 5"><button class="copy-btn" onclick="copyText('line-5')">複製</button><button class="clear-btn" onclick="clearText('line-5')">清除</button></div>
     </div>
 </div>
 
 <script>
+    // 執行取代功能 (全部取代)
+    function executeReplace() {
+        const mainNote = document.getElementById('main-note');
+        const findStr = document.getElementById('find-str').value;
+        const replaceStr = document.getElementById('replace-str').value;
+
+        if (!findStr) {
+            alert("請輸入要尋找的內容");
+            return;
+        }
+
+        // 使用正則表達式進行全域取代 (g)
+        const escapedFindStr = findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // 處理特殊字元
+        const re = new RegExp(escapedFindStr, 'g');
+        const newValue = mainNote.value.replace(re, replaceStr);
+        
+        mainNote.value = newValue;
+    }
+
+    // 複製功能
     function copyText(id) {
         const el = document.getElementById(id);
         el.select();
-        el.setSelectionRange(0, 99999);
         navigator.clipboard.writeText(el.value).then(() => {
-            // 簡單的視覺回饋替代彈窗
-            const originalText = event.target.innerText;
-            event.target.innerText = "OK!";
-            setTimeout(() => { event.target.innerText = originalText; }, 1000);
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "已複製";
+            setTimeout(() => { btn.innerText = originalText; }, 800);
         });
     }
 
+    // 清除功能
     function clearText(id) {
         if(confirm("確定清除？")) {
             document.getElementById(id).value = "";
