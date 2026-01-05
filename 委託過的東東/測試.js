@@ -127,7 +127,7 @@ document.querySelector('.lightbox-close').addEventListener('click', () => {
 
 async function main() {
     try {
-        const res = await fetch('posts.json');
+        const res = await fetch('測試posts.json');
         allPosts = (await res.json()).reverse(); 
         for (let i = 0; i < Math.min(allPosts.length, 3); i++) { await renderPost(allPosts[loadedIdx++]); }
         document.getElementById('loading-status').style.display = 'none';
