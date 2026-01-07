@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>載具條碼紀錄</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <style>
+        body {
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 40px;
+            background-color: #f4f7f9;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 380px;
+        }
+        #barcode-container {
+            background: white;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        #barcode {
+            max-width: 100%;
+        }
+        input {
+            padding: 15px;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 22px;
+            text-align: center;
+            border: 2px solid #007bff;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        .btn-download {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .btn-download:hover {
+            background-color: #218838;
+        }
+        .info-box {
+            text-align: left;
+            font-size: 13px;
+            color: #444;
+            background: #e7f1ff;
+            padding: 15px;
+            border-radius: 8px;
+            line-height: 1.6;
+            border-left: 5px solid #007bff;
+        }
+        .status-tag {
+            font-size: 11px;
+            color: #6c757d;
+            margin-bottom: 5px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <span id="status" class="status-tag">● 系統就緒</span>
+    
+    <div id="barcode-container">
+        <svg id="barcode"></svg>
+    </div>
+
+    <input type="text" id="barcodeInput" placeholder="輸入 A-Z, 0-9 或 /">
+
+    <button class="btn-download" onclick="downloadBarcode()">下載條碼圖片 (PNG)</button>
+
+    <div class="info-box">
+        <strong>使用說明：</strong><br>
+        • 自動強制轉大寫，僅限 <mark>A-Z, 0-9, /</mark><br>
+        • 內容將自動儲存，下次開啟無需重新輸入。<br>
+        • 點擊下載按鈕可將條碼儲存為 PNG 圖檔。
+    </div>
+</div>
+
+<canvas id="canvas" style="display:none;"></canvas>
+
+<script>
+    const input = document.getElementById('barcodeInput');
+    const statusTag = document.getElementById('status');
+    const STORAGE_KEY = 'last_barcode_data';
+
+    // 頁面載入時讀取記憶
+    window.onload = () => {
+        const savedData = localStorage.getItem(STORAGE_KEY);
+        if (savedData) {
+            input.value = savedData;
+            statusTag.innerText = "● 已載入上次紀錄";
+        } else {
+            input.value = "ABC/123";
+        }
+        updateBarcode();
+    };
+
+    function updateBarcode() {
+        let rawValue = input.value.toUpperCase();
+        let filteredValue = rawValue.replace(/[^A-Z0-9\/]/g, '');
+        input.value = filteredValue;
+
+        localStorage.setItem(STORAGE_KEY, filteredValue);
+
+        if (filteredValue !== "") {
+            JsBarcode("#barcode", filteredValue, {
+                format: "CODE39",
+                width: 2,
+                height: 80,
+                displayValue: true,
+                fontSize: 18,
+                background: "#ffffff"
+            });
+            statusTag.innerText = "● 已自動儲存";
+        } else {
+            document.getElementById('barcode').innerHTML = "";
+            statusTag.innerText = "● 等待輸入...";
+        }
+    }
+
+    function downloadBarcode() {
+        const svg = document.getElementById('barcode');
+        const canvas = document.getElementById('canvas');
+        const xml = new XMLSerializer().serializeToString(svg);
+        const svg64 = btoa(unescape(encodeURIComponent(xml)));
+        const b64Start = 'data:image/svg+xml;base64,';
+        const image64 = b64Start + svg64;
+
+        const img = new Image();
+        img.onload = function() {
+            // 設定畫布尺寸與 SVG 一致
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = "white"; // 確保背景是白色
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+
+            // 觸發下載
+            const link = document.createElement('a');
+            link.download = `barcode-${input.value || 'export'}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        };
+        img.src = image64;
+    }
+
+    input.addEventListener('input', updateBarcode);
+</script>
+
+</body>
+</html>
