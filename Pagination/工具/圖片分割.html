@@ -3,130 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>圖片分割工具</title>
+    <title id="tab-title">圖片分割</title>
     <style>
-        :root {
-            --bg-dark: #121212;
-            --panel-dark: #1e1e1e;
-            --text-main: #e0e0e0;
-            --text-sub: #b0b0b0;
-            --primary: #3766f2;
-            --accent: #ff3b30;
-            --border: #333333;
+        /* 定義主題變數 */
+        :root { 
+            --primary: #007bff; 
+            --bg: #f8f9fa; 
+            --card: #ffffff; 
+            --text: #333333; 
+            --border: #eeeeee;
+            --slider-bg: #fafafa;
+            --btn-single: #f1f3f5;
+            --btn-single-text: #495057;
         }
-        
+
+        /* 深色模式變數 */
+        [data-theme="dark"] {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --text: #e0e0e0;
+            --border: #333333;
+            --slider-bg: #2d2d2d;
+            --btn-single: #333333;
+            --btn-single-text: #cccccc;
+        }
+
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: var(--bg-dark); 
-            color: var(--text-main);
-            margin: 0; 
-            padding: 10px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
+            font-family: -apple-system, sans-serif; 
+            background: var(--bg); 
+            color: var(--text);
+            margin: 0; padding: 10px; 
+            display: flex; flex-direction: column; align-items: center; 
+            transition: background 0.3s, color 0.3s;
         }
 
         .container { 
-            background: var(--panel-dark); 
-            padding: 20px; 
-            border-radius: 16px; 
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5); 
-            width: 100%; 
-            max-width: 600px; 
-            box-sizing: border-box; 
+            background: var(--card); 
+            padding: 15px; border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            width: 100%; max-width: 600px; 
+            box-sizing: border-box; position: relative; 
         }
 
-        h2 { text-align: center; font-size: 1.4rem; margin-bottom: 25px; color: #fff; letter-spacing: 1px; }
-
-        .control-group { 
-            margin-bottom: 20px; 
-            padding: 15px; 
-            border: 1px solid var(--border); 
-            border-radius: 12px; 
-            background: rgba(255, 255, 255, 0.03); 
-        }
-
-        label { font-size: 0.85rem; font-weight: 600; color: var(--text-sub); display: block; margin-bottom: 10px; text-transform: uppercase; }
-
-        select, input[type="file"] { 
-            width: 100%; 
-            padding: 12px; 
-            margin-bottom: 10px; 
-            border: 1px solid var(--border); 
-            border-radius: 8px; 
-            background: #2c2c2e; 
-            color: #fff; 
-            font-size: 16px; 
-            outline: none;
-        }
-
-        .slider-box { margin: 18px 0; border-top: 1px solid var(--border); padding-top: 15px; }
-        .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .slider-header b { color: var(--primary); font-size: 1.1rem; }
-
-        input[type="range"] { 
-            width: 100%; 
-            height: 8px; 
-            background: #333; 
-            border-radius: 4px; 
-            outline: none; 
-            accent-color: var(--primary);
-            -webkit-appearance: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            background: #fff;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .canvas-container { 
-            position: relative; 
-            width: 100%; 
-            margin: 20px 0; 
-            border-radius: 10px; 
-            overflow: hidden; 
-            border: 2px solid var(--border); 
-            background: #000;
-        }
-        canvas { width: 100%; height: auto; display: block; }
-
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
-        .download-btn { 
-            border: none; 
-            padding: 14px; 
-            border-radius: 10px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            font-size: 0.95rem; 
-            transition: opacity 0.2s;
-        }
-        .download-btn:active { opacity: 0.7; }
+        /* 工具欄：語言與主題 */
+        .toolbar { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; z-index: 100; }
         
-        .single { background: #3a3a3c; color: #fff; }
-        .all { background: var(--primary); color: white; grid-column: span 2; margin-top: 10px; font-size: 1.1rem; }
-
-        .radio-group { 
-            display: flex; 
-            gap: 15px; 
-            background: #2c2c2e; 
-            padding: 12px; 
-            border-radius: 10px; 
+        .icon-btn { 
+            background: rgba(0,0,0,0.05); border: none; 
+            padding: 6px 12px; border-radius: 20px; 
+            cursor: pointer; font-size: 14px; color: var(--text); 
+            display: flex; align-items: center; gap: 4px;
         }
-        .radio-group label { margin: 0; font-weight: normal; display: flex; align-items: center; cursor: pointer; color: var(--text-main); }
-        .radio-group input { margin-right: 6px; width: 18px; height: 18px; }
+        [data-theme="dark"] .icon-btn { background: rgba(255,255,255,0.1); }
+
+        #langMenu { 
+            display: none; position: absolute; top: 35px; right: 0; 
+            background: var(--card); border-radius: 8px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+            border: 1px solid var(--border); overflow: hidden; 
+        }
+        #langMenu div { padding: 10px 20px; cursor: pointer; font-size: 14px; white-space: nowrap; }
+        #langMenu div:hover { background: var(--primary); color: white; }
+        #langMenu.show { display: block; }
+
+        h2 { font-size: 1.3rem; margin: 0 0 20px 0; }
+        .control-group { margin-bottom: 15px; padding: 15px; border: 1px solid var(--border); border-radius: 10px; }
+        label { font-size: 0.85rem; font-weight: bold; opacity: 0.8; display: block; margin-bottom: 10px; }
+        
+        select, input[type="file"] { 
+            width: 100%; padding: 12px; margin-bottom: 10px; 
+            border: 1px solid var(--border); border-radius: 8px; 
+            font-size: 16px; background: var(--card); color: var(--text);
+        }
+        
+        .slider-box { margin: 10px 0; padding-top: 10px; border-top: 1px solid var(--border); }
+        .slider-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+        input[type="range"] { width: 100%; height: 35px; accent-color: var(--primary); }
+        
+        canvas { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); margin: 10px 0; background: #eee; }
+        
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .download-btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .single { background: var(--btn-single); color: var(--btn-single-text); font-size: 0.8rem; }
+        .all { background: var(--primary); color: white; grid-column: span 2; margin-top: 10px; }
+        
+        .radio-group { display: flex; gap: 12px; padding: 10px; background: var(--slider-bg); border-radius: 8px; }
+        .radio-group label { margin: 0; font-weight: normal; display: flex; align-items: center; gap: 4px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🎨 圖片比例切割 (深色版)</h2>
+    <div class="toolbar">
+        <button id="themeBtn" class="icon-btn">🌙</button>
+        <div style="position:relative">
+            <button id="langBtn" class="icon-btn">🌐</button>
+            <div id="langMenu">
+                <div onclick="changeLang('zh')">繁體中文</div>
+                <div onclick="changeLang('en')">English</div>
+                <div onclick="changeLang('ja')">日本語</div>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="ui-title">圖片分割</h2>
     
     <div class="control-group">
-        <label>1. 上傳與格式</label>
+        <label id="label-step1">1. 檔案與匯出格式</label>
         <input type="file" id="upload" accept="image/*">
         <select id="format">
             <option value="image/jpeg">JPEG (.jpg)</option>
@@ -136,26 +119,24 @@
     </div>
 
     <div class="control-group">
-        <label>2. 切割模式</label>
+        <label id="label-step2">2. 切割方式</label>
         <select id="splitMode">
-            <option value="2">2 分法</option>
-            <option value="4">4 分法</option>
+            <option value="2" id="opt-2cut">2 分法</option>
+            <option value="4" id="opt-4cut">4 分法</option>
         </select>
         <div class="radio-group">
-            <label><input type="radio" name="dir" value="v" checked> 縱向</label>
-            <label><input type="radio" name="dir" value="h"> 橫向</label>
-            <label id="crossOption" style="display:none;"><input type="radio" name="dir" value="c"> 十字</label>
+            <label><input type="radio" name="dir" value="v" checked> <span id="ui-v">縱向</span></label>
+            <label><input type="radio" name="dir" value="h"> <span id="ui-h">橫向</span></label>
+            <label id="crossOption" style="display:none;"><input type="radio" name="dir" value="c"> <span id="ui-c">十字切</span></label>
         </div>
     </div>
 
     <div id="ratioControls" class="control-group">
-        <label>3. 比例調整</label>
+        <label id="label-step3">3. 比例調整</label>
         <div id="sliders"></div>
     </div>
 
-    <div class="canvas-container">
-        <canvas id="preview"></canvas>
-    </div>
+    <canvas id="preview"></canvas>
 
     <div id="singleDownloads" class="btn-grid"></div>
     <button id="allDownload" class="download-btn all">打包下載全部 (.zip)</button>
@@ -164,7 +145,53 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <script>
-    // 邏輯部分與之前相同，僅在 draw() 中微調了文字可讀性
+    // --- 語言與主題邏輯 ---
+    const i18n = {
+        zh: { title: "圖片分割", step1: "1. 檔案與匯出格式", step2: "2. 切割方式", step3: "3. 比例調整", cut2: "2 分法", cut4: "4 分法", v: "縱向", h: "橫向", c: "十字切", ratioX: "左右比例 (X)", ratioY: "上下比例 (Y)", cutLine: "切割線", downSingle: "下載區塊", downAll: "打包下載全部 (.zip)", alertNoImg: "請先上傳圖片" },
+        en: { title: "Image Splitter", step1: "1. File & Format", step2: "2. Mode", step3: "3. Adjust Ratios", cut2: "2-Way", cut4: "4-Way", v: "Vertical", h: "Horizontal", c: "Cross", ratioX: "Width (X)", ratioY: "Height (Y)", cutLine: "Line", downSingle: "Part", downAll: "Download All (.zip)", alertNoImg: "Please upload an image" },
+        ja: { title: "画像分割", step1: "1. ファイルと形式", step2: "2. 分割モード", step3: "3. 比率調整", cut2: "2分割", cut4: "4分割", v: "垂直", h: "水平", c: "十字", ratioX: "左右比率 (X)", ratioY: "上下比率 (Y)", cutLine: "線", downSingle: "区画", downAll: "すべて保存 (.zip)", alertNoImg: "画像をアップロードしてください" }
+    };
+
+    let currentLang = 'zh';
+    let isDark = false;
+
+    // 主題切換
+    document.getElementById('themeBtn').onclick = () => {
+        isDark = !isDark;
+        document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
+    };
+
+    // 語言選單
+    document.getElementById('langBtn').onclick = (e) => {
+        e.stopPropagation();
+        document.getElementById('langMenu').classList.toggle('show');
+    };
+    window.onclick = () => document.getElementById('langMenu').classList.remove('show');
+
+    function changeLang(lang) {
+        currentLang = lang;
+        updateLanguage();
+    }
+
+    function updateLanguage() {
+        const t = i18n[currentLang];
+        document.getElementById('tab-title').innerText = t.title;
+        document.getElementById('ui-title').innerText = t.title;
+        document.getElementById('label-step1').innerText = t.step1;
+        document.getElementById('label-step2').innerText = t.step2;
+        document.getElementById('label-step3').innerText = t.step3;
+        document.getElementById('opt-2cut').innerText = t.cut2;
+        document.getElementById('opt-4cut').innerText = t.cut4;
+        document.getElementById('ui-v').innerText = t.v;
+        document.getElementById('ui-h').innerText = t.h;
+        document.getElementById('ui-c').innerText = t.c;
+        document.getElementById('allDownload').innerText = t.downAll;
+        updateSliders();
+        draw();
+    }
+
+    // --- 核心處理邏輯 ---
     const upload = document.getElementById('upload');
     const canvas = document.getElementById('preview');
     const ctx = canvas.getContext('2d');
@@ -181,14 +208,12 @@
         if (!file) return;
         originalName = file.name.split('.').slice(0, -1).join('.');
         const reader = new FileReader();
-        reader.onload = event => {
+        reader.onload = ev => {
             img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                updateSliders();
-                draw();
+                canvas.width = img.width; canvas.height = img.height;
+                updateSliders(); draw();
             };
-            img.src = event.target.result;
+            img.src = ev.target.result;
         };
         reader.readAsDataURL(file);
     };
@@ -196,20 +221,16 @@
     function updateSliders() {
         slidersDiv.innerHTML = '';
         let count = (config.mode === '2') ? 1 : (config.dir === 'c' ? 2 : 3);
-        config.ratios = Array(count).fill(0).map((_, i) => Math.round((i + 1) * (100 / (count + 1))));
-        
+        if (config.ratios.length !== count) config.ratios = Array(count).fill(0).map((_, i) => Math.round((i + 1) * (100 / (count + 1))));
+        const t = i18n[currentLang];
         config.ratios.forEach((r, i) => {
-            const labelText = config.dir === 'c' ? (i===0 ? '垂直位置 (X)' : '水平位置 (Y)') : `切割線 ${i+1}`;
+            let labelText = config.dir === 'c' ? (i===0 ? t.ratioX : t.ratioY) : `${t.cutLine} ${i+1}`;
             const box = document.createElement('div');
             box.className = 'slider-box';
-            box.innerHTML = `
-                <div class="slider-header"><span>${labelText}</span><b id="val-${i}">${r}%</b></div>
-                <input type="range" value="${r}" min="1" max="99">
-            `;
-            const slider = box.querySelector('input');
-            slider.oninput = (e) => {
+            box.innerHTML = `<div class="slider-header"><span>${labelText}</span><b>${r}%</b></div><input type="range" value="${r}" min="1" max="99">`;
+            box.querySelector('input').oninput = (e) => {
                 config.ratios[i] = parseInt(e.target.value);
-                document.getElementById(`val-${i}`).innerText = e.target.value + '%';
+                box.querySelector('b').innerText = e.target.value + '%';
                 draw();
             };
             slidersDiv.appendChild(box);
@@ -220,20 +241,15 @@
         if (!img.src) return;
         ctx.drawImage(img, 0, 0);
         calculateRegions();
-
-        // 繪製線條
-        ctx.strokeStyle = '#ff3b30'; // 使用亮紅色
-        ctx.lineWidth = Math.max(img.width * 0.006, 3);
-        ctx.setLineDash([img.width * 0.02, img.width * 0.01]);
-        
-        const fontSize = Math.max(img.width * 0.06, 24);
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = Math.max(img.width * 0.006, 2);
+        ctx.setLineDash([15, 10]);
+        const fontSize = Math.max(img.width * 0.05, 18);
         ctx.font = `bold ${fontSize}px sans-serif`;
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
 
         if (config.dir === 'c') {
-            const x = img.width * (config.ratios[0]/100);
-            const y = img.height * (config.ratios[1]/100);
+            const x = img.width * (config.ratios[0]/100), y = img.height * (config.ratios[1]/100);
             ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, img.height); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(img.width, y); ctx.stroke();
         } else {
@@ -244,112 +260,95 @@
                 ctx.stroke();
             });
         }
-
-        // 編號背景
         regions.forEach((reg, i) => {
-            const centerX = reg.x + reg.w/2;
-            const centerY = reg.y + reg.h/2;
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; // 深色背景圈
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, fontSize * 0.8, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#fff'; // 白色文字
-            ctx.fillText(i+1, centerX, centerY);
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.beginPath(); ctx.arc(reg.x+reg.w/2, reg.y+reg.h/2, fontSize, 0, 7); ctx.fill();
+            ctx.fillStyle = 'red';
+            ctx.fillText(i+1, reg.x+reg.w/2, reg.y+reg.h/2 + fontSize/3);
         });
-
         updateDownloadButtons();
     }
 
     function calculateRegions() {
         regions = [];
-        const sortedRatios = [...config.ratios].sort((a,b) => a-b);
+        const sorted = [...config.ratios].sort((a,b)=>a-b);
         if (config.dir === 'v') {
             let lastX = 0;
-            [...sortedRatios, 100].forEach(p => {
+            [...sorted, 100].forEach(p => {
                 let x = (p/100)*img.width;
-                regions.push({x: lastX, y: 0, w: x - lastX, h: img.height});
+                regions.push({x: lastX, y: 0, w: x-lastX, h: img.height});
                 lastX = x;
             });
         } else if (config.dir === 'h') {
             let lastY = 0;
-            [...sortedRatios, 100].forEach(p => {
+            [...sorted, 100].forEach(p => {
                 let y = (p/100)*img.height;
-                regions.push({x: 0, y: lastY, w: img.width, h: y - lastY});
+                regions.push({x: 0, y: lastY, w: img.width, h: y-lastY});
                 lastY = y;
             });
         } else if (config.dir === 'c') {
             const rx = config.ratios[0]/100, ry = config.ratios[1]/100;
-            const w1 = img.width * rx, h1 = img.height * ry;
-            regions = [
-                {x:0, y:0, w:w1, h:h1}, {x:w1, y:0, w:img.width-w1, h:h1},
-                {x:0, y:h1, w:w1, h:img.height-h1}, {x:w1, y:h1, w:img.width-w1, h:img.height-h1}
-            ];
+            const w1 = img.width*rx, h1 = img.height*ry;
+            regions = [{x:0, y:0, w:w1, h:h1}, {x:w1, y:0, w:img.width-w1, h:h1}, {x:0, y:h1, w:w1, h:img.height-h1}, {x:w1, y:h1, w:img.width-w1, h:img.height-h1}];
         }
     }
 
     function updateDownloadButtons() {
         singleDownloads.innerHTML = '';
+        const t = i18n[currentLang];
         regions.forEach((_, i) => {
             const btn = document.createElement('button');
             btn.className = 'download-btn single';
-            btn.innerText = `下載區塊 ${i+1}`;
+            btn.innerText = `${t.downSingle} ${i+1}`;
             btn.onclick = () => downloadPart(i);
             singleDownloads.appendChild(btn);
         });
     }
 
-    async function downloadPart(index) {
-        const reg = regions[index];
+    async function downloadPart(idx) {
+        const reg = regions[idx];
         const format = document.getElementById('format').value;
         const ext = format.split('/')[1].replace('jpeg', 'jpg');
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = reg.w;
-        tempCanvas.height = reg.h;
-        tempCanvas.getContext('2d').drawImage(img, reg.x, reg.y, reg.w, reg.h, 0, 0, reg.w, reg.h);
-        const link = document.createElement('a');
-        link.download = `${index + 1}_${originalName}.${ext}`;
-        link.href = tempCanvas.toDataURL(format, 0.9);
-        link.click();
+        const temp = document.createElement('canvas');
+        temp.width = reg.w; temp.height = reg.h;
+        temp.getContext('2d').drawImage(img, reg.x, reg.y, reg.w, reg.h, 0, 0, reg.w, reg.h);
+        const a = document.createElement('a');
+        a.download = `${idx+1}_${originalName}.${ext}`;
+        a.href = temp.toDataURL(format, 0.9);
+        a.click();
     }
 
     document.getElementById('allDownload').onclick = async () => {
-        if (!img.src) return alert('請先上傳圖片');
+        if (!img.src) return alert(i18n[currentLang].alertNoImg);
         const zip = new JSZip();
         const format = document.getElementById('format').value;
         const ext = format.split('/')[1].replace('jpeg', 'jpg');
-        for(let i=0; i<regions.length; i++) {
+        for(let i=0; i<regions.length; i++){
             const reg = regions[i];
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = reg.w;
-            tempCanvas.height = reg.h;
-            tempCanvas.getContext('2d').drawImage(img, reg.x, reg.y, reg.w, reg.h, 0, 0, reg.w, reg.h);
-            zip.file(`${i+1}_${originalName}.${ext}`, tempCanvas.toDataURL(format, 0.9).split(',')[1], {base64: true});
+            const temp = document.createElement('canvas');
+            temp.width = reg.w; temp.height = reg.h;
+            temp.getContext('2d').drawImage(img, reg.x, reg.y, reg.w, reg.h, 0, 0, reg.w, reg.h);
+            zip.file(`${i+1}_${originalName}.${ext}`, temp.toDataURL(format, 0.9).split(',')[1], {base64: true});
         }
-        const content = await zip.generateAsync({type: "blob"});
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(content);
-        link.download = `${originalName}_all.zip`;
-        link.click();
+        const blob = await zip.generateAsync({type:"blob"});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `${originalName}_split.zip`;
+        a.click();
     };
 
     document.getElementById('splitMode').onchange = e => {
         config.mode = e.target.value;
         document.getElementById('crossOption').style.display = config.mode === '4' ? 'inline' : 'none';
-        if (config.mode === '2' && config.dir === 'c') {
-            document.querySelector('input[value="v"]').checked = true;
-            config.dir = 'v';
-        }
-        updateSliders();
-        draw();
+        if (config.mode === '2' && config.dir === 'c') { document.querySelector('input[value="v"]').checked = true; config.dir = 'v'; }
+        updateSliders(); draw();
     };
     
     document.getElementsByName('dir').forEach(radio => {
-        radio.onchange = e => {
-            config.dir = e.target.value;
-            updateSliders();
-            draw();
-        };
+        radio.onchange = e => { config.dir = e.target.value; updateSliders(); draw(); };
     });
+
+    updateLanguage();
 </script>
 </body>
 </html>
