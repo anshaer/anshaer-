@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="tab-title">圖片分割</title>
     <style>
-        /* 定義主題變數 */
+        
         :root { 
             --primary: #007bff; 
             --bg: #f8f9fa; 
@@ -17,7 +17,7 @@
             --btn-single-text: #495057;
         }
 
-        /* 深色模式變數 */
+        
         [data-theme="dark"] {
             --bg: #121212;
             --card: #1e1e1e;
@@ -45,7 +45,7 @@
             box-sizing: border-box; position: relative; 
         }
 
-        /* 工具欄：語言與主題 */
+        
         .toolbar { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; z-index: 100; }
         
         .icon-btn { 
@@ -145,7 +145,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <script>
-    // --- 語言與主題邏輯 ---
+    
     const i18n = {
         zh: { title: "圖片分割", step1: "1. 檔案與匯出格式", step2: "2. 切割方式", step3: "3. 比例調整", cut2: "2 分法", cut4: "4 分法", v: "縱向", h: "橫向", c: "十字切", ratioX: "左右比例 (X)", ratioY: "上下比例 (Y)", cutLine: "切割線", downSingle: "下載區塊", downAll: "打包下載全部 (.zip)", alertNoImg: "請先上傳圖片" },
         en: { title: "Image Splitter", step1: "1. File & Format", step2: "2. Mode", step3: "3. Adjust Ratios", cut2: "2-Way", cut4: "4-Way", v: "Vertical", h: "Horizontal", c: "Cross", ratioX: "Width (X)", ratioY: "Height (Y)", cutLine: "Line", downSingle: "Part", downAll: "Download All (.zip)", alertNoImg: "Please upload an image" },
@@ -155,14 +155,14 @@
     let currentLang = 'zh';
     let isDark = false;
 
-    // 主題切換
+    
     document.getElementById('themeBtn').onclick = () => {
         isDark = !isDark;
         document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
         document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
     };
 
-    // 語言選單
+    
     document.getElementById('langBtn').onclick = (e) => {
         e.stopPropagation();
         document.getElementById('langMenu').classList.toggle('show');
@@ -191,7 +191,7 @@
         draw();
     }
 
-    // --- 核心處理邏輯 ---
+    
     const upload = document.getElementById('upload');
     const canvas = document.getElementById('preview');
     const ctx = canvas.getContext('2d');
