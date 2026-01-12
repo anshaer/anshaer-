@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="tab-title">圖片拼接工具</title>
+    <style>
+        :root { 
+            --primary: #28a745; --bg: #f8f9fa; --card: #ffffff; --text: #333333; 
+            --border: #eeeeee; --slider-bg: #fafafa; --btn-single: #f1f3f5; --btn-single-text: #495057;
+        }
+        [data-theme="dark"] {
+            --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --border: #333333; 
+            --slider-bg: #2d2d2d; --btn-single: #333333; --btn-single-text: #cccccc;
+        }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; transition: 0.3s; }
+        .container { background: var(--card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; box-sizing: border-box; position: relative; }
+        
+        .toolbar { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; z-index: 1000; }
+        .icon-btn { background: rgba(0,0,0,0.05); border: none; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 14px; color: var(--text); display: flex; align-items: center; gap: 4px; }
+        
+        #langMenu { display: none; position: absolute; top: 35px; right: 0; background: var(--card); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: 1px solid var(--border); overflow: hidden; min-width: 140px; }
+        #langMenu div { padding: 12px 20px; cursor: pointer; font-size: 14px; white-space: nowrap; text-align: left; }
+        #langMenu div:hover { background: var(--primary); color: white; }
+        #langMenu.show { display: block; }
+
+        h2 { font-size: 1.3rem; margin: 0 0 20px 0; }
+        .control-group { margin-bottom: 15px; padding: 15px; border: 1px solid var(--border); border-radius: 10px; }
+        label { font-size: 0.85rem; font-weight: bold; opacity: 0.8; display: block; margin-bottom: 10px; }
+        
+        .file-input-wrapper { margin-bottom: 10px; }
+        input[type="file"] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: var(--card); color: var(--text); box-sizing: border-box; }
+        
+        .option-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .option-row > * { flex: 1; min-width: 120px; }
+
+        select, input[type="number"], input[type="color"] { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); }
+        
+        .radio-group { display: flex; gap: 10px; padding: 10px; background: var(--slider-bg); border-radius: 8px; }
+        .radio-group label { margin: 0; font-weight: normal; display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 0.85rem; }
+
+        .preview-container { width: 100%; overflow: auto; border: 1px solid var(--border); border-radius: 8px; background: #eee; margin: 15px 0; min-height: 200px; display: flex; align-items: center; justify-content: center; }
+        canvas { max-width: 100%; height: auto; display: block; }
+        
+        .download-btn { width: 100%; border: none; padding: 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; background: var(--primary); color: white; transition: 0.2s; }
+        .download-btn:hover { opacity: 0.9; }
+        .download-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+        .img-list { font-size: 0.8rem; margin-top: 10px; opacity: 0.7; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="toolbar">
+        <button id="themeBtn" class="icon-btn">🌙</button>
+        <div style="position:relative">
+            <button id="langBtn" class="icon-btn">🌐 <span id="ui-lang-text">語言</span></button>
+            <div id="langMenu">
+                <div onclick="changeLang('zh')">繁體中文</div>
+                <div onclick="changeLang('en')">English</div>
+                <div onclick="changeLang('ja')">日本語</div>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="ui-title">圖片拼接</h2>
+    
+    <div class="control-group">
+        <label id="label-step1">1. 上傳圖片 (可多選並拖曳排序)</label>
+        <div class="file-input-wrapper">
+            <input type="file" id="upload" accept="image/*" multiple>
+        </div>
+        <div id="fileInfo" class="img-list"></div>
+    </div>
+
+    <div class="control-group">
+        <label id="label-step2">2. 拼接設定</label>
+        <div class="radio-group">
+            <label><input type="radio" name="dir" value="v" checked> <span id="ui-v">縱向排列</span></label>
+            <label><input type="radio" name="dir" value="h"> <span id="ui-h">橫向排列</span></label>
+        </div>
+        <div class="option-row" style="margin-top:10px;">
+            <div>
+                <label id="ui-gap">間距 (px)</label>
+                <input type="number" id="gap" value="0" min="0">
+            </div>
+            <div>
+                <label id="ui-bgcolor">背景顏色</label>
+                <input type="color" id="bgColor" value="#ffffff">
+            </div>
+        </div>
+    </div>
+
+    <div class="preview-container">
+        <canvas id="preview"></canvas>
+    </div>
+
+    <div class="control-group">
+        <label id="ui-format">輸出格式</label>
+        <select id="format">
+            <option value="image/jpeg">JPEG (.jpg)</option>
+            <option value="image/png">PNG (.png)</option>
+            <option value="image/webp">WebP (.webp)</option>
+        </select>
+    </div>
+
+    <button id="downloadBtn" class="download-btn" disabled>儲存拼接圖片</button>
+</div>
+
+<script>
+    const i18n = {
+        zh: { title: "圖片拼接", step1: "1. 上傳多張圖片", step2: "2. 拼接設定", v: "縱向排列", h: "橫向排列", gap: "間距 (px)", bgcolor: "背景顏色", format: "輸出格式", save: "儲存拼接圖片", lang: "語言", alertNoImg: "請先上傳圖片", count: "張圖片已載入" },
+        en: { title: "Image Joiner", step1: "1. Upload Images", step2: "2. Settings", v: "Vertical", h: "Horizontal", gap: "Gap (px)", bgcolor: "BG Color", format: "Format", save: "Save Joined Image", lang: "Lang", alertNoImg: "No images", count: "images loaded" },
+        ja: { title: "画像結合", step1: "1. 画像を選択", step2: "2. 結合設定", v: "垂直に並べる", h: "水平に並べる", gap: "間隔 (px)", bgcolor: "背景色", format: "形式", save: "画像を保存", lang: "言語", alertNoImg: "画像を選択してください", count: "枚の画像が読み込まれました" }
+    };
+
+    let currentLang = 'zh';
+    let isDark = false;
+    let imageList = [];
+    
+    const canvas = document.getElementById('preview');
+    const ctx = canvas.getContext('2d');
+
+    // 切換主題
+    document.getElementById('themeBtn').onclick = () => {
+        isDark = !isDark;
+        document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
+    };
+
+    // 語言選單
+    document.getElementById('langBtn').onclick = (e) => { e.stopPropagation(); document.getElementById('langMenu').classList.toggle('show'); };
+    window.onclick = () => document.getElementById('langMenu').classList.remove('show');
+
+    function changeLang(lang) {
+        currentLang = lang;
+        updateLanguageUI();
+    }
+
+    function updateLanguageUI() {
+        const t = i18n[currentLang];
+        document.getElementById('ui-title').innerText = t.title;
+        document.getElementById('label-step1').innerText = t.step1;
+        document.getElementById('label-step2').innerText = t.step2;
+        document.getElementById('ui-v').innerText = t.v;
+        document.getElementById('ui-h').innerText = t.h;
+        document.getElementById('ui-gap').innerText = t.gap;
+        document.getElementById('ui-bgcolor').innerText = t.bgcolor;
+        document.getElementById('ui-format').innerText = t.format;
+        document.getElementById('downloadBtn').innerText = t.save;
+        document.getElementById('ui-lang-text').innerText = t.lang;
+        updateFileInfo();
+    }
+
+    // 檔案上傳
+    document.getElementById('upload').onchange = async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+
+        imageList = [];
+        const promises = files.map(file => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.src = URL.createObjectURL(file);
+            });
+        });
+
+        imageList = await Promise.all(promises);
+        document.getElementById('downloadBtn').disabled = false;
+        updateFileInfo();
+        draw();
+    };
+
+    function updateFileInfo() {
+        if (imageList.length > 0) {
+            document.getElementById('fileInfo').innerText = `✅ ${imageList.length} ${i18n[currentLang].count}`;
+        }
+    }
+
+    // 繪製拼接圖
+    function draw() {
+        if (imageList.length === 0) return;
+
+        const isVertical = document.querySelector('input[name="dir"]:checked').value === 'v';
+        const gap = parseInt(document.getElementById('gap').value) || 0;
+        const bgColor = document.getElementById('bgColor').value;
+
+        let totalWidth = 0;
+        let totalHeight = 0;
+
+        if (isVertical) {
+            totalWidth = Math.max(...imageList.map(img => img.width));
+            totalHeight = imageList.reduce((sum, img) => sum + img.height, 0) + (gap * (imageList.length - 1));
+        } else {
+            totalWidth = imageList.reduce((sum, img) => sum + img.width, 0) + (gap * (imageList.length - 1));
+            totalHeight = Math.max(...imageList.map(img => img.height));
+        }
+
+        canvas.width = totalWidth;
+        canvas.height = totalHeight;
+
+        // 背景
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 繪製圖片
+        let currentPos = 0;
+        imageList.forEach((img) => {
+            if (isVertical) {
+                // 縱向時置中對齊
+                const offsetX = (totalWidth - img.width) / 2;
+                ctx.drawImage(img, offsetX, currentPos);
+                currentPos += img.height + gap;
+            } else {
+                // 橫向時置中對齊
+                const offsetY = (totalHeight - img.height) / 2;
+                ctx.drawImage(img, currentPos, offsetY);
+                currentPos += img.width + gap;
+            }
+        });
+    }
+
+    // 事件監聽
+    document.getElementsByName('dir').forEach(r => r.onchange = draw);
+    document.getElementById('gap').oninput = draw;
+    document.getElementById('bgColor').oninput = draw;
+
+    // 下載
+    document.getElementById('downloadBtn').onclick = () => {
+        const format = document.getElementById('format').value;
+        const ext = format.split('/')[1].replace('jpeg', 'jpg');
+        const link = document.createElement('a');
+        link.download = `joined_image_${Date.now()}.${ext}`;
+        link.href = canvas.toDataURL(format, 0.9);
+        link.click();
+    };
+
+    updateLanguageUI();
+</script>
+</body>
+</html>
