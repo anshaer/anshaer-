@@ -3,92 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="tab-title">圖片分割</title>
+    <title id="tab-title">圖片分割小工具</title>
     <style>
-        
         :root { 
-            --primary: #007bff; 
-            --bg: #f8f9fa; 
-            --card: #ffffff; 
-            --text: #333333; 
-            --border: #eeeeee;
-            --slider-bg: #fafafa;
-            --btn-single: #f1f3f5;
-            --btn-single-text: #495057;
+            --primary: #007bff; --bg: #f8f9fa; --card: #ffffff; --text: #333333; 
+            --border: #eeeeee; --slider-bg: #fafafa; --btn-single: #f1f3f5; --btn-single-text: #495057;
         }
-
-        
         [data-theme="dark"] {
-            --bg: #121212;
-            --card: #1e1e1e;
-            --text: #e0e0e0;
-            --border: #333333;
-            --slider-bg: #2d2d2d;
-            --btn-single: #333333;
-            --btn-single-text: #cccccc;
+            --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; --border: #333333; 
+            --slider-bg: #2d2d2d; --btn-single: #333333; --btn-single-text: #cccccc;
         }
-
-        body { 
-            font-family: -apple-system, sans-serif; 
-            background: var(--bg); 
-            color: var(--text);
-            margin: 0; padding: 10px; 
-            display: flex; flex-direction: column; align-items: center; 
-            transition: background 0.3s, color 0.3s;
-        }
-
-        .container { 
-            background: var(--card); 
-            padding: 15px; border-radius: 12px; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            width: 100%; max-width: 600px; 
-            box-sizing: border-box; position: relative; 
-        }
-
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; transition: 0.3s; }
+        .container { background: var(--card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; box-sizing: border-box; position: relative; }
         
-        .toolbar { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; z-index: 100; }
+        .toolbar { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; z-index: 1000; }
+        .icon-btn { background: rgba(0,0,0,0.05); border: none; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 14px; color: var(--text); display: flex; align-items: center; gap: 4px; }
         
-        .icon-btn { 
-            background: rgba(0,0,0,0.05); border: none; 
-            padding: 6px 12px; border-radius: 20px; 
-            cursor: pointer; font-size: 14px; color: var(--text); 
-            display: flex; align-items: center; gap: 4px;
-        }
-        [data-theme="dark"] .icon-btn { background: rgba(255,255,255,0.1); }
-
-        #langMenu { 
-            display: none; position: absolute; top: 35px; right: 0; 
-            background: var(--card); border-radius: 8px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
-            border: 1px solid var(--border); overflow: hidden; 
-        }
-        #langMenu div { padding: 10px 20px; cursor: pointer; font-size: 14px; white-space: nowrap; }
+        #langMenu { display: none; position: absolute; top: 35px; right: 0; background: var(--card); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: 1px solid var(--border); overflow: hidden; min-width: 140px; }
+        #langMenu div { padding: 12px 20px; cursor: pointer; font-size: 14px; white-space: nowrap; text-align: left; }
         #langMenu div:hover { background: var(--primary); color: white; }
         #langMenu.show { display: block; }
 
         h2 { font-size: 1.3rem; margin: 0 0 20px 0; }
         .control-group { margin-bottom: 15px; padding: 15px; border: 1px solid var(--border); border-radius: 10px; }
         label { font-size: 0.85rem; font-weight: bold; opacity: 0.8; display: block; margin-bottom: 10px; }
-        
-        select, input[type="file"] { 
-            width: 100%; padding: 12px; margin-bottom: 10px; 
-            border: 1px solid var(--border); border-radius: 8px; 
-            font-size: 16px; background: var(--card); color: var(--text);
-        }
+        select, input[type="file"] { width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; background: var(--card); color: var(--text); }
         
         .slider-box { margin: 10px 0; padding-top: 10px; border-top: 1px solid var(--border); }
         .slider-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
-        input[type="range"] { width: 100%; height: 35px; accent-color: var(--primary); }
+        input[type="range"] { width: 100%; height: 35px; accent-color: var(--primary); cursor: pointer; }
         
         canvas { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); margin: 10px 0; background: #eee; }
         
-        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .download-btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .download-btn { border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; line-height: 1.4; }
         .single { background: var(--btn-single); color: var(--btn-single-text); font-size: 0.8rem; }
-        .all { background: var(--primary); color: white; grid-column: span 2; margin-top: 10px; }
+        .all { background: var(--primary); color: white; grid-column: span 2; margin-top: 10px; font-size: 1rem; }
+        .btn-size { display: block; font-weight: normal; font-size: 0.7rem; opacity: 0.7; }
         
-        .radio-group { display: flex; gap: 12px; padding: 10px; background: var(--slider-bg); border-radius: 8px; }
-        .radio-group label { margin: 0; font-weight: normal; display: flex; align-items: center; gap: 4px; }
+        .radio-group { display: flex; gap: 10px; padding: 10px; background: var(--slider-bg); border-radius: 8px; flex-wrap: wrap; }
+        .radio-group label { margin: 0; font-weight: normal; display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -97,7 +51,7 @@
     <div class="toolbar">
         <button id="themeBtn" class="icon-btn">🌙</button>
         <div style="position:relative">
-            <button id="langBtn" class="icon-btn">🌐</button>
+            <button id="langBtn" class="icon-btn">🌐 <span id="ui-lang-text">語言</span></button>
             <div id="langMenu">
                 <div onclick="changeLang('zh')">繁體中文</div>
                 <div onclick="changeLang('en')">English</div>
@@ -109,7 +63,7 @@
     <h2 id="ui-title">圖片分割</h2>
     
     <div class="control-group">
-        <label id="label-step1">1. 檔案與匯出格式</label>
+        <label id="label-step1">1. 檔案與格式</label>
         <input type="file" id="upload" accept="image/*">
         <select id="format">
             <option value="image/jpeg">JPEG (.jpg)</option>
@@ -121,12 +75,15 @@
     <div class="control-group">
         <label id="label-step2">2. 切割方式</label>
         <select id="splitMode">
-            <option value="2" id="opt-2cut">2 分法</option>
-            <option value="4" id="opt-4cut">4 分法</option>
+            <option value="2">2 分法</option>
+            <option value="3">3 分法</option>
+            <option value="4">4 分法</option>
         </select>
-        <div class="radio-group">
+        <div class="radio-group" id="dirGroup">
             <label><input type="radio" name="dir" value="v" checked> <span id="ui-v">縱向</span></label>
             <label><input type="radio" name="dir" value="h"> <span id="ui-h">橫向</span></label>
+            <label id="compVOption" style="display:none;"><input type="radio" name="dir" value="vc"> <span id="ui-vc">縱切補償</span></label>
+            <label id="compHOption" style="display:none;"><input type="radio" name="dir" value="hc"> <span id="ui-hc">橫切補償</span></label>
             <label id="crossOption" style="display:none;"><input type="radio" name="dir" value="c"> <span id="ui-c">十字切</span></label>
         </div>
     </div>
@@ -137,7 +94,6 @@
     </div>
 
     <canvas id="preview"></canvas>
-
     <div id="singleDownloads" class="btn-grid"></div>
     <button id="allDownload" class="download-btn all">打包下載全部 (.zip)</button>
 </div>
@@ -145,109 +101,154 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <script>
-    
     const i18n = {
-        zh: { title: "圖片分割", step1: "1. 檔案與匯出格式", step2: "2. 切割方式", step3: "3. 比例調整", cut2: "2 分法", cut4: "4 分法", v: "縱向", h: "橫向", c: "十字切", ratioX: "左右比例 (X)", ratioY: "上下比例 (Y)", cutLine: "切割線", downSingle: "下載區塊", downAll: "打包下載全部 (.zip)", alertNoImg: "請先上傳圖片" },
-        en: { title: "Image Splitter", step1: "1. File & Format", step2: "2. Mode", step3: "3. Adjust Ratios", cut2: "2-Way", cut4: "4-Way", v: "Vertical", h: "Horizontal", c: "Cross", ratioX: "Width (X)", ratioY: "Height (Y)", cutLine: "Line", downSingle: "Part", downAll: "Download All (.zip)", alertNoImg: "Please upload an image" },
-        ja: { title: "画像分割", step1: "1. ファイルと形式", step2: "2. 分割モード", step3: "3. 比率調整", cut2: "2分割", cut4: "4分割", v: "垂直", h: "水平", c: "十字", ratioX: "左右比率 (X)", ratioY: "上下比率 (Y)", cutLine: "線", downSingle: "区画", downAll: "すべて保存 (.zip)", alertNoImg: "画像をアップロードしてください" }
+        zh: { title: "圖片分割", step1: "1. 檔案與格式", step2: "2. 切割方式", step3: "3. 比例調整", v: "縱向", h: "橫向", c: "十字切", vc: "縱切補償", hc: "橫切補償", copyLine: "像素複製線位置", copyRange: "補償像素多寡", downSingle: "區塊", downAll: "打包下載全部 (.zip)", alertNoImg: "請先上傳圖片", lang: "語言", line: "切割線", axisX: "X軸比例", axisY: "Y軸比例" },
+        en: { title: "Image Splitter", step1: "1. File & Format", step2: "2. Mode", step3: "3. Adjust", v: "Vertical", h: "Horizontal", c: "Cross", vc: "V-Comp", hc: "H-Comp", copyLine: "Pixel Line Pos", copyRange: "Comp Pixels", downSingle: "Part", downAll: "Download All (.zip)", alertNoImg: "No image", lang: "Lang", line: "Line", axisX: "X Axis", axisY: "Y Axis" },
+        ja: { title: "画像分割", step1: "1. ファイルと形式", step2: "2. 分割モード", step3: "3. 比率調整", v: "垂直", h: "水平", c: "十字", vc: "垂直補償", hc: "水平補償", copyLine: "複製線位置", copyRange: "補償ピクセル数", downSingle: "区画", downAll: "すべて保存 (.zip)", alertNoImg: "画像を選択してください", lang: "言語", line: "分割線", axisX: "X軸比率", axisY: "Y軸比率" }
     };
 
     let currentLang = 'zh';
     let isDark = false;
+    let img = new Image();
+    let originalName = "image";
+    let config = { mode: '2', dir: 'v', ratios: [50], copyPos: 50, copyRange: 50 };
+    let regions = [];
 
-    
+    const canvas = document.getElementById('preview');
+    const ctx = canvas.getContext('2d');
+    const slidersDiv = document.getElementById('sliders');
+
     document.getElementById('themeBtn').onclick = () => {
         isDark = !isDark;
         document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
         document.getElementById('themeBtn').innerText = isDark ? '☀️' : '🌙';
     };
 
-    
-    document.getElementById('langBtn').onclick = (e) => {
-        e.stopPropagation();
-        document.getElementById('langMenu').classList.toggle('show');
-    };
+    document.getElementById('langBtn').onclick = (e) => { e.stopPropagation(); document.getElementById('langMenu').classList.toggle('show'); };
     window.onclick = () => document.getElementById('langMenu').classList.remove('show');
 
     function changeLang(lang) {
         currentLang = lang;
-        updateLanguage();
+        updateLanguageUI();
     }
 
-    function updateLanguage() {
+    function updateLanguageUI() {
         const t = i18n[currentLang];
-        document.getElementById('tab-title').innerText = t.title;
         document.getElementById('ui-title').innerText = t.title;
         document.getElementById('label-step1').innerText = t.step1;
         document.getElementById('label-step2').innerText = t.step2;
         document.getElementById('label-step3').innerText = t.step3;
-        document.getElementById('opt-2cut').innerText = t.cut2;
-        document.getElementById('opt-4cut').innerText = t.cut4;
+        document.getElementById('allDownload').innerText = t.downAll;
+        document.getElementById('ui-lang-text').innerText = t.lang;
         document.getElementById('ui-v').innerText = t.v;
         document.getElementById('ui-h').innerText = t.h;
+        document.getElementById('ui-vc').innerText = t.vc;
+        document.getElementById('ui-hc').innerText = t.hc;
         document.getElementById('ui-c').innerText = t.c;
-        document.getElementById('allDownload').innerText = t.downAll;
         updateSliders();
-        draw();
     }
 
-    
-    const upload = document.getElementById('upload');
-    const canvas = document.getElementById('preview');
-    const ctx = canvas.getContext('2d');
-    const slidersDiv = document.getElementById('sliders');
-    const singleDownloads = document.getElementById('singleDownloads');
-    
-    let img = new Image();
-    let originalName = "image";
-    let config = { mode: '2', dir: 'v', ratios: [50] };
-    let regions = [];
-
-    upload.onchange = e => {
+    document.getElementById('upload').onchange = e => {
         const file = e.target.files[0];
         if (!file) return;
         originalName = file.name.split('.').slice(0, -1).join('.');
         const reader = new FileReader();
-        reader.onload = ev => {
-            img.onload = () => {
-                canvas.width = img.width; canvas.height = img.height;
-                updateSliders(); draw();
-            };
-            img.src = ev.target.result;
+        reader.onload = ev => { 
+            img.onload = () => { 
+                canvas.width = img.width; canvas.height = img.height; 
+                updateSliders();
+            }; 
+            img.src = ev.target.result; 
         };
         reader.readAsDataURL(file);
     };
 
     function updateSliders() {
         slidersDiv.innerHTML = '';
-        let count = (config.mode === '2') ? 1 : (config.dir === 'c' ? 2 : 3);
-        if (config.ratios.length !== count) config.ratios = Array(count).fill(0).map((_, i) => Math.round((i + 1) * (100 / (count + 1))));
         const t = i18n[currentLang];
+        const isComp = (config.dir === 'vc' || config.dir === 'hc') && config.mode === '3';
+        const lineCount = (config.dir === 'c') ? 2 : parseInt(config.mode) - 1;
+
+        if (config.ratios.length !== lineCount) {
+            config.ratios = Array(lineCount).fill(0).map((_, i) => Math.round((i + 1) * (100 / (lineCount + 1))));
+        }
+
         config.ratios.forEach((r, i) => {
-            let labelText = config.dir === 'c' ? (i===0 ? t.ratioX : t.ratioY) : `${t.cutLine} ${i+1}`;
-            const box = document.createElement('div');
-            box.className = 'slider-box';
-            box.innerHTML = `<div class="slider-header"><span>${labelText}</span><b>${r}%</b></div><input type="range" value="${r}" min="1" max="99">`;
-            box.querySelector('input').oninput = (e) => {
-                config.ratios[i] = parseInt(e.target.value);
-                box.querySelector('b').innerText = e.target.value + '%';
-                draw();
-            };
-            slidersDiv.appendChild(box);
+            let label = (config.dir === 'c') ? (i===0 ? t.axisX : t.axisY) : `${t.line} ${i+1}`;
+            createSlider(label, r, 1, 99, (val) => { config.ratios[i] = val; draw(); }, false);
         });
+
+        if (isComp) {
+            createSlider(t.copyLine, config.copyPos, 0, 100, (val) => { config.copyPos = val; draw(); }, false);
+            createSlider(t.copyRange, config.copyRange, 5, 1000, (val) => { config.copyRange = val; draw(); }, true);
+        }
+        draw();
+    }
+
+    function createSlider(label, val, min, max, callback, isPixel) {
+        const box = document.createElement('div');
+        box.className = 'slider-box';
+        const unit = isPixel ? 'px' : '%';
+        box.innerHTML = `<div class="slider-header"><span>${label}</span><b>${val}${unit}</b></div><input type="range" value="${val}" min="${min}" max="${max}">`;
+        box.querySelector('input').oninput = (e) => { 
+            const v = parseInt(e.target.value);
+            box.querySelector('b').innerText = v + unit;
+            callback(v);
+        };
+        slidersDiv.appendChild(box);
+    }
+
+    function calculateRegions() {
+        regions = [];
+        if (!img.src) return;
+        const sorted = [...config.ratios].sort((a,b)=>a-b);
+        const isComp = (config.dir === 'vc' || config.dir === 'hc') && config.mode === '3';
+
+        if (config.dir === 'c' && config.mode === '4') {
+            const rx = config.ratios[0]/100, ry = config.ratios[1]/100;
+            const w1 = Math.round(img.width*rx), h1 = Math.round(img.height*ry);
+            const w2 = img.width-w1, h2 = img.height-h1;
+            regions = [
+                {sx:0, sy:0, sw:w1, sh:h1, type:'normal'}, {sx:w1, sy:0, sw:w2, sh:h1, type:'normal'},
+                {sx:0, sy:h1, sw:w1, sh:h2, type:'normal'}, {sx:w1, sy:h1, sw:w2, sh:h2, type:'normal'}
+            ];
+        } else {
+            let last = 0;
+            [...sorted, 100].forEach(p => {
+                if (config.dir.includes('v')) {
+                    let w = Math.round((p/100)*img.width) - last;
+                    regions.push({sx:last, sy:0, sw:w, sh:img.height, type:'normal'});
+                    last += w;
+                } else {
+                    let h = Math.round((p/100)*img.height) - last;
+                    regions.push({sx:0, sy:last, sw:img.width, sh:h, type:'normal'});
+                    last += h;
+                }
+            });
+
+            if (isComp) {
+                const cp = config.copyPos/100;
+                if (config.dir === 'vc') {
+                    regions.push({sx: Math.floor(img.width * cp), sy: 0, sw: 1, sh: img.height, stretchW: config.copyRange, type:'pixel'});
+                } else {
+                    regions.push({sx: 0, sy: Math.floor(img.height * cp), sw: img.width, sh: 1, stretchH: config.copyRange, type:'pixel'});
+                }
+            }
+        }
     }
 
     function draw() {
         if (!img.src) return;
-        ctx.drawImage(img, 0, 0);
         calculateRegions();
-        ctx.strokeStyle = 'red';
-        ctx.lineWidth = Math.max(img.width * 0.006, 2);
-        ctx.setLineDash([15, 10]);
-        const fontSize = Math.max(img.width * 0.05, 18);
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img, 0, 0);
+        
+        const fontSize = Math.max(img.width * 0.04, 16);
         ctx.font = `bold ${fontSize}px sans-serif`;
         ctx.textAlign = 'center';
 
+        // 繪製紅線
+        ctx.strokeStyle = 'red'; ctx.lineWidth = Math.max(img.width * 0.005, 2); ctx.setLineDash([10, 5]);
         if (config.dir === 'c') {
             const x = img.width * (config.ratios[0]/100), y = img.height * (config.ratios[1]/100);
             ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, img.height); ctx.stroke();
@@ -255,67 +256,79 @@
         } else {
             config.ratios.forEach(r => {
                 ctx.beginPath();
-                if (config.dir === 'v') { ctx.moveTo(img.width * r/100, 0); ctx.lineTo(img.width * r/100, img.height); }
-                else { ctx.moveTo(0, img.height * r/100); ctx.lineTo(img.width, img.height * r/100); }
+                if (config.dir.includes('v')) { ctx.moveTo(img.width*r/100, 0); ctx.lineTo(img.width*r/100, img.height); }
+                else { ctx.moveTo(0, img.height*r/100); ctx.lineTo(img.width, img.height*r/100); }
                 ctx.stroke();
             });
         }
+
+        // 繪製藍線
+        if ((config.dir === 'vc' || config.dir === 'hc') && config.mode === '3') {
+            ctx.strokeStyle = '#00e5ff'; ctx.setLineDash([]); ctx.lineWidth = Math.max(img.width * 0.007, 3);
+            ctx.beginPath();
+            if (config.dir === 'vc') { ctx.moveTo(img.width*config.copyPos/100, 0); ctx.lineTo(img.width*config.copyPos/100, img.height); }
+            else { ctx.moveTo(0, img.height*config.copyPos/100); ctx.lineTo(img.width, img.height*config.copyPos/100); }
+            ctx.stroke();
+        }
+
+        // 繪製數字標記
         regions.forEach((reg, i) => {
-            ctx.fillStyle = 'rgba(255,255,255,0.7)';
-            ctx.beginPath(); ctx.arc(reg.x+reg.w/2, reg.y+reg.h/2, fontSize, 0, 7); ctx.fill();
-            ctx.fillStyle = 'red';
-            ctx.fillText(i+1, reg.x+reg.w/2, reg.y+reg.h/2 + fontSize/3);
+            const isPixel = reg.type === 'pixel';
+            const actualW = isPixel ? (reg.stretchW || 1) : reg.sw;
+            const actualH = isPixel ? (reg.stretchH || 1) : reg.sh;
+            
+            ctx.fillStyle = isPixel ? 'rgba(0,229,255,0.8)' : 'rgba(255,255,255,0.7)';
+            ctx.beginPath(); 
+            // 補償區塊標記點放在像素線位置，普通區塊放在正中間
+            const mx = isPixel ? reg.sx : reg.sx + reg.sw/2;
+            const my = isPixel ? reg.sy : reg.sy + reg.sh/2;
+            ctx.arc(mx, my, fontSize * 0.8, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = isPixel ? 'black' : 'red';
+            ctx.fillText(i+1, mx, my + fontSize/3);
         });
+
         updateDownloadButtons();
     }
 
-    function calculateRegions() {
-        regions = [];
-        const sorted = [...config.ratios].sort((a,b)=>a-b);
-        if (config.dir === 'v') {
-            let lastX = 0;
-            [...sorted, 100].forEach(p => {
-                let x = (p/100)*img.width;
-                regions.push({x: lastX, y: 0, w: x-lastX, h: img.height});
-                lastX = x;
-            });
-        } else if (config.dir === 'h') {
-            let lastY = 0;
-            [...sorted, 100].forEach(p => {
-                let y = (p/100)*img.height;
-                regions.push({x: 0, y: lastY, w: img.width, h: y-lastY});
-                lastY = y;
-            });
-        } else if (config.dir === 'c') {
-            const rx = config.ratios[0]/100, ry = config.ratios[1]/100;
-            const w1 = img.width*rx, h1 = img.height*ry;
-            regions = [{x:0, y:0, w:w1, h:h1}, {x:w1, y:0, w:img.width-w1, h:h1}, {x:0, y:h1, w:w1, h:img.height-h1}, {x:w1, y:h1, w:img.width-w1, h:img.height-h1}];
-        }
-    }
-
     function updateDownloadButtons() {
-        singleDownloads.innerHTML = '';
+        const div = document.getElementById('singleDownloads');
+        div.innerHTML = '';
         const t = i18n[currentLang];
-        regions.forEach((_, i) => {
+        regions.forEach((reg, i) => {
+            const isPixel = reg.type === 'pixel';
+            const w = isPixel ? (reg.stretchW || reg.sw) : Math.round(reg.sw);
+            const h = isPixel ? (reg.stretchH || reg.sh) : Math.round(reg.sh);
+            
             const btn = document.createElement('button');
             btn.className = 'download-btn single';
-            btn.innerText = `${t.downSingle} ${i+1}`;
+            if (isPixel) btn.style.border = '2px solid #00e5ff';
+            
+            btn.innerHTML = `${t.downSingle} ${i+1} <span class="btn-size">${w} × ${h}</span>`;
             btn.onclick = () => downloadPart(i);
-            singleDownloads.appendChild(btn);
+            div.appendChild(btn);
         });
     }
 
-    async function downloadPart(idx) {
+    function downloadPart(idx) {
         const reg = regions[idx];
         const format = document.getElementById('format').value;
         const ext = format.split('/')[1].replace('jpeg', 'jpg');
         const temp = document.createElement('canvas');
-        temp.width = reg.w; temp.height = reg.h;
-        temp.getContext('2d').drawImage(img, reg.x, reg.y, reg.w, reg.h, 0, 0, reg.w, reg.h);
-        const a = document.createElement('a');
-        a.download = `${idx+1}_${originalName}.${ext}`;
-        a.href = temp.toDataURL(format, 0.9);
-        a.click();
+        const tCtx = temp.getContext('2d');
+        
+        if (reg.type === 'pixel') {
+            if (reg.stretchW) {
+                temp.width = reg.stretchW; temp.height = reg.sh;
+                tCtx.drawImage(img, reg.sx, reg.sy, 1, reg.sh, 0, 0, reg.stretchW, reg.sh);
+            } else {
+                temp.width = reg.sw; temp.height = reg.stretchH;
+                tCtx.drawImage(img, reg.sx, reg.sy, reg.sw, 1, 0, 0, reg.sw, reg.stretchH);
+            }
+        } else {
+            temp.width = reg.sw; temp.height = reg.sh;
+            tCtx.drawImage(img, reg.sx, reg.sy, reg.sw, reg.sh, 0, 0, reg.sw, reg.sh);
+        }
+        const a = document.createElement('a'); a.download = `${idx+1}_${originalName}.${ext}`; a.href = temp.toDataURL(format, 0.9); a.click();
     }
 
     document.getElementById('allDownload').onclick = async () => {
@@ -323,32 +336,44 @@
         const zip = new JSZip();
         const format = document.getElementById('format').value;
         const ext = format.split('/')[1].replace('jpeg', 'jpg');
-        for(let i=0; i<regions.length; i++){
+        
+        for(let i=0; i<regions.length; i++) {
             const reg = regions[i];
             const temp = document.createElement('canvas');
-            temp.width = reg.w; temp.height = reg.h;
-            temp.getContext('2d').drawImage(img, reg.x, reg.y, reg.w, reg.h, 0, 0, reg.w, reg.h);
+            if (reg.type === 'pixel') {
+                temp.width = reg.stretchW || reg.sw; temp.height = reg.stretchH || reg.sh;
+                temp.getContext('2d').drawImage(img, reg.sx, reg.sy, reg.sw, reg.sh, 0, 0, temp.width, temp.height);
+            } else {
+                temp.width = reg.sw; temp.height = reg.sh;
+                temp.getContext('2d').drawImage(img, reg.sx, reg.sy, reg.sw, reg.sh, 0, 0, reg.sw, reg.sh);
+            }
             zip.file(`${i+1}_${originalName}.${ext}`, temp.toDataURL(format, 0.9).split(',')[1], {base64: true});
         }
         const blob = await zip.generateAsync({type:"blob"});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `${originalName}_split.zip`;
-        a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${originalName}_split.zip`; a.click();
     };
 
     document.getElementById('splitMode').onchange = e => {
         config.mode = e.target.value;
-        document.getElementById('crossOption').style.display = config.mode === '4' ? 'inline' : 'none';
-        if (config.mode === '2' && config.dir === 'c') { document.querySelector('input[value="v"]').checked = true; config.dir = 'v'; }
-        updateSliders(); draw();
+        const is3 = config.mode === '3';
+        const is4 = config.mode === '4';
+        document.getElementById('compVOption').style.display = is3 ? 'inline' : 'none';
+        document.getElementById('compHOption').style.display = is3 ? 'inline' : 'none';
+        document.getElementById('crossOption').style.display = is4 ? 'inline' : 'none';
+        
+        if (is4) {
+            document.querySelector('input[value="c"]').checked = true; config.dir = 'c';
+        } else if (config.dir === 'c') {
+            document.querySelector('input[value="v"]').checked = true; config.dir = 'v';
+        }
+        updateSliders();
     };
     
     document.getElementsByName('dir').forEach(radio => {
-        radio.onchange = e => { config.dir = e.target.value; updateSliders(); draw(); };
+        radio.onchange = e => { config.dir = e.target.value; updateSliders(); };
     });
 
-    updateLanguage();
+    updateLanguageUI();
 </script>
 </body>
 </html>
