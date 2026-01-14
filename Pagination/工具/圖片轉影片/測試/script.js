@@ -1,7 +1,6 @@
 const { createFFmpeg, fetchFile } = FFmpeg;
 const ffmpeg = createFFmpeg({ log: true });
 
-// 全域變數
 let currentVideoFile = null;
 
 // UI 元素
@@ -12,8 +11,7 @@ const previewBox = document.getElementById('previewBox');
 const videoPreview = document.getElementById('videoPreview');
 const downloadLink = document.getElementById('downloadLink');
 
-// --- 1. UI 滑桿數值即時顯示 ---
-
+// --- UI 即時顯示 ---
 function updateVal(id) {
     const el = document.getElementById(id);
     const display = document.getElementById(id + 'Val');
@@ -36,7 +34,7 @@ document.getElementById('textColor').oninput = (e) => {
     document.getElementById('colorHex').innerText = e.target.value.toUpperCase();
 };
 
-// --- 2. 核心功能：生成彈幕影片 ---
+// --- 核心功能 ---
 
 convertBtn.onclick = async () => {
     const uploader = document.getElementById('uploader');
@@ -64,9 +62,8 @@ convertBtn.onclick = async () => {
             await ffmpeg.load();
         }
 
-        statusDisplay.innerText = '⏳ 載入素材中...';
+        statusDisplay.innerText = '⏳ 處理素材中...';
         const fontUrl = 'https://raw.githubusercontent.com/googlefonts/noto-cjk/main/Sans/OTF/TraditionalChinese/NotoSansCJKtc-Bold.otf';
-        
         const [fontData, imageData] = await Promise.all([
             fetchFile(fontUrl),
             fetchFile(file)
@@ -75,83 +72,75 @@ convertBtn.onclick = async () => {
         ffmpeg.FS('writeFile', 'font.otf', fontData);
         ffmpeg.FS('writeFile', 'input.img', imageData);
 
-        // --- 構建 FFmpeg 濾鏡 (Video Filter) ---
-        // A. 基礎：縮放圖片 + 主浮水印
+        // A. 基礎濾鏡：圖片縮放 + 主浮水印
         let filter = `scale=-2:${qualityH},drawtext=fontfile=font.otf:text='${mainText}':fontcolor=${mainColor}:fontsize=${mainSize}:shadowcolor=black@0.4:shadowx=2:shadowy=2:x=(w-tw)*${xPct}:y=(h-th)*${yPct}`;
 
-        // B. 疊加彈幕：每行文字轉為一個 drawtext 濾鏡
+        // B. 解析並生成自定義彈幕
         danmakuLines.forEach((line, index) => {
-            // 隨機軌道 (1~9)，避免彈幕重疊
-            const lane = (index % 9) + 1;
-            const yPos = `(h/11)*${lane}`; 
+            // 解析格式: "文字,時間,位置"
+            const parts = line.split(',');
+            const content = parts[0].trim().replace(/'/g, "\u2019");
             
-            // 延遲出現時間 (秒)
-            const delay = index * 0.4; 
+            // 如果沒給時間或位置，則使用自動分配
+            const startTime = parts[1] ? parseFloat(parts[1]) : (index * 0.4);
+            const lane = parts[2] ? parseInt(parts[2]) : ((index % 8) + 1);
             
-            // 運動公式：x = 畫布寬 - (時間-延遲)*速度
-            // 當 t < delay 時，x 會在畫布外；當 t > delay 時開始向左移動
-            const xMove = `w-(t-${delay.toFixed(1)})*${danmakuSpeed}`;
+            // 計算 Y 座標 (畫面均分 10 份軌道)
+            const yPos = `(h/11)*${lane}`;
             
-            // 轉義單引號防止指令中斷
-            const safeLine = line.replace(/'/g, "\u2019");
+            // 動態 X 座標公式
+            // w = 起點寬度, t = 當前秒數, startTime = 延遲開始, danmakuSpeed = 像素/秒
+            const xMove = `w-(t-${startTime})*${danmakuSpeed}`;
 
-            filter += `,drawtext=fontfile=font.otf:text='${safeLine}':fontcolor=white:fontsize=36:shadowcolor=black@0.5:shadowx=1:shadowy=1:x=${xMove}:y=${yPos}`;
+            // 疊加濾鏡 (限制在時間到達後才顯示 drawtext)
+            // 使用 enable='gt(t,startTime)' 確保文字不會在開始前擠在螢幕右側
+            filter += `,drawtext=fontfile=font.otf:text='${content}':fontcolor=white:fontsize=36:shadowcolor=black@0.4:shadowx=1:shadowy=1:x=${xMove}:y=${yPos}:enable='gt(t,${startTime})'`;
         });
 
-        statusDisplay.innerText = `🚀 影片合成中 (畫質: ${qualityH}p)...`;
+        statusDisplay.innerText = '🚀 影片合成中...';
 
         await ffmpeg.run(
             '-loop', '1', 
             '-i', 'input.img',
-            '-t', '3', // 影片長度 3 秒
+            '-t', '3', 
             '-vf', filter,
             '-pix_fmt', 'yuv420p',
             '-vcodec', 'libx264',
             'out.mp4'
         );
 
-        statusDisplay.innerText = '⌛ 處理完畢，正在準備預覽...';
-        
         const data = ffmpeg.FS('readFile', 'out.mp4');
         const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
         const url = URL.createObjectURL(videoBlob);
         
-        // 封裝供分享使用
-        currentVideoFile = new File([videoBlob], `video_${Date.now()}.mp4`, { type: 'video/mp4' });
-
-        // 更新預覽區
+        currentVideoFile = new File([videoBlob], `danmaku_${Date.now()}.mp4`, { type: 'video/mp4' });
         videoPreview.src = url;
         downloadLink.href = url;
-        downloadLink.download = `watermark_danmaku.mp4`;
+        downloadLink.download = `3s_video.mp4`;
         previewBox.style.display = 'block';
         
         statusDisplay.innerText = '✅ 生成成功！';
-        previewBox.scrollIntoView({ behavior: 'smooth' });
-
     } catch (e) {
         console.error(e);
-        statusDisplay.innerText = '❌ 發生錯誤，請重整頁面後重試。';
+        statusDisplay.innerText = '❌ 發生錯誤，請重整頁面。';
     } finally {
         convertBtn.disabled = false;
     }
 };
 
-// --- 3. 分享功能 ---
-
+// 分享功能
 shareBtn.onclick = async () => {
     if (!currentVideoFile) return;
-
     if (navigator.canShare && navigator.canShare({ files: [currentVideoFile] })) {
         try {
             await navigator.share({
-                title: '我的彈幕影片',
-                text: '看我做的 3 秒彈幕影片！',
+                title: '我的作品',
                 files: [currentVideoFile]
             });
         } catch (err) {
             if (err.name !== 'AbortError') alert('分享失敗。');
         }
     } else {
-        alert('您的瀏覽器/系統不支援直接分享檔案，請使用下載按鈕。');
+        alert('請點擊下載按鈕保存影片。');
     }
 };
