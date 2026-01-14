@@ -44,6 +44,21 @@
                 <input type="range" id="posY" min="0" max="100" value="50">
                 <span class="val-display" id="posYVal">50%</span>
             </div>
+            <div class="input-group">
+    <label>2.5 彈幕設定 (每行一句)</label>
+    <textarea id="danmakuText" rows="4" placeholder="輸入彈幕文字...
+每一行會變成一條隨機彈幕
+例如：好美喔！
+例如：我也想去這裡" style="width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #e5e5ea; background: var(--bg-gray); font-family: inherit; resize: vertical;"></textarea>
+    
+    <div class="slider-box" style="margin-top: 10px;">
+        <div class="slider-row">
+            <label>彈幕速度</label>
+            <input type="range" id="danmakuSpeed" min="200" max="800" value="400">
+            <span class="val-display" id="danmakuSpeedVal">中</span>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 
@@ -66,21 +81,7 @@
             <button id="shareBtn" class="share-btn">📤 分享影片(不適用部分WIN系統)</button>
         </div>
     </div>
-    <div class="input-group">
-    <label>2.5 彈幕設定 (每行一句)</label>
-    <textarea id="danmakuText" rows="4" placeholder="輸入彈幕文字...
-每一行會變成一條隨機彈幕
-例如：好美喔！
-例如：我也想去這裡" style="width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #e5e5ea; background: var(--bg-gray); font-family: inherit; resize: vertical;"></textarea>
     
-    <div class="slider-box" style="margin-top: 10px;">
-        <div class="slider-row">
-            <label>彈幕速度</label>
-            <input type="range" id="danmakuSpeed" min="200" max="800" value="400">
-            <span class="val-display" id="danmakuSpeedVal">中</span>
-        </div>
-    </div>
-</div>
 </div>
 
 <script src="script.js"></script>
