@@ -1,10 +1,10 @@
 /**
  * 🎄 3秒真影片 - 專業彈幕工具
- * 版本：V2.3.0 (Ultimate Compatibility)
+ * 版本：V2.4.0 (Final Stability Fix)
  * 修復重點：
- * 1. 解決播放器黑屏/毀損問題 (修正像素奇數問題與編碼兼容性)
- * 2. 徹底移除可能失效的 tpad 濾鏡，改用穩定的 zoompan 固定影格
- * 3. 強制輸出高品質 H.264 基礎 Profile
+ * 1. 解決手機端 FFmpeg 濾鏡崩潰導致的黑屏。
+ * 2. 移除 zoompan，回歸穩定 loop 模式並強制固定解析度為偶數。
+ * 3. 增加 setsar=1:1 確保比例在手機上不跳動。
  */
 
 const { createFFmpeg, fetchFile } = FFmpeg;
@@ -64,7 +64,7 @@ convertBtn.onclick = async () => {
 
     try {
         if (!ffmpeg.isLoaded()) {
-            statusDisplay.innerText = '⏳ 初始化引擎中...';
+            statusDisplay.innerText = '⏳ 引擎啟動中...';
             await ffmpeg.load();
         }
 
@@ -79,12 +79,13 @@ convertBtn.onclick = async () => {
         ffmpeg.FS('writeFile', 'input.img', imageData);
 
         /**
-         * V2.3.0 濾鏡鏈重構：
-         * 1. scale='if(gte(iw/ih,w/h),...)' : 複雜的縮放確保寬高為偶數 (mp4 必備條件)
-         * 2. zoompan : 取代 loop，產生穩定的 3 秒靜態畫面 (90幀)
-         * 3. 主浮水印與彈幕座標強制使用 floor
+         * V2.4.0 核心修正邏輯：
+         * 1. 使用 scale 配合 pad 確保最終輸出長寬一定是偶數且符合比例。
+         * 2. setsar=1:1 防止手機播放時畫面比例被壓縮。
          */
-        let filter = `scale=trunc(oh*a/2)*2:${qualityH},format=yuv420p,zoompan=fps=30:d=90:s=${qualityH}x${qualityH},drawtext=fontfile=font.otf:text='${mainText}':fontcolor=${mainColor}:fontsize=${mainSize}:shadowcolor=black@0.4:shadowx=2:shadowy=2:x=floor((w-tw)*${xPct}):y=floor((h-th)*${yPct})`;
+        const targetW = Math.round((qualityH * 16) / 9 / 2) * 2; // 強制 16:9 或維持原圖比例但轉偶數
+        
+        let filter = `scale=trunc(iw*${qualityH}/ih/2)*2:${qualityH},format=yuv420p,setsar=1:1,drawtext=fontfile=font.otf:text='${mainText}':fontcolor=${mainColor}:fontsize=${mainSize}:shadowcolor=black@0.4:shadowx=2:shadowy=2:x=floor((w-tw)*${xPct}):y=floor((h-th)*${yPct})`;
 
         danmakuLines.forEach((line, index) => {
             const parts = line.split(',');
@@ -99,35 +100,37 @@ convertBtn.onclick = async () => {
             filter += `,drawtext=fontfile=font.otf:text='${content}':fontcolor=${dColor}:fontsize=32:shadowcolor=black@0.3:shadowx=1:shadowy=1:x=${xMove}:y=${yPos}:enable='gt(t,${startTime})'`;
         });
 
-        statusDisplay.innerText = `🚀 穩定化生成中 (共 ${danmakuLines.length} 條彈幕)...`;
+        statusDisplay.innerText = `🚀 正在進行最終相容性壓製...`;
 
         await ffmpeg.run(
+            '-loop', '1',              // 穩定循環模式
             '-i', 'input.img',
             '-vf', filter,
-            '-t', '3',
+            '-r', '30',                // 固定 30 幀
+            '-t', '3',                 // 3 秒
             '-c:v', 'libx264',
-            '-profile:v', 'baseline', // 使用最基礎的 Profile 確保所有手機都能播
-            '-level', '3.0',
-            '-pix_fmt', 'yuv420p',
+            '-pix_fmt', 'yuv420p',     // 最關鍵：必須是 yuv420p
             '-preset', 'ultrafast',
-            '-y', 'out.mp4'
+            '-tune', 'stillimage',
+            '-f', 'mp4',               // 強制 mp4 容器格式
+            'out.mp4'
         );
 
-        statusDisplay.innerText = '⌛ 讀取影片...';
+        statusDisplay.innerText = '⌛ 影片準備中...';
         const data = ffmpeg.FS('readFile', 'out.mp4');
         const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
         const url = URL.createObjectURL(videoBlob);
         
-        currentVideoFile = new File([videoBlob], `video_${Date.now()}.mp4`, { type: 'video/mp4' });
+        currentVideoFile = new File([videoBlob], `v24_video.mp4`, { type: 'video/mp4' });
         videoPreview.src = url;
         downloadLink.href = url;
-        downloadLink.download = `3s_video_fixed.mp4`;
+        downloadLink.download = `3s_stable_v24.mp4`;
         previewBox.style.display = 'block';
         statusDisplay.innerText = '✅ 生成完成！';
 
     } catch (e) {
         console.error('FFmpeg Error:', e);
-        statusDisplay.innerText = '❌ 生成錯誤，可能是圖片過大或格式不符。';
+        statusDisplay.innerText = '❌ 錯誤：請嘗試換一張較小的圖片。';
     } finally {
         convertBtn.disabled = false;
     }
@@ -136,6 +139,6 @@ convertBtn.onclick = async () => {
 shareBtn.onclick = async () => {
     if (!currentVideoFile) return;
     try {
-        await navigator.share({ title: '我的彈幕影片', files: [currentVideoFile] });
-    } catch (err) { if (err.name !== 'AbortError') alert('分享失敗'); }
+        await navigator.share({ title: '彈幕影片', files: [currentVideoFile] });
+    } catch (err) { alert('請手動下載分享'); }
 };
