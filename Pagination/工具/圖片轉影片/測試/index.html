@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🎬 3秒真影片 - 專業彈幕版</title>
+    <title>🎬 3秒真影片 - 專業彈幕自定義版</title>
     <script src="coi-serviceworker.js"></script>
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -11,8 +11,8 @@
 <body>
 
 <div class="container">
-    <h2>圖片轉 3s 影片</h2>
-    <p class="subtitle">自定義主浮水印與時間軸彈幕</p>
+    <h2>圖片轉 3s 彈幕影片</h2>
+    <p class="subtitle">支援精確時間軸與 20 軌位置設定</p>
 
     <div class="input-group">
         <label>1. 選擇來源圖片</label>
@@ -20,27 +20,27 @@
     </div>
 
     <div class="input-group">
-        <label>2. 固定浮水印 (主標題)</label>
+        <label>2. 固定主浮水印 (固定標題)</label>
         <input type="text" id="videoText" value="禁止盜用" placeholder="輸入文字內容...">
         
         <div class="slider-box">
             <div class="color-row">
-                <label>文字顏色</label>
+                <label>顏色</label>
                 <input type="color" id="textColor" value="#ffffff">
                 <span id="colorHex" style="font-size: 12px; color: #666;">#FFFFFF</span>
             </div>
             <div class="slider-row">
-                <label>文字大小</label>
+                <label>大小</label>
                 <input type="range" id="fontSize" min="20" max="250" value="80">
                 <span class="val-display" id="fontSizeVal">80</span>
             </div>
             <div class="slider-row">
-                <label>左右位置</label>
+                <label>左右</label>
                 <input type="range" id="posX" min="0" max="100" value="50">
                 <span class="val-display" id="posXVal">50%</span>
             </div>
             <div class="slider-row">
-                <label>上下位置</label>
+                <label>上下</label>
                 <input type="range" id="posY" min="0" max="100" value="50">
                 <span class="val-display" id="posYVal">50%</span>
             </div>
@@ -48,16 +48,19 @@
     </div>
 
     <div class="input-group">
-        <label>3. 彈幕內容與時間軸</label>
-        <div style="background: #fffbe6; padding: 10px; border-radius: 8px; border: 1px solid #ffe58f; margin-bottom: 10px;">
-            <p style="font-size: 12px; color: #856404; margin: 0;">
-                💡 格式：<strong>文字,出現秒數,軌道(1-10)</strong><br>
-                範例：<br>
-                <code>第一條彈幕,0.5,2</code> (0.5秒在上方出現)<br>
-                <code>這是下方的,1.2,8</code> (1.2秒在下方出現)
+        <label>3. 彈幕設定 (位置,秒數,顏色,文字) - 最多100行</label>
+        <div style="background: #e6f7ff; padding: 12px; border-radius: 8px; border: 1px solid #91d5ff; margin-bottom: 10px;">
+            <p style="font-size: 12px; color: #0050b3; margin: 0; line-height: 1.6;">
+                💡 格式：<strong>位置(1-20),秒數(0-3),顏色,文字</strong><br>
+                範例：<code>5,0.5,red,太強了</code> (5軌道、0.5秒、紅色)
             </p>
         </div>
-        <textarea id="danmakuText" rows="6" placeholder="直接輸入文字（自動分配時間）&#10;或使用格式：文字,秒數,軌道"></textarea>
+        <textarea id="danmakuText" rows="3" 
+            placeholder="位置,時間,顏色,文字"
+            style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; background: var(--bg-gray); font-family: inherit; resize: none; overflow-y: hidden; transition: height 0.2s; box-sizing: border-box;"
+        >5,0.5,#FFD700,這太強了吧！
+10,1.0,#00FF7F,666666
+15,1.5,#FF69B4,這個特效好美喔</textarea>
         
         <div class="slider-box" style="margin-top: 10px;">
             <div class="slider-row">
@@ -71,9 +74,9 @@
     <div class="input-group">
         <label>4. 輸出畫質</label>
         <select id="qualitySelect">
-            <option value="480">480p (處理最快)</option>
-            <option value="720" selected>720p (標準高清)</option>
-            <option value="1080">1080p (極致細膩)</option>
+            <option value="480">480p (快速)</option>
+            <option value="720" selected>720p (標準)</option>
+            <option value="1080">1080p (高清)</option>
         </select>
     </div>
 
@@ -83,8 +86,8 @@
     <div class="preview-box" id="previewBox">
         <video id="videoPreview" controls playsinline></video>
         <div class="action-buttons">
-            <a id="downloadLink" class="download-link">⬇️ 下載影片到相簿</a>
-            <button id="shareBtn" class="share-btn">📤 快速分享</button>
+            <a id="downloadLink" class="download-link">⬇️ 下載影片</a>
+            <button id="shareBtn" class="share-btn" style="background:#34c759; color:white; border-radius:14px; padding:10px; width:100%; border:none; font-weight:600; cursor:pointer; margin-top:10px;">📤 分享影片</button>
         </div>
     </div>
 </div>
