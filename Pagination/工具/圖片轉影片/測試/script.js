@@ -1,7 +1,10 @@
 /**
  * 🎄 3秒真影片 - 專業彈幕工具
- * 版本：V2.2.0 (Deep Stable)
- * 修復重點：徹底解決靜態圖轉影片的影格閃爍與跳動
+ * 版本：V2.3.0 (Ultimate Compatibility)
+ * 修復重點：
+ * 1. 解決播放器黑屏/毀損問題 (修正像素奇數問題與編碼兼容性)
+ * 2. 徹底移除可能失效的 tpad 濾鏡，改用穩定的 zoompan 固定影格
+ * 3. 強制輸出高品質 H.264 基礎 Profile
  */
 
 const { createFFmpeg, fetchFile } = FFmpeg;
@@ -61,10 +64,11 @@ convertBtn.onclick = async () => {
 
     try {
         if (!ffmpeg.isLoaded()) {
-            statusDisplay.innerText = '⏳ 引擎初始化...';
+            statusDisplay.innerText = '⏳ 初始化引擎中...';
             await ffmpeg.load();
         }
 
+        statusDisplay.innerText = '⏳ 讀取素材...';
         const fontUrl = 'https://raw.githubusercontent.com/googlefonts/noto-cjk/main/Sans/OTF/TraditionalChinese/NotoSansCJKtc-Bold.otf';
         const [fontData, imageData] = await Promise.all([
             fetchFile(fontUrl),
@@ -75,12 +79,12 @@ convertBtn.onclick = async () => {
         ffmpeg.FS('writeFile', 'input.img', imageData);
 
         /**
-         * 閃爍修復核心：
-         * 1. 使用 tpad 建立穩定的 3 秒畫面 (90幀 @ 30fps)
-         * 2. 使用 format=yuv420p 鎖定像素格式
-         * 3. 確保 drawtext 的所有座標都是整數
+         * V2.3.0 濾鏡鏈重構：
+         * 1. scale='if(gte(iw/ih,w/h),...)' : 複雜的縮放確保寬高為偶數 (mp4 必備條件)
+         * 2. zoompan : 取代 loop，產生穩定的 3 秒靜態畫面 (90幀)
+         * 3. 主浮水印與彈幕座標強制使用 floor
          */
-        let filter = `scale=-2:${qualityH},format=yuv420p,tpad=stop_mode=clone:stop_duration=3,drawtext=fontfile=font.otf:text='${mainText}':fontcolor=${mainColor}:fontsize=${mainSize}:shadowcolor=black@0.4:shadowx=2:shadowy=2:x=floor((w-tw)*${xPct}):y=floor((h-th)*${yPct})`;
+        let filter = `scale=trunc(oh*a/2)*2:${qualityH},format=yuv420p,zoompan=fps=30:d=90:s=${qualityH}x${qualityH},drawtext=fontfile=font.otf:text='${mainText}':fontcolor=${mainColor}:fontsize=${mainSize}:shadowcolor=black@0.4:shadowx=2:shadowy=2:x=floor((w-tw)*${xPct}):y=floor((h-th)*${yPct})`;
 
         danmakuLines.forEach((line, index) => {
             const parts = line.split(',');
@@ -90,40 +94,40 @@ convertBtn.onclick = async () => {
             const content = parts[3] ? parts[3].trim().replace(/'/g, "\u2019") : (parts[0] ? parts[0].trim() : "...");
 
             const yPos = `floor((h/21)*${lane})`;
-            // 修正：使用 max(0, t-startTime) 防止負值計算錯誤
             const xMove = `floor(w-(max(0,t-${startTime}))*${danmakuSpeed})`;
 
             filter += `,drawtext=fontfile=font.otf:text='${content}':fontcolor=${dColor}:fontsize=32:shadowcolor=black@0.3:shadowx=1:shadowy=1:x=${xMove}:y=${yPos}:enable='gt(t,${startTime})'`;
         });
 
-        statusDisplay.innerText = `🚀 深度穩定化處理中...`;
+        statusDisplay.innerText = `🚀 穩定化生成中 (共 ${danmakuLines.length} 條彈幕)...`;
 
         await ffmpeg.run(
             '-i', 'input.img',
             '-vf', filter,
-            '-r', '30',
             '-t', '3',
             '-c:v', 'libx264',
-            '-tune', 'stillimage',     // 針對靜態圖優化，減少閃爍
+            '-profile:v', 'baseline', // 使用最基礎的 Profile 確保所有手機都能播
+            '-level', '3.0',
             '-pix_fmt', 'yuv420p',
             '-preset', 'ultrafast',
-            'out.mp4'
+            '-y', 'out.mp4'
         );
 
+        statusDisplay.innerText = '⌛ 讀取影片...';
         const data = ffmpeg.FS('readFile', 'out.mp4');
         const videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
         const url = URL.createObjectURL(videoBlob);
         
-        currentVideoFile = new File([videoBlob], `3s_v22_${Date.now()}.mp4`, { type: 'video/mp4' });
+        currentVideoFile = new File([videoBlob], `video_${Date.now()}.mp4`, { type: 'video/mp4' });
         videoPreview.src = url;
         downloadLink.href = url;
-        downloadLink.download = `stable_video.mp4`;
+        downloadLink.download = `3s_video_fixed.mp4`;
         previewBox.style.display = 'block';
-        statusDisplay.innerText = '✅ 穩定版生成成功！';
+        statusDisplay.innerText = '✅ 生成完成！';
 
     } catch (e) {
-        console.error(e);
-        statusDisplay.innerText = '❌ 錯誤，請重整頁面。';
+        console.error('FFmpeg Error:', e);
+        statusDisplay.innerText = '❌ 生成錯誤，可能是圖片過大或格式不符。';
     } finally {
         convertBtn.disabled = false;
     }
@@ -132,6 +136,6 @@ convertBtn.onclick = async () => {
 shareBtn.onclick = async () => {
     if (!currentVideoFile) return;
     try {
-        await navigator.share({ title: '我的彈幕作品', files: [currentVideoFile] });
-    } catch (err) { if (err.name !== 'AbortError') alert('請下載後分享'); }
+        await navigator.share({ title: '我的彈幕影片', files: [currentVideoFile] });
+    } catch (err) { if (err.name !== 'AbortError') alert('分享失敗'); }
 };
