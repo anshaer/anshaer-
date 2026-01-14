@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎄 3秒真影片 - 浮水印工具</title>
+    <script src="coi-serviceworker.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <h2>圖片轉 3 秒影片</h2>
+    <p class="subtitle">設定浮水印內容、顏色與畫質</p>
+
+    <div class="input-group">
+        <label>1. 選擇來源圖片</label>
+        <input type="file" id="uploader" accept="image/*">
+    </div>
+
+    <div class="input-group">
+        <label>2. 文字與外觀設定</label>
+        <input type="text" id="videoText" value="禁止盜用" placeholder="輸入文字內容...">
+        
+        <div class="slider-box">
+            <div class="color-row">
+                <label>文字顏色</label>
+                <input type="color" id="textColor" value="#ffffff">
+                <span id="colorHex" style="font-size: 12px; color: #666;">#FFFFFF</span>
+            </div>
+            <div class="slider-row">
+                <label>文字大小</label>
+                <input type="range" id="fontSize" min="20" max="250" value="80">
+                <span class="val-display" id="fontSizeVal">80</span>
+            </div>
+            <div class="slider-row">
+                <label>左右位置</label>
+                <input type="range" id="posX" min="0" max="100" value="50">
+                <span class="val-display" id="posXVal">50%</span>
+            </div>
+            <div class="slider-row">
+                <label>上下位置</label>
+                <input type="range" id="posY" min="0" max="100" value="50">
+                <span class="val-display" id="posYVal">50%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label>3. 輸出畫質</label>
+        <select id="qualitySelect">
+            <option value="480">480p</option>
+            <option value="720" selected>720p</option>
+            <option value="1080">1080p</option>
+        </select>
+    </div>
+
+    <button id="convertBtn">生成影片</button>
+    <p id="statusDisplay">系統準備就緒</p>
+
+    <div class="preview-box" id="previewBox">
+        <video id="videoPreview" controls></video>
+        <div class="action-buttons">
+            <a id="downloadLink" class="download-link">⬇️ 下載影片</a>
+            <button id="shareBtn" class="share-btn">📤 分享影片(不適用部分WIN系統)</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
