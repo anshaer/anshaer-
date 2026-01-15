@@ -52,7 +52,7 @@
         <div style="background: #e6f7ff; padding: 12px; border-radius: 8px; border: 1px solid #91d5ff; margin-bottom: 10px;">
             <p style="font-size: 12px; color: #0050b3; margin: 0; line-height: 1.6;">
                 💡 格式：位置(1-20),秒數,顏色,文字<br>
-                <strong>「初始密度」</strong>可讓影片開場就塞滿彈幕。
+                <strong>「提前時間」</strong>彈幕至前時間（第0秒為畫面右側開始）。
             </p>
         </div>
         <textarea id="danmakuText" rows="3" 
@@ -71,7 +71,7 @@
                 <span class="val-display" id="danmakuSpeedVal">中</span>
             </div>
             <div class="slider-row">
-                <label>初始密度</label>
+                <label>提前時間</label>
                 <input type="range" id="preStartOffset" min="0" max="5" step="0.1" value="0">
                 <span class="val-display" id="preStartOffsetVal">無</span>
             </div>
