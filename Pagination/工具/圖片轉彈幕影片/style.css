@@ -1,0 +1,157 @@
+:root {
+    --primary-color: #007AFF;
+    --bg-gray: #f2f2f7;
+}
+
+body {
+    font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 500px;
+}
+
+h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    color: #8e8e93;
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #333;
+}
+
+input[type="text"], 
+input[type="file"], 
+select {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #e5e5ea;
+    border-radius: 12px;
+    box-sizing: border-box;
+    font-size: 16px;
+    background: var(--bg-gray);
+    appearance: none;
+}
+
+/* 顏色選擇器 */
+.color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+input[type="color"] {
+    border: none;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    background: none;
+}
+
+.slider-box {
+    background: var(--bg-gray);
+    padding: 15px;
+    border-radius: 12px;
+    margin-top: 10px;
+}
+
+.slider-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.slider-row label {
+    margin-bottom: 0;
+    width: 70px;
+    flex-shrink: 0;
+    font-size: 13px;
+}
+
+input[type="range"] {
+    flex-grow: 1;
+    margin-right: 10px;
+    accent-color: var(--primary-color);
+}
+
+.val-display {
+    width: 45px;
+    font-size: 12px;
+    color: #666;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+button {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 600;
+    margin-top: 20px;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+button:disabled {
+    background: #d1d1d6;
+    cursor: not-allowed;
+}
+
+#statusDisplay {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #007AFF;
+    text-align: center;
+    font-weight: 500;
+    min-height: 20px;
+}
+
+.preview-box {
+    margin-top: 30px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    display: none;
+}
+
+video {
+    width: 100%;
+    border-radius: 12px;
+    background: #000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.download-link {
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+    color: #007AFF;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 10px;
+}
