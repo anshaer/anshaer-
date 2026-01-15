@@ -12,7 +12,7 @@
 
 <div class="container">
     <h2>圖片轉 3s 彈幕影片</h2>
-    <p class="subtitle">支援精確時間軸與 20 軌位置設定</p>
+    <p class="subtitle">支援精確時間軸、20 軌位置與初始密度設定</p>
 
     <div class="input-group">
         <label>1. 選擇來源圖片</label>
@@ -48,11 +48,11 @@
     </div>
 
     <div class="input-group">
-        <label>3. 彈幕設定 (位置,秒數,顏色,文字) - 最多100行</label>
+        <label>3. 彈幕設定 (位置,秒數,顏色,文字)</label>
         <div style="background: #e6f7ff; padding: 12px; border-radius: 8px; border: 1px solid #91d5ff; margin-bottom: 10px;">
             <p style="font-size: 12px; color: #0050b3; margin: 0; line-height: 1.6;">
-                💡 格式：<strong>位置(1-20),秒數(0-3),顏色,文字</strong><br>
-                範例：<code>5,0.5,red,太強了</code> (5軌道、0.5秒、紅色)
+                💡 格式：位置(1-20),秒數,顏色,文字<br>
+                <strong>「初始密度」</strong>可讓影片開場就塞滿彈幕。
             </p>
         </div>
         <textarea id="danmakuText" rows="3" 
@@ -60,13 +60,20 @@
             style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #e5e5ea; background: var(--bg-gray); font-family: inherit; resize: none; overflow-y: hidden; transition: height 0.2s; box-sizing: border-box;"
         >5,0.5,#FFD700,這太強了吧！
 10,1.0,#00FF7F,666666
-15,1.5,#FF69B4,這個特效好美喔</textarea>
+15,1.5,#FF69B4,這個特效好美喔
+3,0.2,#FFFFFF,第一波彈幕
+8,0.8,#00BFFF,藍色飛行中</textarea>
         
         <div class="slider-box" style="margin-top: 10px;">
             <div class="slider-row">
                 <label>飛行速度</label>
                 <input type="range" id="danmakuSpeed" min="200" max="800" value="400">
                 <span class="val-display" id="danmakuSpeedVal">中</span>
+            </div>
+            <div class="slider-row">
+                <label>初始密度</label>
+                <input type="range" id="preStartOffset" min="0" max="5" step="0.1" value="0">
+                <span class="val-display" id="preStartOffsetVal">無</span>
             </div>
         </div>
     </div>
