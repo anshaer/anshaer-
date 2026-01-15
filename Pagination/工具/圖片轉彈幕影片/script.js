@@ -135,3 +135,4 @@ document.getElementById('shareBtn').onclick = async () => {
         alert('瀏覽器不支持分享，請點擊下載。');
     }
 };
+
