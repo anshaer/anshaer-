@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW" data-theme="morning" class="notranslate">
+<html lang="zh-TW" data-theme="iron" class="notranslate">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -13,12 +13,14 @@
 <div class="top-bar">
     <div class="config-group">
         <select id="themeSelect">
-            <option value="morning">☀️ 早晨白日</option>
+            <option value="iron" selected>⚙️ 鋼鐵銅灰</option>
+            <option value="latte">☕ 咖啡拿鐵</option>
             <option value="neon">🌆 夜間霓虹</option>
             <option value="strawberry">🍓 草莓牛奶</option>
             <option value="mint">🍫 薄荷巧克力</option>
             <option value="ocean">🌊 藍白海洋</option>
             <option value="sunset">🌇 夕陽餘暉</option>
+            <option value="morning">☀️ 早晨白日</option>
         </select>
         <select id="langSelect">
             <option value="zh-TW">繁體中文 (台灣)</option>
@@ -54,9 +56,9 @@
 
         <div class="input-group">
             <label id="t-dan">3. 彈幕設定 (位置,秒數,顏色,內容)</label>
-            <textarea id="danmakuText" rows="4">5,0.5,#00f3ff,Hello World!
-10,1.0,#ff00ff,Neon Light
-15,1.5,#9d00ff,Cyberpunk</textarea>
+            <textarea id="danmakuText" rows="4">5,0.5,#00f3ff,Cool Effect!
+10,1.0,#ff00ff,Professional
+15,1.5,#ffff00,Neon Yellow</textarea>
             <div class="slider-box">
                 <div class="slider-row"><label id="t-speed">速度</label><input type="range" id="danmakuSpeed" min="200" max="800" value="400"><span class="val-display" id="danmakuSpeedVal">中</span></div>
                 <div class="slider-row"><label id="t-density">提前時間</label><input type="range" id="preStartOffset" min="0" max="5" step="0.1" value="0"><span class="val-display" id="preStartOffsetVal">0s</span></div>
