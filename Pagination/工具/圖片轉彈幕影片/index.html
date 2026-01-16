@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-TW" data-theme="dark" class="notranslate">
+<html lang="zh-TW" data-theme="morning" class="notranslate">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🎬 NEON Danmaku Maker</title>
+    <title>🎬 Pro Danmaku Video Maker</title>
     <script src="coi-serviceworker.js"></script>
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -11,7 +11,15 @@
 <body>
 
 <div class="top-bar">
-    <div class="lang-switcher">
+    <div class="config-group">
+        <select id="themeSelect">
+            <option value="morning">☀️ 早晨白日</option>
+            <option value="neon">🌆 夜間霓虹</option>
+            <option value="strawberry">🍓 草莓牛奶</option>
+            <option value="mint">🍫 薄荷巧克力</option>
+            <option value="ocean">🌊 藍白海洋</option>
+            <option value="sunset">🌇 夕陽餘暉</option>
+        </select>
         <select id="langSelect">
             <option value="zh-TW">繁體中文 (台灣)</option>
             <option value="zh-HK">繁體中文 (香港)</option>
@@ -19,21 +27,20 @@
             <option value="ja">日本語</option>
         </select>
     </div>
-    <button id="themeToggle" class="icon-btn">🌓</button>
 </div>
 
 <div class="main-layout">
     <div class="control-panel">
-        <h2 id="t-title">⚡ 圖片轉 3s 彈幕影片</h2>
+        <h2 id="t-title">圖片轉 3s 彈幕影片</h2>
         
         <div class="input-group">
-            <label id="t-label-img">1. 選擇來源圖片</label>
+            <label id="t-img">1. 選擇來源圖片</label>
             <input type="file" id="uploader" accept="image/*">
         </div>
 
         <div class="input-group">
-            <label id="t-label-main">2. 固定主標題</label>
-            <input type="text" id="videoText" value="禁止盜用" placeholder="Text...">
+            <label id="t-main">2. 固定主標題</label>
+            <input type="text" id="videoText" value="禁止盜用">
             <div class="slider-box">
                 <div class="color-row">
                     <input type="color" id="textColor" value="#ffffff">
@@ -46,10 +53,10 @@
         </div>
 
         <div class="input-group">
-            <label id="t-label-dan">3. 彈幕設定 (位置,秒數,顏色,內容)</label>
-            <textarea id="danmakuText" rows="4">5,0.5,#00f3ff,Cyberpunk!
+            <label id="t-dan">3. 彈幕設定 (位置,秒數,顏色,內容)</label>
+            <textarea id="danmakuText" rows="4">5,0.5,#00f3ff,Hello World!
 10,1.0,#ff00ff,Neon Light
-15,1.5,#9d00ff,Ultra Video</textarea>
+15,1.5,#9d00ff,Cyberpunk</textarea>
             <div class="slider-box">
                 <div class="slider-row"><label id="t-speed">速度</label><input type="range" id="danmakuSpeed" min="200" max="800" value="400"><span class="val-display" id="danmakuSpeedVal">中</span></div>
                 <div class="slider-row"><label id="t-density">提前時間</label><input type="range" id="preStartOffset" min="0" max="5" step="0.1" value="0"><span class="val-display" id="preStartOffsetVal">0s</span></div>
@@ -57,7 +64,7 @@
         </div>
 
         <div class="input-group">
-            <label id="t-label-res">4. 解析度</label>
+            <label id="t-res">4. 解析度</label>
             <select id="qualitySelect">
                 <option value="480">480p</option>
                 <option value="720" selected>720p</option>
@@ -65,8 +72,8 @@
             </select>
         </div>
 
-        <button id="convertBtn">START GENERATE</button>
-        <p id="statusDisplay">SYSTEM READY</p>
+        <button id="convertBtn">GENERATE VIDEO</button>
+        <p id="statusDisplay">READY</p>
     </div>
 
     <div class="preview-panel">
