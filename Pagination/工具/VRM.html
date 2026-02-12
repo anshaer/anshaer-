@@ -2,21 +2,22 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>VRM Live Debug Version</title>
+    <title>VRM Live - Final Fix</title>
     <style>
-        body { margin: 0; background: #1a1a1a; color: #0f0; font-family: monospace; overflow: hidden; }
-        #ui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(0,0,0,0.8); padding: 15px; border: 1px solid #0f0; width: 250px; }
-        #video-preview { position: absolute; bottom: 10px; right: 10px; width: 200px; height: 150px; border: 1px solid #0f0; transform: scaleX(-1); background: #000; }
-        #debug-log { font-size: 10px; height: 100px; overflow-y: auto; border-top: 1px solid #444; margin-top: 10px; padding-top: 5px; }
+        body { margin: 0; background: #000; color: #0f0; font-family: monospace; overflow: hidden; }
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(0,0,0,0.9); padding: 15px; border: 1px solid #0f0; width: 260px; }
+        #video-preview { position: absolute; bottom: 10px; right: 10px; width: 240px; height: 180px; border: 2px solid #0f0; transform: scaleX(-1); background: #222; }
+        button { background: #0f0; color: #000; border: none; padding: 5px 10px; cursor: pointer; font-weight: bold; margin-top: 5px; }
     </style>
 </head>
 <body>
 
     <div id="ui">
-        <b>VRM_LIVE_SYSTEM</b>
-        <input type="file" id="vrm-upload" accept=".vrm" style="width:100%; margin:10px 0;"/>
-        <div id="status">STATUS: INITIALIZING...</div>
-        <div id="debug-log">Log: System starting...</div>
+        <b>> VRM_SYSTEM_v3.0</b><br><br>
+        1. <button onclick="startCamera()">點擊開啟相機</button><br>
+        2. <input type="file" id="vrm-upload" accept=".vrm" style="margin-top:10px;"/><br>
+        <div id="status" style="margin-top:10px; color: #fff;">狀態：等待手動開啟相機...</div>
+        <div id="log" style="font-size: 10px; color: #888; margin-top: 10px;">日誌：準備就緒</div>
     </div>
 
     <video id="video-preview" autoplay playsinline></video>
@@ -24,84 +25,77 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.0.2/lib/three-vrm.pkgd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic@0.5.1675235345/holistic.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/kalidokit@1.1.5/dist/kalidokit.it.js"></script>
 
     <script>
-        const logEl = document.getElementById('debug-log');
-        const statusEl = document.getElementById('status');
-        function debug(msg) { 
-            logEl.innerHTML += `<div>> ${msg}</div>`;
-            logEl.scrollTop = logEl.scrollHeight;
-        }
+        const status = document.getElementById('status');
+        const log = (msg) => { document.getElementById('log').innerHTML += `<div>> ${msg}</div>`; };
 
-        // --- Three.js 初始化 ---
+        // --- Three.js ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 20);
         camera.position.set(0, 1.4, 3);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
-        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        scene.add(new THREE.AmbientLight(0xffffff, 1.0));
 
         let currentVrm = null;
         const loader = new THREE.GLTFLoader();
 
-        // --- 載入模型 ---
         document.getElementById('vrm-upload').onchange = (e) => {
-            const file = e.target.files[0];
-            const url = URL.createObjectURL(file);
-            debug("Loading VRM file...");
-            
+            const url = URL.createObjectURL(e.target.files[0]);
+            log("正在解析 VRM...");
             loader.load(url, async (gltf) => {
                 const vrm = await THREE_VRM.VRM.from(gltf);
                 if (currentVrm) scene.remove(currentVrm.scene);
                 currentVrm = vrm;
                 scene.add(vrm.scene);
                 vrm.scene.rotation.y = Math.PI;
-                debug("VRM Loaded & Added to Scene");
-                statusEl.innerText = "STATUS: TRACKING_ACTIVE";
-            }, undefined, (err) => debug("Load Error: " + err));
+                status.innerText = "狀態：模型已就緒";
+                log("模型載入完成");
+            });
         };
 
-        // --- 追蹤核心 ---
-        const videoElement = document.getElementById('video-preview');
+        // --- Mediapipe ---
+        const video = document.getElementById('video-preview');
         const holistic = new Holistic({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic@0.5.1675235345/${file}`
         });
 
-        holistic.setOptions({ modelComplexity: 1, smoothLandmarks: true });
-
-        holistic.onResults((results) => {
-            if (!currentVrm) return;
-
-            // 檢查是否有捕捉到臉部
-            if (results.faceLandmarks) {
-                // 調用 Kalidokit
-                const faceRig = Kalidokit.Face.solve(results.faceLandmarks, { runtime: "mediapipe", video: videoElement });
-                
-                if (faceRig) {
-                    const head = currentVrm.humanoid.getNormalizedBoneNode('head');
-                    // 直接強制賦值測試
-                    head.rotation.y = faceRig.degrees.y * (Math.PI / 180);
-                    head.rotation.x = faceRig.degrees.x * (Math.PI / 180);
-                    
-                    // 表情
-                    const em = currentVrm.expressionManager;
-                    em.setValue('aa', faceRig.mouth.shape.A);
-                    em.setValue('blink', 1 - faceRig.eye.l);
-                }
+        holistic.setOptions({ modelComplexity: 1, refineLandmarks: true });
+        holistic.onResults((res) => {
+            if (!currentVrm || !res.faceLandmarks) return;
+            const faceRig = Kalidokit.Face.solve(res.faceLandmarks, { runtime: "mediapipe", video: video });
+            if (faceRig) {
+                const head = currentVrm.humanoid.getNormalizedBoneNode('head');
+                head.rotation.y = faceRig.degrees.y * (Math.PI / 180);
+                head.rotation.x = faceRig.degrees.x * (Math.PI / 180);
+                currentVrm.expressionManager.setValue('aa', faceRig.mouth.shape.A);
+                currentVrm.expressionManager.setValue('blink', 1 - faceRig.eye.l);
             }
         });
 
-        // 啟動相機
-        const cam = new Camera(videoElement, {
-            onFrame: async () => { await holistic.send({ image: videoElement }); },
+        const cam = new Camera(video, {
+            onFrame: async () => { await holistic.send({ image: video }); },
             width: 640, height: 480
         });
-        
-        cam.start().then(() => debug("Camera Started")).catch(e => debug("Camera Fail: " + e));
+
+        // 強制手動啟動函數
+        window.startCamera = () => {
+            status.innerText = "狀態：正在啟動相機...";
+            cam.start()
+                .then(() => {
+                    status.innerText = "狀態：相機已開啟，請上傳 VRM";
+                    log("相機啟動成功");
+                })
+                .catch(e => {
+                    log("相機啟動失敗: " + e);
+                    alert("請確保已授權鏡頭使用權限");
+                });
+        };
 
         function animate() {
             requestAnimationFrame(animate);
