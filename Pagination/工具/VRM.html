@@ -1,134 +1,114 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Web VRM Live Sync</title>
+    <title>VRM Live Debug Version</title>
     <style>
-        body { margin: 0; background: #1a1a1a; overflow: hidden; font-family: sans-serif; }
-        #ui { position: absolute; top: 10px; left: 10px; z-index: 10; background: rgba(0,0,0,0.7); padding: 15px; color: white; border-radius: 8px; }
-        #video-preview { position: absolute; bottom: 10px; right: 10px; width: 180px; border: 2px solid #0f0; transform: scaleX(-1); border-radius: 5px; }
+        body { margin: 0; background: #1a1a1a; color: #0f0; font-family: monospace; overflow: hidden; }
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(0,0,0,0.8); padding: 15px; border: 1px solid #0f0; width: 250px; }
+        #video-preview { position: absolute; bottom: 10px; right: 10px; width: 200px; height: 150px; border: 1px solid #0f0; transform: scaleX(-1); background: #000; }
+        #debug-log { font-size: 10px; height: 100px; overflow-y: auto; border-top: 1px solid #444; margin-top: 10px; padding-top: 5px; }
     </style>
 </head>
 <body>
+
     <div id="ui">
-        <input type="file" id="vrm-upload" accept=".vrm" />
-        <div id="status">等待相機啟動...</div>
+        <b>VRM_LIVE_SYSTEM</b>
+        <input type="file" id="vrm-upload" accept=".vrm" style="width:100%; margin:10px 0;"/>
+        <div id="status">STATUS: INITIALIZING...</div>
+        <div id="debug-log">Log: System starting...</div>
     </div>
+
     <video id="video-preview" autoplay playsinline></video>
 
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.154.0/examples/jsm/",
-            "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.0.2/lib/three-vrm.module.js"
-        }
-    }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.0.2/lib/three-vrm.pkgd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/kalidokit@1.1.5/dist/kalidokit.it.js"></script>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
-
+    <script>
+        const logEl = document.getElementById('debug-log');
         const statusEl = document.getElementById('status');
-        const videoElement = document.getElementById('video-preview');
+        function debug(msg) { 
+            logEl.innerHTML += `<div>> ${msg}</div>`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
 
-        // --- Three.js 基礎場景 ---
+        // --- Three.js 初始化 ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 20);
         camera.position.set(0, 1.4, 3);
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
-        scene.add(new THREE.DirectionalLight(0xffffff, 1), new THREE.AmbientLight(0xffffff, 0.5));
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
 
         let currentVrm = null;
-        const loader = new GLTFLoader();
-        loader.register((parser) => new VRMLoaderPlugin(parser));
+        const loader = new THREE.GLTFLoader();
 
-        // 載入模型函式
+        // --- 載入模型 ---
         document.getElementById('vrm-upload').onchange = (e) => {
             const file = e.target.files[0];
             const url = URL.createObjectURL(file);
-            loader.load(url, (gltf) => {
-                const vrm = gltf.userData.vrm;
-                if (currentVrm) { scene.remove(currentVrm.scene); VRMUtils.deepDispose(currentVrm.scene); }
+            debug("Loading VRM file...");
+            
+            loader.load(url, async (gltf) => {
+                const vrm = await THREE_VRM.VRM.from(gltf);
+                if (currentVrm) scene.remove(currentVrm.scene);
                 currentVrm = vrm;
                 scene.add(vrm.scene);
                 vrm.scene.rotation.y = Math.PI;
-                statusEl.innerText = "模型載入成功，追蹤中...";
-            });
+                debug("VRM Loaded & Added to Scene");
+                statusEl.innerText = "STATUS: TRACKING_ACTIVE";
+            }, undefined, (err) => debug("Load Error: " + err));
         };
 
-        // --- 核心：骨架動態綁定函式 ---
-        const rigRotation = (name, rotation = { x: 0, y: 0, z: 0 }, dampener = 1, lerpAmount = 0.3) => {
-            if (!currentVrm) return;
-            const bone = currentVrm.humanoid.getNormalizedBoneNode(name);
-            if (!bone) return;
-            
-            // 使用 Euler 角進行平滑旋轉
-            const euler = new THREE.Euler(
-                rotation.x * dampener,
-                rotation.y * dampener,
-                rotation.z * dampener
-            );
-            const quaternion = new THREE.Quaternion().setFromEuler(euler);
-            bone.quaternion.slerp(quaternion, lerpAmount); // Slerp 讓動作更絲滑
-        };
-
-        // --- Mediapipe Holistic 追蹤 ---
+        // --- 追蹤核心 ---
+        const videoElement = document.getElementById('video-preview');
         const holistic = new Holistic({
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
         });
 
-        holistic.setOptions({ modelComplexity: 1, smoothLandmarks: true, refineLandmarks: true });
+        holistic.setOptions({ modelComplexity: 1, smoothLandmarks: true });
 
         holistic.onResults((results) => {
             if (!currentVrm) return;
 
-            // 1. 計算臉部數據
-            const faceRig = Kalidokit.Face.solve(results.faceLandmarks, { runtime: "mediapipe", video: videoElement });
-            
-            if (faceRig) {
-                // 轉動頭部與頸部
-                rigRotation("head", faceRig.degrees, 0.6 * (Math.PI / 180));
-                rigRotation("neck", faceRig.degrees, 0.4 * (Math.PI / 180));
-
-                // 嘴型同步
-                const expressions = currentVrm.expressionManager;
-                expressions.setValue('aa', faceRig.mouth.shape.A);
-                expressions.setValue('ih', faceRig.mouth.shape.I);
-                expressions.setValue('ou', faceRig.mouth.shape.U);
-                expressions.setValue('blink', 1 - faceRig.eye.l); // 簡單眨眼
-            }
-
-            // 2. 計算身體數據 (如果想要手跟著動)
-            const poseRig = Kalidokit.Pose.solve(results.poseLandmarks, results.upperBodyLandmarks, { runtime: "mediapipe", video: videoElement });
-            if (poseRig) {
-                rigRotation("spine", poseRig.spine, 0.5);
-                // 你可以繼續加入肩膀、手臂的連動
+            // 檢查是否有捕捉到臉部
+            if (results.faceLandmarks) {
+                // 調用 Kalidokit
+                const faceRig = Kalidokit.Face.solve(results.faceLandmarks, { runtime: "mediapipe", video: videoElement });
+                
+                if (faceRig) {
+                    const head = currentVrm.humanoid.getNormalizedBoneNode('head');
+                    // 直接強制賦值測試
+                    head.rotation.y = faceRig.degrees.y * (Math.PI / 180);
+                    head.rotation.x = faceRig.degrees.x * (Math.PI / 180);
+                    
+                    // 表情
+                    const em = currentVrm.expressionManager;
+                    em.setValue('aa', faceRig.mouth.shape.A);
+                    em.setValue('blink', 1 - faceRig.eye.l);
+                }
             }
         });
 
         // 啟動相機
-        const cameraObj = new Camera(videoElement, {
+        const cam = new Camera(videoElement, {
             onFrame: async () => { await holistic.send({ image: videoElement }); },
             width: 640, height: 480
         });
-        cameraObj.start().then(() => statusEl.innerText = "相機已啟動，請上傳 VRM");
+        
+        cam.start().then(() => debug("Camera Started")).catch(e => debug("Camera Fail: " + e));
 
-        const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
-            if (currentVrm) currentVrm.update(clock.getDelta());
+            if (currentVrm) currentVrm.update(1/60);
             renderer.render(scene, camera);
         }
         animate();
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/kalidokit@1.1.5/dist/kalidokit.it.js"></script>
 </body>
 </html>
