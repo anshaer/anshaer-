@@ -1,21 +1,21 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Web VRM Camera Live</title>
+    <title>VRM Live Web</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #1a1a1a; font-family: sans-serif; }
-        #controls { position: absolute; top: 20px; left: 20px; z-index: 100; color: white; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 8px; pointer-events: auto; }
-        #video-preview { position: absolute; bottom: 20px; right: 20px; width: 200px; height: 150px; background: #000; border: 2px solid #00ff00; transform: scaleX(-1); border-radius: 8px; z-index: 50; }
-        #status { color: #00ff00; font-weight: bold; }
+        body { margin: 0; background: #222; color: white; font-family: sans-serif; overflow: hidden; }
+        #ui { position: absolute; top: 20px; left: 20px; z-index: 10; background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; border: 1px solid #444; }
+        #video-preview { position: absolute; bottom: 20px; right: 20px; width: 200px; height: 150px; border: 2px solid #555; border-radius: 8px; transform: scaleX(-1); }
+        #status { color: #ffcc00; margin-top: 10px; display: block; }
     </style>
 </head>
 <body>
 
-    <div id="controls">
-        <h3>VRM 實時動態捕捉</h3>
+    <div id="ui">
+        <h3>VRM 控制面板</h3>
         <input type="file" id="vrm-upload" accept=".vrm" />
-        <p>狀態: <span id="status">等待上傳...</span></p>
+        <span id="status">狀態：等待載入套件...</span>
     </div>
 
     <video id="video-preview" autoplay playsinline></video>
@@ -24,82 +24,82 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.0.2/lib/three-vrm.pkgd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic@0.5.1675235345/holistic.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/kalidokit@1.1.5/dist/kalidokit.it.js"></script>
 
     <script>
-        // 檢查環境
         const statusEl = document.getElementById('status');
-        const { VRM, VRMUtils } = THREE_VRM;
+        
+        // 確保所有套件都載入完成
+        window.onload = () => {
+            statusEl.innerText = "狀態：準備就緒，請上傳 VRM";
+        };
 
-        // --- Three.js 基礎設定 ---
+        // --- Three.js 初始化 ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 20);
         camera.position.set(0, 1.4, 3);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
         document.getElementById('container').appendChild(renderer.domElement);
 
-        scene.add(new THREE.DirectionalLight(0xffffff, 1.0));
+        const light = new THREE.DirectionalLight(0xffffff, 1.0);
+        light.position.set(1, 1, 1).normalize();
+        scene.add(light);
         scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
         let currentVrm = null;
 
-        // --- 核心：修正後的載入函式 ---
-        document.getElementById('vrm-upload').addEventListener('change', (e) => {
+        // --- 上傳與載入邏輯 ---
+        document.getElementById('vrm-upload').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            statusEl.innerText = "讀取檔案中...";
+            statusEl.innerText = "狀態：正在讀取檔案...";
             const url = URL.createObjectURL(file);
-
-            // 必須明確實例化 GLTFLoader
-            const loader = new THREE.GLTFLoader();
             
-            // 告訴 GLTFLoader 如何處理 VRM 檔案
-            loader.crossOrigin = 'anonymous';
+            // 使用內建在 window 的 THREE.GLTFLoader
+            const loader = new THREE.GLTFLoader();
             
             loader.load(
                 url,
                 async (gltf) => {
-                    statusEl.innerText = "解析模型中...";
-                    
-                    // 清除舊模型
-                    if (currentVrm) {
-                        scene.remove(currentVrm.scene);
-                        VRMUtils.deepDispose(currentVrm.scene);
-                    }
-
+                    statusEl.innerText = "狀態：正在轉換為 VRM...";
                     try {
-                        // 使用 VRM.from(gltf) 將普通 gltf 轉為 VRM 物件
-                        const vrm = await VRM.from(gltf);
+                        // 使用正確的 Namespace 呼叫
+                        const vrm = await THREE_VRM.VRM.from(gltf);
+                        
+                        if (currentVrm) {
+                            scene.remove(currentVrm.scene);
+                            THREE_VRM.VRMUtils.deepDispose(currentVrm.scene);
+                        }
+
                         currentVrm = vrm;
                         scene.add(vrm.scene);
+                        vrm.scene.rotation.y = Math.PI; // 轉向正面
                         
-                        // 旋轉模型面對相機並調整位置
-                        vrm.scene.rotation.y = Math.PI;
-                        
-                        statusEl.innerText = "模型載入成功！";
-                        console.log("VRM Loaded:", vrm);
+                        statusEl.innerText = "狀態：載入成功！請開啟鏡頭";
+                        console.log("VRM 載入完成", vrm);
                     } catch (err) {
-                        console.error(err);
-                        statusEl.innerText = "VRM 解析失敗，請檢查檔案格式。";
+                        console.error("VRM 轉換錯誤:", err);
+                        statusEl.innerText = "狀態：VRM 格式解析失敗";
                     }
                 },
-                (progress) => {
-                    const percent = (progress.loaded / progress.total * 100).toFixed(0);
-                    statusEl.innerText = `載入中: ${percent}%`;
+                (xhr) => {
+                    const p = (xhr.loaded / xhr.total * 100).toFixed(0);
+                    statusEl.innerText = `狀態：載入中 (${p}%)`;
                 },
                 (error) => {
-                    console.error(error);
-                    statusEl.innerText = "載入錯誤，請看 Console。";
+                    console.error("Loader 錯誤:", error);
+                    statusEl.innerText = "狀態：檔案格式錯誤";
                 }
             );
         });
 
-        // --- Mediapipe 追蹤邏輯 ---
+        // --- Mediapipe 與 Kalidokit 動態綁定 ---
         const videoElement = document.getElementById('video-preview');
         const holistic = new Holistic({
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`,
@@ -110,25 +110,26 @@
         holistic.onResults((results) => {
             if (!currentVrm) return;
 
-            // 使用 Kalidokit 計算旋轉數據
-            const faceRig = Kalidokit.Face.solve(results.faceLandmarks, { runtime: "mediapipe", video: videoElement });
+            // 計算臉部旋轉與表情
+            const faceRig = Kalidokit.Face.solve(results.faceLandmarks, { 
+                runtime: "mediapipe", 
+                video: videoElement 
+            });
             
-            if (faceRig && currentVrm.humanoid) {
-                // 套用頭部旋轉
+            if (faceRig) {
                 const head = currentVrm.humanoid.getNormalizedBoneNode('head');
-                if (head) {
-                    head.rotation.set(
-                        faceRig.degrees.x * (Math.PI / 180),
-                        faceRig.degrees.y * (Math.PI / 180),
-                        faceRig.degrees.z * (Math.PI / 180)
-                    );
-                }
+                // 緩動旋轉 (平滑處理)
+                head.rotation.set(
+                    faceRig.degrees.x * (Math.PI / 180) * 0.8,
+                    faceRig.degrees.y * (Math.PI / 180) * 0.8,
+                    faceRig.degrees.z * (Math.PI / 180) * 0.8
+                );
 
-                // 套用表情
-                const s = currentVrm.expressionManager;
-                s.setValue('ih', faceRig.mouth.shape.I);
-                s.setValue('aa', faceRig.mouth.shape.A);
-                s.setValue('blink', 1 - faceRig.eye.l);
+                // 嘴型與眨眼
+                const expressions = currentVrm.expressionManager;
+                expressions.setValue('ih', faceRig.mouth.shape.I);
+                expressions.setValue('aa', faceRig.mouth.shape.A);
+                expressions.setValue('blink', 1 - faceRig.eye.l);
             }
         });
 
@@ -136,11 +137,12 @@
             onFrame: async () => { await holistic.send({ image: videoElement }); },
             width: 640, height: 480
         });
-        cameraFeed.start();
+        cameraFeed.start().catch(() => statusEl.innerText = "狀態：鏡頭啟動失敗");
 
+        const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
-            if (currentVrm) currentVrm.update(1/60);
+            if (currentVrm) currentVrm.update(clock.getDelta());
             renderer.render(scene, camera);
         }
         animate();
