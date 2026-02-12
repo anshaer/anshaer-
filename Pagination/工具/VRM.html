@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>Web VRM Camera Live</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; }
+        #container { position: relative; width: 100vw; height: 100vh; }
+        #controls { position: absolute; top: 20px; left: 20px; z-index: 100; color: white; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; }
+        #video-preview { position: absolute; bottom: 20px; right: 20px; width: 240px; height: 180px; background: #000; border: 2px solid #fff; transform: scaleX(-1); border-radius: 8px; }
+        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 1.5rem; display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="controls">
+        <h3>VRM 網頁動態捕捉</h3>
+        <input type="file" id="vrm-upload" accept=".vrm" /><br><br>
+        <small>1. 選擇你的 .vrm 檔案<br>2. 允許鏡頭存取<br>3. 對著鏡頭動一動</small>
+    </div>
+
+    <div id="loading-text" class="loading">模型載入中...</div>
+    <video id="video-preview" autoplay playsinline></video>
+    <div id="container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/jsm/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.0.2/lib/three-vrm.pkgd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/kalidokit@1.1.5/dist/kalidokit.it.js"></script>
+
+    <script type="module">
+        const { VRM, VRMUtils } = THREE_VRM;
+        
+        // --- 初始化 Three.js 場景 ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 20);
+        camera.position.set(0, 1.4, 3);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('container').appendChild(renderer.domElement);
+
+        const light = new THREE.DirectionalLight(0xffffff, 1.0);
+        light.position.set(1, 1, 1).normalize();
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+        let currentVrm = null;
+        const loader = new THREE.GLTFLoader();
+
+        // --- 模型載入邏輯 ---
+        document.getElementById('vrm-upload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const url = URL.createObjectURL(file);
+            document.getElementById('loading-text').style.display = 'block';
+
+            loader.load(url, async (gltf) => {
+                // 清除舊模型
+                if (currentVrm) {
+                    scene.remove(currentVrm.scene);
+                    VRMUtils.deepDispose(currentVrm.scene);
+                }
+
+                const vrm = await VRM.from(gltf);
+                scene.add(vrm.scene);
+                currentVrm = vrm;
+                
+                // 修正模型朝向與調整
+                vrm.scene.rotation.y = Math.PI; 
+                document.getElementById('loading-text').style.display = 'none';
+            });
+        });
+
+        // --- Mediapipe 捕捉設定 ---
+        const videoElement = document.getElementById('video-preview');
+        const holistic = new Holistic({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`,
+        });
+
+        holistic.setOptions({
+            modelComplexity: 1,
+            smoothLandmarks: true,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.7
+        });
+
+        // 將捕捉到的點位套用到 VRM
+        holistic.onResults((results) => {
+            if (!currentVrm) return;
+
+            const rig = Kalidokit.Pose.solve(results.poseLandmarks, results.upperBodyLandmarks, {
+                runtime: "mediapipe",
+                video: videoElement,
+            });
+
+            const faceRig = Kalidokit.Face.solve(results.faceLandmarks, {
+                runtime: "mediapipe",
+                video: videoElement,
+            });
+
+            animateVRM(rig, faceRig);
+        });
+
+        // 動畫套用函式
+        const animateVRM = (rig, face) => {
+            if (!currentVrm || !rig) return;
+            
+            const s = currentVrm.humanoid;
+            
+            // 轉動頭部
+            currentVrm.humanoid.getNormalizedBoneNode('head').rotation.set(face.degrees.x * (Math.PI/180), face.degrees.y * (Math.PI/180), face.degrees.z * (Math.PI/180));
+            
+            // 嘴型同步 (A, I, U, E, O)
+            currentVrm.expressionManager.setValue('aa', face.mouth.shape.A);
+            currentVrm.expressionManager.setValue('ih', face.mouth.shape.I);
+            currentVrm.expressionManager.setValue('ou', face.mouth.shape.U);
+            currentVrm.expressionManager.setValue('ee', face.mouth.shape.E);
+            currentVrm.expressionManager.setValue('oh', face.mouth.shape.O);
+            
+            // 眨眼
+            currentVrm.expressionManager.setValue('blink', 1 - face.eye.l);
+        };
+
+        const cameraFeed = new Camera(videoElement, {
+            onFrame: async () => {
+                await holistic.send({ image: videoElement });
+            },
+            width: 640,
+            height: 480
+        });
+        cameraFeed.start();
+
+        // 渲染迴圈
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            if (currentVrm) {
+                currentVrm.update(clock.getDelta());
+            }
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
