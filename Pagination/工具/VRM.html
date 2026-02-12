@@ -2,107 +2,147 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>VRM Live - Final Fix</title>
+    <title>VRM + VRMA Player</title>
     <style>
-        body { margin: 0; background: #000; color: #0f0; font-family: monospace; overflow: hidden; }
-        #ui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(0,0,0,0.9); padding: 15px; border: 1px solid #0f0; width: 260px; }
-        #video-preview { position: absolute; bottom: 10px; right: 10px; width: 240px; height: 180px; border: 2px solid #0f0; transform: scaleX(-1); background: #222; }
-        button { background: #0f0; color: #000; border: none; padding: 5px 10px; cursor: pointer; font-weight: bold; margin-top: 5px; }
+        body { margin: 0; background: #111; color: #0f0; font-family: monospace; overflow: hidden; }
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(0,0,0,0.9); padding: 15px; border: 1px solid #0f0; width: 280px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #fff; }
+        input { width: 100%; background: #222; color: #0f0; border: 1px solid #444; }
+        #status { margin-top: 10px; font-size: 12px; border-top: 1px solid #333; padding-top: 5px; }
     </style>
 </head>
 <body>
 
     <div id="ui">
-        <b>> VRM_SYSTEM_v3.0</b><br><br>
-        1. <button onclick="startCamera()">點擊開啟相機</button><br>
-        2. <input type="file" id="vrm-upload" accept=".vrm" style="margin-top:10px;"/><br>
-        <div id="status" style="margin-top:10px; color: #fff;">狀態：等待手動開啟相機...</div>
-        <div id="log" style="font-size: 10px; color: #888; margin-top: 10px;">日誌：準備就緒</div>
+        <b>> VRM_ANIMATION_SYSTEM</b><br><br>
+        
+        <div class="input-group">
+            <label>1. 上傳模型 (.vrm)</label>
+            <input type="file" id="vrm-upload" accept=".vrm" />
+        </div>
+
+        <div class="input-group">
+            <label>2. 上傳動作 (.vrma)</label>
+            <input type="file" id="vrma-upload" accept=".vrma" disabled />
+        </div>
+
+        <div id="status">狀態：等待載入模型...</div>
     </div>
 
-    <video id="video-preview" autoplay playsinline></video>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.154.0/examples/jsm/",
+            "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.0.2/lib/three-vrm.module.js"
+        }
+    }
+    </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.0.2/lib/three-vrm.pkgd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic@0.5.1675235345/holistic.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/kalidokit@1.1.5/dist/kalidokit.it.js"></script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { VRMLoaderPlugin, VRMAnimationLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
 
-    <script>
-        const status = document.getElementById('status');
-        const log = (msg) => { document.getElementById('log').innerHTML += `<div>> ${msg}</div>`; };
+        const statusEl = document.getElementById('status');
+        const vrmaInput = document.getElementById('vrma-upload');
 
-        // --- Three.js ---
+        // --- 1. 初始化場景 ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 20);
-        camera.position.set(0, 1.4, 3);
+        camera.position.set(0, 1.4, 3.5);
+
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
-        scene.add(new THREE.AmbientLight(0xffffff, 1.0));
 
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.target.set(0, 1.0, 0);
+        controls.update();
+
+        scene.add(new THREE.DirectionalLight(0xffffff, 1.0), new THREE.AmbientLight(0xffffff, 0.6));
+
+        // --- 2. 設定載入器 ---
         let currentVrm = null;
-        const loader = new THREE.GLTFLoader();
+        let mixer = null; // 用於播放動畫
+        
+        const loader = new GLTFLoader();
+        // 同時註冊 VRM 和 VRMA 插件
+        loader.register((parser) => new VRMLoaderPlugin(parser));
+        loader.register((parser) => new VRMAnimationLoaderPlugin(parser));
 
-        document.getElementById('vrm-upload').onchange = (e) => {
-            const url = URL.createObjectURL(e.target.files[0]);
-            log("正在解析 VRM...");
-            loader.load(url, async (gltf) => {
-                const vrm = await THREE_VRM.VRM.from(gltf);
-                if (currentVrm) scene.remove(currentVrm.scene);
+        // --- 3. 處理模型載入 ---
+        document.getElementById('vrm-upload').onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const url = URL.createObjectURL(file);
+            statusEl.innerText = "狀態：載入模型中...";
+
+            loader.load(url, (gltf) => {
+                const vrm = gltf.userData.vrm;
+                if (currentVrm) {
+                    scene.remove(currentVrm.scene);
+                    VRMUtils.deepDispose(currentVrm.scene);
+                }
                 currentVrm = vrm;
                 scene.add(vrm.scene);
                 vrm.scene.rotation.y = Math.PI;
-                status.innerText = "狀態：模型已就緒";
-                log("模型載入完成");
+                
+                vrmaInput.disabled = false;
+                statusEl.innerText = "狀態：模型就緒，請上傳動作檔";
+                URL.revokeObjectURL(url);
             });
         };
 
-        // --- Mediapipe ---
-        const video = document.getElementById('video-preview');
-        const holistic = new Holistic({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic@0.5.1675235345/${file}`
-        });
+        // --- 4. 處理 VRMA 動作載入 ---
+        vrmaInput.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file || !currentVrm) return;
 
-        holistic.setOptions({ modelComplexity: 1, refineLandmarks: true });
-        holistic.onResults((res) => {
-            if (!currentVrm || !res.faceLandmarks) return;
-            const faceRig = Kalidokit.Face.solve(res.faceLandmarks, { runtime: "mediapipe", video: video });
-            if (faceRig) {
-                const head = currentVrm.humanoid.getNormalizedBoneNode('head');
-                head.rotation.y = faceRig.degrees.y * (Math.PI / 180);
-                head.rotation.x = faceRig.degrees.x * (Math.PI / 180);
-                currentVrm.expressionManager.setValue('aa', faceRig.mouth.shape.A);
-                currentVrm.expressionManager.setValue('blink', 1 - faceRig.eye.l);
-            }
-        });
+            const url = URL.createObjectURL(file);
+            statusEl.innerText = "狀態：載入動作中...";
 
-        const cam = new Camera(video, {
-            onFrame: async () => { await holistic.send({ image: video }); },
-            width: 640, height: 480
-        });
+            loader.load(url, (gltf) => {
+                const vrmAnimations = gltf.userData.vrmAnimations;
+                if (!vrmAnimations || vrmAnimations.length === 0) {
+                    statusEl.innerText = "錯誤：無效的 VRMA 檔案";
+                    return;
+                }
 
-        // 強制手動啟動函數
-        window.startCamera = () => {
-            status.innerText = "狀態：正在啟動相機...";
-            cam.start()
-                .then(() => {
-                    status.innerText = "狀態：相機已開啟，請上傳 VRM";
-                    log("相機啟動成功");
-                })
-                .catch(e => {
-                    log("相機啟動失敗: " + e);
-                    alert("請確保已授權鏡頭使用權限");
-                });
+                // 建立動畫混合器
+                mixer = new THREE.AnimationMixer(currentVrm.scene);
+                
+                // 將 VRMA 轉換為動畫 Clip 並播放
+                const clip = vrmAnimations[0].createAnimationClip(currentVrm);
+                mixer.clipAction(clip).play();
+
+                statusEl.innerText = "狀態：正在播放動作";
+                URL.revokeObjectURL(url);
+            });
         };
 
+        // --- 5. 渲染迴圈 ---
+        const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
-            if (currentVrm) currentVrm.update(1/60);
+            const delta = clock.getDelta();
+            
+            if (mixer) mixer.update(delta);
+            if (currentVrm) currentVrm.update(delta);
+            
             renderer.render(scene, camera);
         }
         animate();
+
+        window.onresize = () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        };
     </script>
 </body>
 </html>
