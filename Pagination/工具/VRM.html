@@ -2,14 +2,14 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>VRM Animation System</title>
+    <title>VRM Player Final</title>
     <style>
         body { margin: 0; background: #000; color: #0f0; font-family: monospace; overflow: hidden; }
         #ui { position: absolute; top: 10px; left: 10px; z-index: 100; background: rgba(0,0,0,0.9); padding: 15px; border: 1px solid #0f0; width: 280px; }
         .input-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #fff; }
-        input { width: 100%; background: #222; color: #0f0; border: 1px solid #444; }
-        #status { margin-top: 10px; font-weight: bold; color: #ff0; }
+        input { width: 100%; background: #222; color: #0f0; border: 1px solid #444; padding: 5px; }
+        #status { margin-top: 10px; font-weight: bold; color: #ff0; padding: 5px; border-top: 1px solid #333; }
     </style>
 </head>
 <body>
@@ -27,105 +27,117 @@
         <div id="status">狀態：等待載入模型...</div>
     </div>
 
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.module.js",
-            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.154.0/examples/jsm/",
-            "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@1.0.10/lib/three-vrm.module.js"
-        }
-    }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.0.2/lib/three-vrm.pkgd.min.js"></script>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { VRM, VRMUtils } from '@pixiv/three-vrm';
-
+    <script>
         const statusEl = document.getElementById('status');
         const vrmaInput = document.getElementById('vrma-upload');
 
-        // --- 場景初始化 ---
+        // --- 1. 初始化 Three.js ---
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(30, window.innerWidth / window.innerHeight, 0.1, 20);
         camera.position.set(0, 1.4, 3.5);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
 
-        const controls = new OrbitControls(camera, renderer.domElement);
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.target.set(0, 1.0, 0);
         controls.update();
 
-        scene.add(new THREE.DirectionalLight(0xffffff, 1), new THREE.AmbientLight(0xffffff, 0.6));
+        scene.add(new THREE.DirectionalLight(0xffffff, 1.0), new THREE.AmbientLight(0xffffff, 0.6));
 
         let currentVrm = null;
         let mixer = null;
-        const loader = new GLTFLoader();
+        
+        // 使用全域變數中的載入器
+        const loader = new THREE.GLTFLoader();
+        // 註冊插件 (從全域物件 THREE_VRM 取得)
+        loader.register((parser) => new THREE_VRM.VRMLoaderPlugin(parser));
+        loader.register((parser) => new THREE_VRM.VRMAnimationLoaderPlugin(parser));
 
-        // --- 模型載入 ---
+        // --- 2. 處理模型載入 ---
         document.getElementById('vrm-upload').onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            statusEl.innerText = "狀態：正在解析模型...";
+            statusEl.innerText = "狀態：正在讀取模型檔案...";
             const url = URL.createObjectURL(file);
 
-            loader.load(url, async (gltf) => {
-                // VRM 1.0 之前的版本載入方式
-                VRM.from(gltf).then((vrm) => {
-                    if (currentVrm) {
-                        scene.remove(currentVrm.scene);
-                        VRMUtils.deepDispose(currentVrm.scene);
-                    }
-                    currentVrm = vrm;
-                    scene.add(vrm.scene);
-                    vrm.scene.rotation.y = Math.PI;
-                    
-                    vrmaInput.disabled = false;
-                    statusEl.innerText = "狀態：模型就緒，請上傳動作";
-                    console.log("Model Loaded");
-                }).catch(err => {
-                    statusEl.innerText = "狀態：模型解析出錯";
-                    console.error(err);
-                });
+            loader.load(url, (gltf) => {
+                const vrm = gltf.userData.vrm;
+                if (!vrm) {
+                    statusEl.innerText = "狀態：錯誤！非有效 VRM";
+                    return;
+                }
+
+                if (currentVrm) {
+                    scene.remove(currentVrm.scene);
+                    THREE_VRM.VRMUtils.deepDispose(currentVrm.scene);
+                }
+
+                currentVrm = vrm;
+                scene.add(vrm.scene);
+                vrm.scene.rotation.y = Math.PI; // 轉向正面
+                
+                vrmaInput.disabled = false;
+                statusEl.innerText = "狀態：模型就緒！請選擇動作";
+                URL.revokeObjectURL(url);
+            }, 
+            undefined, 
+            (err) => {
+                statusEl.innerText = "狀態：載入失敗 (查看 Console)";
+                console.error(err);
             });
         };
 
-        // --- 動作載入 ---
+        // --- 3. 處理 VRMA 動作載入 ---
         vrmaInput.onchange = (e) => {
             const file = e.target.files[0];
             if (!file || !currentVrm) return;
 
-            statusEl.innerText = "狀態：正在讀取動作...";
+            statusEl.innerText = "狀態：載入動作中...";
             const url = URL.createObjectURL(file);
 
-            // 針對 .vrma，我們需要使用 AnimationMixer
             loader.load(url, (gltf) => {
-                // 嘗試獲取動畫 clip
-                const clips = gltf.animations;
-                if (clips && clips.length > 0) {
-                    mixer = new THREE.AnimationMixer(currentVrm.scene);
-                    const action = mixer.clipAction(clips[0]);
-                    action.play();
-                    statusEl.innerText = "狀態：播放動作中";
-                } else {
-                    statusEl.innerText = "狀態：此檔案無動畫數據";
+                const vrmAnimations = gltf.userData.vrmAnimations;
+                if (!vrmAnimations || vrmAnimations.length === 0) {
+                    statusEl.innerText = "錯誤：檔案無動畫數據";
+                    return;
                 }
+
+                mixer = new THREE.AnimationMixer(currentVrm.scene);
+                const clip = vrmAnimations[0].createAnimationClip(currentVrm);
+                mixer.clipAction(clip).play();
+
+                statusEl.innerText = "狀態：動起來了！";
+                URL.revokeObjectURL(url);
             });
         };
 
+        // --- 4. 渲染迴圈 ---
         const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate);
             const delta = clock.getDelta();
+            
             if (mixer) mixer.update(delta);
             if (currentVrm) currentVrm.update(delta);
+            
             renderer.render(scene, camera);
         }
         animate();
+
+        window.onresize = () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        };
     </script>
 </body>
 </html>
