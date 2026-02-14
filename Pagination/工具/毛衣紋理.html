@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>3D 貼圖：材質調色工作站</title>
+    <style>
+        :root { --primary: #0984e3; --bg: #1e272e; }
+        body { font-family: sans-serif; background: var(--bg); color: #dcdde1; display: flex; justify-content: center; padding: 20px; }
+        .container { background: #2f3640; padding: 25px; border-radius: 15px; width: 100%; max-width: 1100px; display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
+        
+        .panel { background: #353b48; padding: 20px; border-radius: 10px; overflow-y: auto; max-height: 85vh; }
+        h2 { font-size: 1.2rem; margin-top: 0; color: #f5f6fa; border-bottom: 1px solid #485460; padding-bottom: 10px; }
+        
+        .control-group { margin-bottom: 18px; }
+        label { font-size: 0.85rem; display: flex; justify-content: space-between; margin-bottom: 5px; color: #a4b0be; }
+        input[type="range"], input[type="color"] { width: 100%; cursor: pointer; accent-color: var(--primary); }
+        .checkbox-group { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; cursor: pointer; }
+
+        .style-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+        .style-btn { background: #485460; border: none; color: white; padding: 8px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
+        .style-btn.active { background: var(--primary); }
+
+        .display-area { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #1e272e; border-radius: 10px; padding: 10px; position: relative; }
+        canvas { max-width: 100%; max-height: 70vh; box-shadow: 0 0 20px rgba(0,0,0,0.5); image-rendering: pixelated; }
+        .btn-main { background: #44bd32; color: white; border: none; padding: 12px 30px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 15px; width: 100%; }
+        
+        #uploadBtn { border: 2px dashed #7f8fa6; padding: 40px; border-radius: 10px; cursor: pointer; width: 80%; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="panel">
+        <h2>🎨 材質控制台</h2>
+        
+        <div class="style-grid" id="styleGrid">
+            <button class="style-btn active" onclick="updateStyle('cable', this)">捲麻花</button>
+            <button class="style-btn" onclick="updateStyle('honeycomb', this)">蜂巢紋</button>
+            <button class="style-btn" onclick="updateStyle('herringbone', this)">魚骨紋</button>
+            <button class="style-btn" onclick="updateStyle('diamond', this)">菱格紋</button>
+            <button class="style-btn" onclick="updateStyle('rib', this)">坑條紋</button>
+            <button class="style-btn" onclick="updateStyle('popcorn', this)">爆米花</button>
+        </div>
+
+        <div class="control-group">
+            <label>紋理密度 (Density) <span id="v-density">30</span></label>
+            <input type="range" id="density" min="10" max="100" value="30">
+        </div>
+
+        <div class="control-group">
+            <label>紋理顏色 (Color Filter)</label>
+            <input type="color" id="tintColor" value="#ffffff">
+        </div>
+
+        <div class="control-group">
+            <label>紋理透明度 (Opacity) <span id="v-opacity">0.5</span></label>
+            <input type="range" id="opacity" min="0" max="1" step="0.1" value="0.5">
+        </div>
+
+        <div class="control-group">
+            <label>深邃感 (Depth/Shadow) <span id="v-depth">0.2</span></label>
+            <input type="range" id="depth" min="0" max="1" step="0.05" value="0.2">
+        </div>
+
+        <div class="control-group">
+            <label>絲光感 (Lustre/Highlight) <span id="v-lustre">0.1</span></label>
+            <input type="range" id="lustre" min="0" max="1" step="0.05" value="0.1">
+        </div>
+
+        <div class="control-group">
+            <label class="checkbox-group">
+                <input type="checkbox" id="vintage"> 套用復古暖色調 (Vintage Warmth)
+            </label>
+        </div>
+
+        <input type="file" id="imgInput" style="display:none" accept="image/*">
+        <button class="btn-main" style="background:#0097e6" onclick="document.getElementById('imgInput').click()">📁 上傳底圖</button>
+        <button class="btn-main" onclick="download()">💾 下載高品質貼圖</button>
+    </div>
+
+    <div class="display-area">
+        <div id="uploadBtn" onclick="document.getElementById('imgInput').click()">尚未上傳圖片</div>
+        <canvas id="canvas"></canvas>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let baseImg = null;
+    let currentStyle = 'cable';
+
+    // 監聽所有滑桿變動
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', render);
+    });
+
+    function updateStyle(s, btn) {
+        currentStyle = s;
+        document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        render();
+    }
+
+    document.getElementById('imgInput').onchange = function(e) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            baseImg = new Image();
+            baseImg.onload = function() {
+                canvas.width = baseImg.width;
+                canvas.height = baseImg.height;
+                document.getElementById('uploadBtn').style.display = 'none';
+                canvas.style.display = 'block';
+                render();
+            };
+            baseImg.src = event.target.result;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    function render() {
+        if (!baseImg) return;
+
+        // 讀取數值
+        const d = parseInt(document.getElementById('density').value);
+        const op = document.getElementById('opacity').value;
+        const dep = document.getElementById('depth').value;
+        const lus = document.getElementById('lustre').value;
+        const tint = document.getElementById('tintColor').value;
+        const isVintage = document.getElementById('vintage').checked;
+
+        // 更新 UI 數值顯示
+        document.getElementById('v-density').innerText = d;
+        document.getElementById('v-opacity').innerText = op;
+        document.getElementById('v-depth').innerText = dep;
+        document.getElementById('v-lustre').innerText = lus;
+
+        // 1. 畫底圖與濾鏡
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        if (isVintage) ctx.filter = 'sepia(0.4) saturate(1.2) contrast(1.1)';
+        ctx.drawImage(baseImg, 0, 0);
+        
+        // 疊加顏色濾鏡
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.fillStyle = tint;
+        ctx.globalAlpha = 0.3; // 輕微染色
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+
+        // 2. 渲染紋路
+        drawKnitLayer(d, op, 'overlay', 'rgba(0,0,0,0.5)'); // 基礎纹路
+        drawKnitLayer(d, dep, 'multiply', 'rgba(0,0,0,0.8)'); // 深邃感 (陰影)
+        drawKnitLayer(d, lus, 'screen', 'rgba(255,255,255,0.6)'); // 絲光感 (高光)
+    }
+
+    function drawKnitLayer(spacing, alpha, mode, stroke) {
+        if (alpha <= 0) return;
+        ctx.save();
+        ctx.globalCompositeOperation = mode;
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = spacing / 8;
+
+        const h = spacing * 0.5;
+        for (let x = 0; x < canvas.width + spacing; x += spacing) {
+            for (let y = 0; y < canvas.height + spacing; y += (spacing * 0.4)) {
+                ctx.beginPath();
+                switch(currentStyle) {
+                    case 'cable': ctx.ellipse(x + (y % (spacing/2)), y, spacing/2.5, spacing/4, Math.PI/4, 0, Math.PI*2); break;
+                    case 'honeycomb': 
+                        ctx.moveTo(x, y); ctx.lineTo(x + spacing/2, y + h/3); 
+                        ctx.lineTo(x + spacing/2, y + 2*h/3); ctx.lineTo(x, y + h); 
+                        break;
+                    case 'herringbone':
+                        ctx.moveTo(x, y); ctx.lineTo(x + spacing/2, y + h);
+                        ctx.moveTo(x + spacing, y); ctx.lineTo(x + spacing/2, y + h);
+                        break;
+                    case 'diamond':
+                        ctx.moveTo(x, y); ctx.lineTo(x + spacing/2, y + h/2); ctx.lineTo(x, y + h);
+                        ctx.moveTo(x + spacing, y); ctx.lineTo(x + spacing/2, y + h/2);
+                        break;
+                    case 'rib': ctx.rect(x, y, spacing/3, h); break;
+                    case 'popcorn': ctx.arc(x, y, spacing/5, 0, Math.PI * 2); break;
+                }
+                ctx.stroke();
+            }
+        }
+        ctx.restore();
+    }
+
+    function download() {
+        const link = document.createElement('a');
+        link.download = `knit_texture_pro.png`;
+        link.href = canvas.toDataURL('image/png', 1.0);
+        link.click();
+    }
+</script>
+
+</body>
+</html>
