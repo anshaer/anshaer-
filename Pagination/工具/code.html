@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模擬瀏覽器展示櫃</title>
+    <style>
+        body {
+            background-color: #eef2f5;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            padding: 50px 20px;
+            font-family: sans-serif;
+        }
+
+        /* 瀏覽器外框容器 */
+        .browser-window {
+            width: 400px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            overflow: hidden;
+            border: 1px solid #ddd;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .browser-window:hover {
+            transform: translateY(-10px);
+        }
+
+        /* 瀏覽器頂部工具列 */
+        .browser-header {
+            background: #f1f1f1;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        /* 左側三個小圓點 (紅黃綠) */
+        .dots {
+            display: flex;
+            gap: 6px;
+            margin-right: 15px;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .red { background: #ff5f56; }
+        .yellow { background: #ffbd2e; }
+        .green { background: #27c93f; }
+
+        /* 模擬網址列 */
+        .address-bar {
+            background: white;
+            flex-grow: 1;
+            height: 22px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            font-size: 11px;
+            color: #999;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        /* 內容區塊 (放模型圖) */
+        .browser-content {
+            width: 100%;
+            height: 400px; /* 固定高度模擬小窗 */
+            background-color: #fafafa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .browser-content img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 讓圖片填滿 */
+            transition: opacity 0.3s;
+        }
+
+        /* 懸浮提示文字 */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-weight: bold;
+        }
+        .browser-window:hover .overlay {
+            opacity: 1;
+        }
+
+        .footer-info {
+            padding: 12px;
+            background: white;
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="https://hub.vroid.com/en/characters/2383262574951674485/models/6708987337205814198 " target="_blank" class="browser-window">
+        <div class="browser-header">
+            <div class="dots">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+            </div>
+            <div class="address-bar">hub.vroid.com/characters/anshaer/mint-choco...</div>
+        </div>
+        <div class="browser-content">
+            <img src="你的模型截圖A.jpg" alt="薄荷巧克力毛衣">
+            <div class="overlay">點擊進入 3D 展示頁面</div>
+        </div>
+        <div class="footer-info">薄荷巧克力毛衣 / 毛衣版</div>
+    </a>
+
+    <a href="這裡放第二個模型的 VRoid 網址" target="_blank" class="browser-window">
+        <div class="browser-header">
+            <div class="dots">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+            </div>
+            <div class="address-bar">hub.vroid.com/characters/anshaer/model-b...</div>
+        </div>
+        <div class="browser-content">
+            <img src="你的模型截圖B.jpg" alt="Model B">
+            <div class="overlay">點擊進入 3D 展示頁面</div>
+        </div>
+        <div class="footer-info">模型名稱 B</div>
+    </a>
+
+</body>
+</html>
