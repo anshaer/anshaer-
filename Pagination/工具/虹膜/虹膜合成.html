@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>虹膜</title>
+    <style>
+        body { background: #121212; color: #eee; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .layout { display: flex; gap: 30px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
+        /* 畫布背景設為棋盤格，方便辨識透明區域 */
+        canvas { 
+            background-image: linear-gradient(45deg, #222 25%, transparent 25%), linear-gradient(-45deg, #222 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #222 75%), linear-gradient(-45deg, transparent 75%, #222 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border-radius: 50%; 
+            box-shadow: 0 0 50px #000; 
+            border: 2px solid #333; 
+        }
+        .controls { background: #252525; padding: 20px; border-radius: 12px; width: 350px; }
+        .group { margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        label { display: block; margin-bottom: 8px; color: #00d4ff; font-weight: bold; }
+        .input-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+        input[type="number"] { width: 50px; background: #333; border: 1px solid #444; color: white; padding: 5px; border-radius: 4px; }
+        button { width: 100%; padding: 12px; cursor: pointer; background: #00d4ff; border: none; border-radius: 5px; font-weight: bold; margin-top: 10px; }
+        .info-box { margin-top: 20px; background: #1a1a1a; padding: 15px; border-radius: 8px; border-left: 4px solid #00d4ff; font-size: 14px; line-height: 1.6; }
+        .info-box h3 { margin-top: 0; color: #00d4ff; }
+        code { background: #333; padding: 2px 4px; border-radius: 4px; color: #ffad33; }
+    </style>
+</head>
+<body>
+
+    <h2>虹膜紋理合成</h2>
+
+    <div class="layout">
+        <canvas id="irisCanvas" width="1024" height="1024"></canvas>
+
+        <div class="controls">
+            <div class="group">
+                <label>1. 虹膜捲縮輪 (內)</label>
+                <input type="file" id="file1" accept="image/*">
+                <div class="input-row">
+                    <span>範圍：</span>
+                    <input type="number" id="r1_min" value="15" oninput="drawAll()"> % 至 
+                    <input type="number" id="r1_max" value="40" oninput="drawAll()"> %
+                </div>
+            </div>
+
+            <div class="group">
+                <label>2. 虹膜隱窩 (中)</label>
+                <input type="file" id="file2" accept="image/*">
+                <div class="input-row">
+                    <span>範圍：</span>
+                    <input type="number" id="r2_min" value="35" oninput="drawAll()"> % 至 
+                    <input type="number" id="r2_max" value="70" oninput="drawAll()"> %
+                </div>
+            </div>
+
+            <div class="group">
+                <label>3. 虹膜收縮溝 (外)</label>
+                <input type="file" id="file3" accept="image/*">
+                <div class="input-row">
+                    <span>範圍：</span>
+                    <input type="number" id="r3_min" value="65" oninput="drawAll()"> % 至 
+                    <input type="number" id="r3_max" value="100" oninput="drawAll()"> %
+                </div>
+            </div>
+
+            <button onclick="downloadCanvas()">下載透明 PNG 貼圖</button>
+
+            <div class="info-box">
+                <h3>📏 最佳上傳尺寸建議</h3>
+                <ul>
+                    <li><b>建議比例：</b> <code>4:1</code> 或 <code>8:1</code> 的長條圖。</li>
+                    <li><b>建議解析度：</b> <code>2048 x 512</code> px 或 <code>1024 x 256</code> px。</li>
+                    <li><b>紋理提示：</b> 圖片左側與右側邊緣若能對齊（無縫貼圖），合成後的圓圈就不會有接縫。</li>
+                    <li><b>透明度：</b> 支援帶 Alpha 通道的 PNG，方便層疊。</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('irisCanvas');
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const maxRadius = canvas.width / 2;
+
+    let layers = [{img:null}, {img:null}, {img:null}];
+
+    [1, 2, 3].forEach(i => {
+        document.getElementById(`file${i}`).onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => { layers[i-1].img = img; drawAll(); };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        };
+    });
+
+    function drawAll() {
+        // 清空畫布，確保背景透明
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // 建立一個暫存的像素容器
+        const finalData = ctx.createImageData(canvas.width, canvas.height);
+
+        layers.forEach((layer, idx) => {
+            const rMin = parseFloat(document.getElementById(`r${idx+1}_min`).value) / 100;
+            const rMax = parseFloat(document.getElementById(`r${idx+1}_max`).value) / 100;
+            if (layer.img && rMax > rMin) {
+                renderToData(layer.img, rMin, rMax, finalData);
+            }
+        });
+
+        ctx.putImageData(finalData, 0, 0);
+    }
+
+    function renderToData(img, rMinP, rMaxP, targetData) {
+        const off = document.createElement('canvas');
+        off.width = img.width; off.height = img.height;
+        const oCtx = off.getContext('2d');
+        oCtx.drawImage(img, 0, 0);
+        const src = oCtx.getImageData(0, 0, img.width, img.height).data;
+        const dest = targetData.data;
+
+        for (let y = 0; y < canvas.height; y++) {
+            for (let x = 0; x < canvas.width; x++) {
+                const dx = x - centerX, dy = y - centerY;
+                const distP = Math.sqrt(dx*dx + dy*dy) / maxRadius;
+
+                if (distP >= rMinP && distP <= rMaxP) {
+                    let angle = Math.atan2(dy, dx);
+                    if (angle < 0) angle += Math.PI * 2;
+                    const u = angle / (Math.PI * 2);
+                    const v = (distP - rMinP) / (rMaxP - rMinP);
+                    const sx = Math.floor(u * (img.width - 1)), sy = Math.floor(v * (img.height - 1));
+                    const si = (sy * img.width + sx) * 4, di = (y * canvas.width + x) * 4;
+
+                    if (src[si + 3] > 0) {
+                        // 簡單的覆蓋邏輯
+                        dest[di] = src[si]; dest[di+1] = src[si+1]; dest[di+2] = src[si+2]; dest[di+3] = 255;
+                    }
+                }
+            }
+        }
+    }
+
+    function downloadCanvas() {
+        const link = document.createElement('a');
+        link.download = 'iris_transparent.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+</script>
+</body>
+</html>
