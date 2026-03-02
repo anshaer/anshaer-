@@ -1,0 +1,114 @@
+:root {
+    --accent: #00ffcc;
+    --bg: #0a0a0a;
+    --panel: #161616;
+    --danger: #ff3e3e;
+    --text: #ddd;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    margin: 0; padding: 10px;
+}
+
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 420px 1fr;
+    gap: 15px;
+    height: 98vh;
+}
+
+.eye-section, .mid-panel {
+    background: var(--panel);
+    border: 1px solid #333;
+    padding: 12px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+}
+
+.header-box {
+    color: var(--accent);
+    border-bottom: 2px solid #333;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.accent { border-bottom-color: var(--accent); }
+
+/* 繪圖區 */
+.canvas-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1/1;
+    background: #000;
+}
+
+canvas.view {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+}
+
+.top-ctrl { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.auto-btn { background: #444; color: white; border: none; font-size: 10px; cursor: pointer; padding: 2px 8px; }
+
+/* 座標面板 */
+.coord-panel {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    background: #000;
+    margin-top: 10px;
+}
+
+input[type="number"] {
+    background: #222;
+    border: 1px solid #444;
+    color: var(--accent);
+    width: 55px;
+    padding: 2px;
+}
+
+/* 取樣設定 */
+.sampling-config {
+    background: #222;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.config-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 11px;
+}
+
+/* 數據顯示 */
+.main-score {
+    font-size: 20px;
+    color: var(--accent);
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+canvas.spec-cvs {
+    width: 100%;
+    height: 40px;
+    background: #000;
+    border: 1px solid #333;
+}
+
+.main-spec { height: 80px; border-color: var(--accent); }
+
+.sub-score {
+    font-size: 12px;
+    margin-top: 15px;
+}
+
+canvas.strip { width: 100%; height: 25px; margin-top: 5px; border-bottom: 1px solid var(--accent); }

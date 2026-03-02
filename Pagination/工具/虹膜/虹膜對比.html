@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>IRIS Extreme 4D Analyzer - Precision Edition</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="main-grid">
+    <section class="eye-section">
+        <div class="header-box">SOURCE_A_DECONSTRUCTION</div>
+        <div class="top-ctrl">
+            <input type="file" id="upA" accept="image/*">
+            <button class="auto-btn" onclick="autoCenter('A')">AUTO-CENTER</button>
+        </div>
+        <div class="canvas-wrapper">
+            <canvas id="canA" width="1024" height="1024" class="view"></canvas>
+            <canvas id="guideA" width="1024" height="1024" class="view"></canvas>
+        </div>
+        <div class="coord-panel">
+            X <input type="number" id="ax" value="512" oninput="syncAndRun('A')">
+            Y <input type="number" id="ay" value="512" oninput="syncAndRun('A')">
+            R <input type="number" id="ar" value="450" oninput="syncAndRun('A')">
+        </div>
+        <div class="strip-container">
+            <canvas id="sa1" class="strip"></canvas>
+            <canvas id="sa2" class="strip"></canvas>
+            <canvas id="sa3" class="strip"></canvas>
+        </div>
+    </section>
+
+    <main class="mid-panel">
+        <div class="header-box accent">DIAGNOSTIC_CENTER</div>
+        
+        <div class="sampling-config">
+            <div class="config-group">
+                <label>1. COLLARETTE (%)</label>
+                <input type="number" id="r1m" value="30" oninput="updateSamplingAndRun()"> - 
+                <input type="number" id="r1x" value="45" oninput="updateSamplingAndRun()">
+            </div>
+            <div class="config-group">
+                <label>2. CRYPTS (%)</label>
+                <input type="number" id="r2m" value="45" oninput="updateSamplingAndRun()"> - 
+                <input type="number" id="r2x" value="65" oninput="updateSamplingAndRun()">
+            </div>
+            <div class="config-group">
+                <label>3. FURROWS (%)</label>
+                <input type="number" id="r3m" value="65" oninput="updateSamplingAndRun()"> - 
+                <input type="number" id="r3x" value="100" oninput="updateSamplingAndRun()">
+            </div>
+        </div>
+
+        <div class="score-display">
+            <div class="main-score">OVERALL: <span id="sim_total">--%</span></div>
+            <canvas id="diff_total" class="spec-cvs main-spec"></canvas>
+            
+            <div class="sub-score">1. <span id="sim_1">--%</span> <canvas id="diff_1" class="spec-cvs"></canvas></div>
+            <div class="sub-score">2. <span id="sim_2">--%</span> <canvas id="diff_2" class="spec-cvs"></canvas></div>
+            <div class="sub-score">3. <span id="sim_3">--%</span> <canvas id="diff_3" class="spec-cvs"></canvas></div>
+        </div>
+    </main>
+
+    <section class="eye-section">
+        <div class="header-box">SOURCE_B_DECONSTRUCTION</div>
+        <div class="top-ctrl">
+            <input type="file" id="upB" accept="image/*">
+            <button class="auto-btn" onclick="autoCenter('B')">AUTO-CENTER</button>
+        </div>
+        <div class="canvas-wrapper">
+            <canvas id="canB" width="1024" height="1024" class="view"></canvas>
+            <canvas id="guideB" width="1024" height="1024" class="view"></canvas>
+        </div>
+        <div class="coord-panel">
+            X <input type="number" id="bx" value="512" oninput="syncAndRun('B')">
+            Y <input type="number" id="by" value="512" oninput="syncAndRun('B')">
+            R <input type="number" id="br" value="450" oninput="syncAndRun('B')">
+        </div>
+        <div class="strip-container">
+            <canvas id="sb1" class="strip"></canvas>
+            <canvas id="sb2" class="strip"></canvas>
+            <canvas id="sb3" class="strip"></canvas>
+        </div>
+    </section>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
