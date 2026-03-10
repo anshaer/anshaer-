@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Video Editor Pro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="toolbar">
+            <div class="logo">WebEditor 10min</div>
+            <button id="exportBtn" class="btn-primary">導出 10 分鐘 MP4</button>
+        </header>
+
+        <main class="editor-main">
+            <aside class="sidebar">
+                <section class="upload-section">
+                    <h3>素材上傳</h3>
+                    <label class="file-label">影片 <input type="file" id="videoInput" accept="video/*"></label>
+                    <label class="file-label">音樂 <input type="file" id="audioInput" accept="audio/*"></label>
+                    <label class="file-label">Logo <input type="file" id="logoInput" accept="image/*"></label>
+                </section>
+                
+                <section class="filter-section">
+                    <h3>濾鏡效果</h3>
+                    <select id="filterSelect">
+                        <option value="none">無效果</option>
+                        <option value="grayscale(100%)">經典黑白</option>
+                        <option value="sepia(100%)">懷舊復古</option>
+                        <option value="brightness(1.5)">提亮</option>
+                        <option value="contrast(1.5)">高對比</option>
+                    </select>
+                </section>
+
+                <section class="text-section">
+                    <h3>文字疊加</h3>
+                    <input type="text" id="overlayText" placeholder="輸入文字...">
+                </section>
+            </aside>
+
+            <section class="preview-area">
+                <canvas id="previewCanvas" width="1280" height="720"></canvas>
+                
+                <div class="timeline-controls">
+                    <button id="playPauseBtn">播放</button>
+                    <input type="range" id="timeline" min="0" value="0" step="0.1">
+                    <span id="timeDisplay">00:00 / 00:00</span>
+                </div>
+            </section>
+        </main>
+
+        <footer class="tracks-footer">
+            <div class="track"><span class="label">Text</span><div class="track-line" id="textTrackVisual"></div></div>
+            <div class="track"><span class="label">Video</span><div class="track-line" id="videoTrackVisual"></div></div>
+            <div class="track"><span class="label">Audio</span><div class="track-line" id="audioTrackVisual"></div></div>
+        </footer>
+    </div>
+
+    <script src="renderer.js"></script>
+    <script src="editor.js"></script>
+</body>
+</html>
