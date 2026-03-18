@@ -3,159 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube 聊天室 ID 優化工具</title>
+    <title>YT 聊天室 @ID 轉名稱工具</title>
     <style>
         :root {
-            --bg-color: #0f0f0f;
-            --panel-color: #1e1e1e;
-            --text-color: #ffffff;
-            --accent-color: #3ea6ff;
+            --bg: #0f0f0f;
+            --panel: #1e1e1e;
+            --text: #ffffff;
+            --accent: #3ea6ff;
+            --input-bg: #2a2a2a;
         }
         body {
-            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             margin: 0;
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
         }
-        /* 設定區塊 */
-        #setup-panel {
-            background-color: var(--panel-color);
+
+        /* 控制面板 */
+        #control-panel {
+            background-color: var(--panel);
             padding: 15px 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            display: grid;
-            grid-template-columns: 1fr 1fr auto;
+            display: flex;
+            flex-wrap: wrap;
             gap: 15px;
-            align-items: end;
-            z-index: 10;
+            align-items: flex-end;
+            border-bottom: 1px solid #333;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            z-index: 100;
         }
-        .input-group {
+
+        .input-item {
             display: flex;
             flex-direction: column;
+            flex: 1;
+            min-width: 200px;
         }
+
         label {
             font-size: 12px;
             color: #aaa;
-            margin-bottom: 5px;
-        }
-        input {
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            outline: none;
-        }
-        input:focus { border-color: var(--accent-color); }
-        button {
-            background-color: var(--accent-color);
-            color: black;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 4px;
-            cursor: pointer;
+            margin-bottom: 6px;
             font-weight: bold;
-            height: 36px;
         }
+
+        input {
+            background: var(--input-bg);
+            border: 1px solid #444;
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+        }
+
+        button {
+            background-color: var(--accent);
+            color: #000;
+            border: none;
+            padding: 0 25px;
+            height: 38px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        button:active { transform: scale(0.95); }
         button:hover { opacity: 0.9; }
 
-        /* 聊天室顯示區 */
-        #chat-container {
-            flex-grow: 1;
+        /* 聊天室容器 */
+        #chat-viewport {
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             background: #000;
-            position: relative;
         }
+
         iframe {
             width: 100%;
             height: 100%;
             border: none;
+            background: #000;
         }
-        #placeholder {
+
+        .empty-state {
             color: #555;
             text-align: center;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            #control-panel { flex-direction: column; align-items: stretch; }
+            button { width: 100%; }
         }
     </style>
 </head>
 <body>
 
-<div id="setup-panel">
-    <div class="input-group">
-        <label>YouTube 直播或聊天室網址</label>
-        <input type="text" id="targetUrl" placeholder="https://www.youtube.com/watch?v=...">
+<div id="control-panel">
+    <div class="input-item">
+        <label>YouTube 直播 / 聊天室 / 影片連結</label>
+        <input type="text" id="targetUrl" placeholder="貼上網址或 Video ID...">
     </div>
-    <div class="input-group">
-        <label>YouTube Data API Key (僅儲存於本地)</label>
-        <input type="password" id="apiKey" placeholder="貼上你的 API Key">
+    <div class="input-item">
+        <label>YouTube Data API Key (僅存在本地儲存空間)</label>
+        <input type="password" id="apiKey" placeholder="輸入 API 金鑰">
     </div>
     <button onclick="loadChat()">載入聊天室</button>
 </div>
 
-<div id="chat-container">
-    <div id="placeholder">請輸入網址與 API Key 以載入聊天室</div>
+<div id="chat-viewport">
+    <div id="empty-msg" class="empty-state">
+        請在上方輸入網址，點擊「載入聊天室」<br>
+        (建議搭配 Tampermonkey 腳本以顯示頻道名稱)
+    </div>
 </div>
 
 <script>
-    // 1. 頁面載入時，檢查是否有舊的 API Key
-    window.onload = () => {
+    // 頁面初始化：讀取上次儲存的 Key
+    window.addEventListener('DOMContentLoaded', () => {
         const savedKey = localStorage.getItem('yt_api_key');
         if (savedKey) {
             document.getElementById('apiKey').value = savedKey;
         }
-    };
+    });
+
+    function extractVideoId(url) {
+        // 全能型正規表達式：支援 watch?v=, live/, shorts/, youtu.be/, embed/
+        const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+        const match = url.match(regex);
+        
+        if (match && match[1]) return match[1];
+        
+        // 如果使用者直接貼 11 位元的 ID
+        if (url.length === 11 && !url.includes('/')) return url;
+        
+        return null;
+    }
 
     function loadChat() {
         const rawUrl = document.getElementById('targetUrl').value.trim();
         const apiKey = document.getElementById('apiKey').value.trim();
-        
+        const viewport = document.getElementById('chat-viewport');
+        const emptyMsg = document.getElementById('empty-msg');
+
         if (!rawUrl) {
-            alert('請輸入直播或聊天室連結');
+            alert('❌ 請先輸入 YouTube 連結');
             return;
         }
 
-        // 儲存 API Key
-        localStorage.setItem('yt_api_key', apiKey);
-
-        // 2. 解析 Video ID
-        let videoId = '';
-        try {
-            const urlObj = new URL(rawUrl);
-            if (urlObj.searchParams.has('v')) {
-                videoId = urlObj.searchParams.get('v');
-            } else if (urlObj.pathname.includes('/live_chat')) {
-                videoId = urlObj.searchParams.get('v');
-            } else if (urlObj.hostname === 'youtu.be') {
-                videoId = urlObj.pathname.substring(1);
-            }
-        } catch (e) {
-            alert('無效的網址格式');
-            return;
+        // 儲存 Key 到本地，讓 Tampermonkey 腳本可以共用
+        if (apiKey) {
+            localStorage.setItem('yt_api_key', apiKey);
         }
+
+        const videoId = extractVideoId(rawUrl);
 
         if (!videoId) {
-            alert('無法從網址中解析 Video ID');
+            alert('❌ 無法解析 Video ID，請確認網址格式是否正確。');
             return;
         }
 
-        // 3. 嵌入 Iframe
-        // 注意：embed_domain 必須與你現在運行網頁的網域一致
+        // 獲取當前網域 (YouTube Iframe 必須指定 embed_domain)
         const currentDomain = window.location.hostname || 'localhost';
-        const chatUrl = `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${currentDomain}`;
         
-        const container = document.getElementById('chat-container');
-        container.innerHTML = `<iframe src="${chatUrl}"></iframe>`;
-
-        console.log(`已載入影片 ${videoId} 的聊天室`);
+        // 建立 Iframe 連結
+        // 加上 dark theme 參數與網域參數
+        const chatUrl = `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${currentDomain}&dark_theme=1`;
         
-        // 提示使用者
-        if (!apiKey) {
-            alert('提示：您未輸入 API Key，Tampermonkey 腳本將無法執行名稱替換功能。');
-        }
+        // 更新畫面
+        viewport.innerHTML = `<iframe src="${chatUrl}" id="chat-frame"></iframe>`;
+        
+        console.log(`✅ 成功載入影片 ID: ${videoId}`);
+        console.log(`🌐 偵測網域: ${currentDomain}`);
     }
 </script>
 
