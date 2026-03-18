@@ -3,30 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anshaer 直播觀測站 (省點數版)</title>
+    <title>Anshaer 實名聊天室觀測站</title>
     <style>
-        :root { --bg: #0f0f0f; --text: #eee; --blue: #3ea6ff; --gray: #888; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        #setup { background: #1e1e1e; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        input { background: #2a2a2a; border: 1px solid #444; color: #fff; padding: 10px; border-radius: 4px; }
-        button { background: var(--blue); color: #000; border: none; padding: 12px; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        #chat-box { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; }
+        :root { --bg: #0f0f0f; --text: #eee; --blue: #3ea6ff; --gray: #888; --name: #ffcc00; }
+        body { background: var(--bg); color: var(--text); font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         
-        /* 聊天訊息樣式優化 */
-        .msg { padding: 6px 8px; font-size: 15px; border-bottom: 1px solid #1a1a1a; animation: fadeIn 0.3s; }
-        .author { font-weight: bold; color: var(--blue); }
-        .id-tag { font-size: 11px; color: var(--gray); margin: 0 5px; }
-        .content { margin-left: 5px; line-height: 1.5; }
+        /* 設定區 */
+        #setup { background: #1e1e1e; padding: 15px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid #333; z-index: 100; }
+        input { background: #2a2a2a; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 6px; outline: none; }
+        input:focus { border-color: var(--blue); }
+        button { background: var(--blue); color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        /* 聊天顯示區 */
+        #chat-box { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; scroll-behavior: smooth; }
+        .msg { padding: 6px 10px; font-size: 15px; border-bottom: 1px solid #1a1a1a; animation: fadeIn 0.3s forwards; }
         
+        /* 名稱顯示樣式 */
+        .real-name { color: var(--name); font-weight: bold; margin-right: 4px; }
+        .handle { color: var(--blue); font-size: 13px; font-weight: normal; }
+        .content { margin-left: 8px; color: #fff; line-height: 1.6; word-break: break-all; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div id="setup">
-    <input type="text" id="ytUrl" placeholder="貼上直播網址 (如 https://www.youtube.com/live/...)">
-    <input type="password" id="apiKey" placeholder="輸入 API Key">
-    <button onclick="init()">進入監控模式</button>
+    <input type="text" id="ytUrl" placeholder="貼上直播網址 (例如: https://www.youtube.com/live/...)">
+    <input type="password" id="apiKey" placeholder="輸入您的 YouTube Data API Key">
+    <button onclick="init()">開始監控 (實名模式)</button>
 </div>
 
 <div id="chat-box"></div>
@@ -34,18 +39,26 @@
 <script>
     let chatPageToken = "";
     let isRunning = false;
+    const nameCache = new Map(); // 快取：ID -> 中文名
+
+    // 初始化讀取上次存的 Key
+    window.onload = () => {
+        const savedKey = localStorage.getItem('yt_api_key');
+        if (savedKey) document.getElementById('apiKey').value = savedKey;
+    };
 
     async function init() {
         const url = document.getElementById('ytUrl').value;
         const key = document.getElementById('apiKey').value;
-        if(!url || !key) return alert("請填寫網址與 Key");
+        if(!url || !key) return alert("請完整填寫網址與 Key");
+
+        localStorage.setItem('yt_api_key', key);
 
         const vidMatch = url.match(/(?:v=|\/live\/|youtu\.be\/)([^"&?\/\s]{11})/);
-        if(!vidMatch) return alert("網址解析失敗");
+        if(!vidMatch) return alert("網址解析失敗，請貼上完整的 YouTube 直播網址");
         const vid = vidMatch[1];
 
         try {
-            // 1. 取得 Live Chat ID (耗費 1 點)
             const videoRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${vid}&key=${key}`);
             const videoData = await videoRes.json();
             const chatId = videoData.items[0].liveStreamingDetails.activeLiveChatId;
@@ -54,14 +67,30 @@
             isRunning = true;
             loop(chatId, key);
         } catch(e) {
-            alert("抓取失敗，請確認直播是否已結束或 Key 是否正確");
+            alert("初始化失敗：可能非直播中、Key 無效或已達配額上限。");
         }
+    }
+
+    // 核心：查詢真實頻道名稱 (消耗 1 點)
+    async function getRealName(channelId, key) {
+        if (nameCache.has(channelId)) return nameCache.get(channelId);
+
+        try {
+            const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${channelId}&key=${key}`);
+            const data = await res.json();
+            if (data.items && data.items.length > 0) {
+                const title = data.items[0].snippet.title;
+                nameCache.set(channelId, title); // 存入快取
+                return title;
+            }
+        } catch (e) { console.error("查詢名稱失敗", e); }
+        return "Unknown";
     }
 
     async function loop(chatId, key) {
         if(!isRunning) return;
 
-        let apiUrl = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${chatId}&part=snippet,authorDetails&key=${key}&maxResults=200`;
+        let apiUrl = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${chatId}&part=snippet,authorDetails&key=${key}&maxResults=100`;
         if (chatPageToken) apiUrl += `&pageToken=${chatPageToken}`;
 
         try {
@@ -71,31 +100,31 @@
 
             const chatBox = document.getElementById('chat-box');
             
-            data.items.forEach(item => {
-                const name = item.authorDetails.displayName;
-                // 折衷處理：使用 channelId 的後六碼當作識別，不額外耗點查詢 Handle
-                const shortId = item.authorDetails.channelId.substring(2, 8); 
+            // 逐一處理留言
+            for (const item of data.items) {
+                const channelId = item.authorDetails.channelId;
+                const handle = item.authorDetails.displayName; // 這裡通常是 @ID
                 const msgText = item.snippet.displayMessage;
+
+                // 異步獲取真實中文名稱
+                const realName = await getRealName(channelId, key);
 
                 const div = document.createElement('div');
                 div.className = 'msg';
                 div.innerHTML = `
-                    <span class="author">${name}</span>
-                    <span class="id-tag">#${shortId}</span>
+                    <span class="real-name">${realName}</span>
+                    <span class="handle">(@${handle.replace('@','')})</span>:
                     <span class="content">${msgText}</span>
                 `;
                 chatBox.appendChild(div);
-            });
+            }
 
             chatBox.scrollTop = chatBox.scrollHeight;
-
-            // 💡 省錢關鍵：根據 YouTube 建議的間隔進行輪詢（通常為 3-5 秒）
-            // 這樣一次 fetch (5點) 就能抓到這幾秒內的所有訊息，不用一則一則查。
             setTimeout(() => loop(chatId, key), Math.max(data.pollingIntervalMillis, 4000));
 
         } catch(e) {
-            console.error("API 請求發生錯誤", e);
-            setTimeout(() => loop(chatId, key), 10000); // 報錯則停 10 秒
+            console.error("迴圈發生錯誤", e);
+            setTimeout(() => loop(chatId, key), 10000);
         }
     }
 </script>
