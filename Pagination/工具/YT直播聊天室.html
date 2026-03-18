@@ -3,119 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube 聊天室解析測試</title>
+    <title>Anshaer 自製直播聊天室</title>
     <style>
-        :root {
-            --bg: #0f0f0f;
-            --panel: #1e1e1e;
-            --accent: #3ea6ff;
-            --text: #ffffff;
-        }
-        body {
-            font-family: sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-        #header {
-            background: var(--panel);
-            padding: 15px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            border-bottom: 1px solid #333;
-        }
-        .input-box {
-            flex: 1;
-            min-width: 250px;
-            display: flex;
-            flex-direction: column;
-        }
-        label { font-size: 12px; color: #aaa; margin-bottom: 4px; }
-        input {
-            background: #2a2a2a;
-            border: 1px solid #444;
-            color: white;
-            padding: 8px;
-            border-radius: 4px;
-        }
-        button {
-            background: var(--accent);
-            color: black;
-            border: none;
-            padding: 0 20px;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            height: 35px;
-            align-self: flex-end;
-        }
-        #chat-frame-container {
-            flex: 1;
-            background: #000;
-        }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
+        body { background: #0f0f0f; color: #fff; font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        #setup { background: #1e1e1e; padding: 15px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid #333; }
+        input { background: #2a2a2a; border: 1px solid #444; color: #fff; padding: 8px; border-radius: 4px; }
+        button { background: #3ea6ff; color: #000; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        #chat-box { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .msg { font-size: 14px; line-height: 1.4; }
+        .author { font-weight: bold; color: #3ea6ff; margin-right: 5px; }
+        .text { color: #eee; }
+        .handle { font-size: 11px; color: #888; margin-right: 5px; }
     </style>
 </head>
 <body>
 
-<div id="header">
-    <div class="input-box">
-        <label>YouTube 連結 (直播/影片/短連結)</label>
-        <input type="text" id="urlInput" placeholder="貼上網址...">
-    </div>
-    <div class="input-box">
-        <label>API Key (選填，若腳本已寫死可不填)</label>
-        <input type="password" id="keyInput" placeholder="輸入 API 金鑰">
-    </div>
-    <button onclick="startChat()">載入</button>
+<div id="setup">
+    <input type="text" id="ytUrl" placeholder="輸入直播連結...">
+    <input type="password" id="apiKey" placeholder="輸入 API Key">
+    <button onclick="startMonitoring()">開始監控聊天室</button>
 </div>
 
-<div id="chat-frame-container">
-    <div style="padding: 20px; color: #555; text-align: center;">載入後聊天室將顯示於此</div>
-</div>
+<div id="chat-box" id="chatBox">
+    </div>
 
 <script>
-    // 初始化：嘗試抓取上次存的 Key
-    window.onload = () => {
-        const savedKey = localStorage.getItem('AIzaSyB0FlaHE7Eq2Xz_EdBt7ar02l40ryk7Qps');
-        if (savedKey) document.getElementById('keyInput').value = savedKey;
-    };
+    let nextPoll = null;
+    let chatPageToken = "";
 
-    function startChat() {
-        const url = document.getElementById('urlInput').value.trim();
-        const key = document.getElementById('keyInput').value.trim();
+    async function startMonitoring() {
+        const url = document.getElementById('ytUrl').value;
+        const key = document.getElementById('apiKey').value;
+        if(!url || !key) return alert("請填寫網址與 Key");
+
+        localStorage.setItem('yt_api_key', key);
+
+        // 1. 解析 Video ID
+        const vid = url.match(/(?:v=|\/live\/|youtu\.be\/)([^"&?\/\s]{11})/)[1];
         
-        if (!url) return alert('請輸入網址');
-
-        // 儲存 Key 供腳本讀取 (如果腳本沒寫死的話)
-        if (key) localStorage.setItem('AIzaSyB0FlaHE7Eq2Xz_EdBt7ar02l40ryk7Qps', key);
-
-        // 解析 Video ID (Regex)
-        const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-        const match = url.match(regex);
-        let videoId = (match && match[1]) ? match[1] : (url.length === 11 ? url : null);
-
-        if (!videoId) return alert('無法辨識 Video ID');
-
-        // 取得當前網域
-        const domain = window.location.hostname || 'localhost';
-        const chatUrl = `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${domain}&dark_theme=1`;
-
-        // 渲染 Iframe
-        document.getElementById('chat-frame-container').innerHTML = 
-            `<iframe src="${chatUrl}"></iframe>`;
+        // 2. 獲取 LiveChatID
+        try {
+            const videoRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${vid}&key=${key}`);
+            const videoData = await videoRes.json();
+            const liveChatId = videoData.items[0].liveStreamingDetails.activeLiveChatId;
             
-        console.log("成功載入：", videoId, "網域：", domain);
+            document.getElementById('setup').style.display = 'none'; // 隱藏設定區
+            fetchMessages(liveChatId, key);
+        } catch(e) {
+            alert("獲取直播資訊失敗，請確認是否正在直播中。");
+        }
+    }
+
+    async function fetchMessages(chatId, key) {
+        let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${chatId}&part=snippet,authorDetails&key=${key}`;
+        if (chatPageToken) url += `&pageToken=${chatPageToken}`;
+
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            chatPageToken = data.nextPageToken;
+
+            const chatBox = document.getElementById('chat-box');
+            data.items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'msg';
+                // 這裡就是你要的：同時顯示 名稱 + @ID
+                div.innerHTML = `
+                    <span class="author">${item.authorDetails.displayName}</span>
+                    <span class="handle">(@${item.authorDetails.channelId.substring(0,8)}...)</span>
+                    <span class="text">${item.snippet.displayMessage}</span>
+                `;
+                chatBox.appendChild(div);
+            });
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            // 根據 YouTube 建議的間隔時間抓取下一波 (通常是幾秒)
+            setTimeout(() => fetchMessages(chatId, key), data.pollingIntervalMillis);
+        } catch(e) {
+            console.error("抓取留言失敗", e);
+        }
     }
 </script>
-
 </body>
 </html>
