@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube 聊天室 ID 優化工具</title>
+    <style>
+        :root {
+            --bg-color: #0f0f0f;
+            --panel-color: #1e1e1e;
+            --text-color: #ffffff;
+            --accent-color: #3ea6ff;
+        }
+        body {
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* 設定區塊 */
+        #setup-panel {
+            background-color: var(--panel-color);
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+            z-index: 10;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        input {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            outline: none;
+        }
+        input:focus { border-color: var(--accent-color); }
+        button {
+            background-color: var(--accent-color);
+            color: black;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            height: 36px;
+        }
+        button:hover { opacity: 0.9; }
+
+        /* 聊天室顯示區 */
+        #chat-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            position: relative;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        #placeholder {
+            color: #555;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div id="setup-panel">
+    <div class="input-group">
+        <label>YouTube 直播或聊天室網址</label>
+        <input type="text" id="targetUrl" placeholder="https://www.youtube.com/watch?v=...">
+    </div>
+    <div class="input-group">
+        <label>YouTube Data API Key (僅儲存於本地)</label>
+        <input type="password" id="apiKey" placeholder="貼上你的 API Key">
+    </div>
+    <button onclick="loadChat()">載入聊天室</button>
+</div>
+
+<div id="chat-container">
+    <div id="placeholder">請輸入網址與 API Key 以載入聊天室</div>
+</div>
+
+<script>
+    // 1. 頁面載入時，檢查是否有舊的 API Key
+    window.onload = () => {
+        const savedKey = localStorage.getItem('yt_api_key');
+        if (savedKey) {
+            document.getElementById('apiKey').value = savedKey;
+        }
+    };
+
+    function loadChat() {
+        const rawUrl = document.getElementById('targetUrl').value.trim();
+        const apiKey = document.getElementById('apiKey').value.trim();
+        
+        if (!rawUrl) {
+            alert('請輸入直播或聊天室連結');
+            return;
+        }
+
+        // 儲存 API Key
+        localStorage.setItem('yt_api_key', apiKey);
+
+        // 2. 解析 Video ID
+        let videoId = '';
+        try {
+            const urlObj = new URL(rawUrl);
+            if (urlObj.searchParams.has('v')) {
+                videoId = urlObj.searchParams.get('v');
+            } else if (urlObj.pathname.includes('/live_chat')) {
+                videoId = urlObj.searchParams.get('v');
+            } else if (urlObj.hostname === 'youtu.be') {
+                videoId = urlObj.pathname.substring(1);
+            }
+        } catch (e) {
+            alert('無效的網址格式');
+            return;
+        }
+
+        if (!videoId) {
+            alert('無法從網址中解析 Video ID');
+            return;
+        }
+
+        // 3. 嵌入 Iframe
+        // 注意：embed_domain 必須與你現在運行網頁的網域一致
+        const currentDomain = window.location.hostname || 'localhost';
+        const chatUrl = `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${currentDomain}`;
+        
+        const container = document.getElementById('chat-container');
+        container.innerHTML = `<iframe src="${chatUrl}"></iframe>`;
+
+        console.log(`已載入影片 ${videoId} 的聊天室`);
+        
+        // 提示使用者
+        if (!apiKey) {
+            alert('提示：您未輸入 API Key，Tampermonkey 腳本將無法執行名稱替換功能。');
+        }
+    }
+</script>
+
+</body>
+</html>
