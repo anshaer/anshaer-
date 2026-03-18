@@ -1,58 +1,20 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anshaer 高效率聊天室</title>
-    <style>
-        body { background: transparent; margin: 0; font-family: sans-serif; overflow: hidden; }
-        #setup-ui { background: #1e1e1e; padding: 20px; color: white; position: relative; z-index: 99; }
-        .input-group { margin-bottom: 10px; }
-        input { width: 100%; padding: 8px; box-sizing: border-box; background: #333; border: 1px solid #444; color: white; border-radius: 4px; }
-        button { width: 100%; padding: 10px; background: #3ea6ff; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
-        #chat-container { width: 100vw; height: 100vh; background: transparent; }
-        iframe { width: 100%; height: 100%; border: none; }
-    </style>
-</head>
-<body>
-
-<div id="setup-ui">
-    <div class="input-group">
-        <label style="font-size: 12px; color: #aaa;">YouTube 直播網址</label>
-        <input type="text" id="ytUrl" placeholder="https://www.youtube.com/live/...">
-    </div>
-    <div class="input-group">
-        <label style="font-size: 12px; color: #aaa;">API Key</label>
-        <input type="password" id="apiKey">
-    </div>
-    <button onclick="launch()">套用並載入聊天室</button>
-</div>
-
-<div id="chat-container"></div>
-
 <script>
-    // 自動帶入上次的 Key
-    window.onload = () => {
-        const savedKey = localStorage.getItem('yt_api_key');
-        if (savedKey) document.getElementById('apiKey').value = savedKey;
-    };
-
     function launch() {
         const url = document.getElementById('ytUrl').value.trim();
         const key = document.getElementById('apiKey').value.trim();
-        if(!url || !key) return alert("請輸入完整資料");
+        
+        if(!url || !key) return alert("請填寫資料");
 
+        // 存入 localStorage
         localStorage.setItem('yt_api_key', key);
         
         const vidMatch = url.match(/(?:v=|\/live\/|youtu\.be\/)([^"&?\/\s]{11})/);
-        if(!vidMatch) return alert("網址解析失敗");
+        if(!vidMatch) return alert("網址無效");
         
-        const domain = window.location.hostname || "localhost";
-        const chatUrl = `https://www.youtube.com/live_chat?v=${vidMatch[1]}&embed_domain=${domain}&dark_theme=1`;
-        
+        const domain = window.location.hostname;
+        // 確保 iframe 載入
+        const chatUrl = `https://www.youtube.com/live_chat?v=${vidMatch[1]}&embed_domain=${domain}`;
         document.getElementById('chat-container').innerHTML = `<iframe src="${chatUrl}"></iframe>`;
         document.getElementById('setup-ui').style.display = 'none';
     }
 </script>
-</body>
-</html>
