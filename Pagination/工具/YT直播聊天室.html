@@ -1,55 +1,38 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anshaer 高效率聊天室</title>
+    <title>手機實名觀測站</title>
     <style>
-        body { background: transparent; margin: 0; font-family: sans-serif; overflow: hidden; }
-        #setup-ui { background: #1e1e1e; padding: 20px; color: white; position: relative; z-index: 99; }
-        .input-group { margin-bottom: 10px; }
-        input { width: 100%; padding: 8px; box-sizing: border-box; background: #333; border: 1px solid #444; color: white; border-radius: 4px; }
-        button { width: 100%; padding: 10px; background: #3ea6ff; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
-        #chat-container { width: 100vw; height: 100vh; background: transparent; }
-        iframe { width: 100%; height: 100%; border: none; }
+        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; }
+        .msg { padding: 10px; border-bottom: 1px solid #222; }
+        .name { color: #ffca28; font-weight: bold; }
+        .handle { color: #3ea6ff; font-size: 12px; }
     </style>
 </head>
 <body>
+    <div id="chat-box">載入中...</div>
 
-<div id="setup-ui">
-    <div class="input-group">
-        <label style="font-size: 12px; color: #aaa;">YouTube 直播網址</label>
-        <input type="text" id="ytUrl" placeholder="https://www.youtube.com/live/...">
-    </div>
-    <div class="input-group">
-        <label style="font-size: 12px; color: #aaa;">API Key</label>
-        <input type="password" id="apiKey">
-    </div>
-    <button onclick="launch()">套用並載入聊天室</button>
-</div>
+    <script>
+        const GAS_URL = '你的_GAS_網址_貼在這裡';
+        const VIDEO_ID = '你的_直播_ID';
 
-<div id="chat-container"></div>
+        async function refresh() {
+            try {
+                const res = await fetch(`${GAS_URL}?vid=${VIDEO_ID}`);
+                const data = await res.json();
+                const box = document.getElementById('chat-box');
+                box.innerHTML = '';
+                data.forEach(m => {
+                    box.innerHTML += `<div class="msg"><span class="name">${m.name}</span> <span class="handle">(@${m.handle})</span>: ${m.text}</div>`;
+                });
+                window.scrollTo(0, document.body.scrollHeight);
+            } catch (e) { console.error(e); }
+        }
 
-<script>
-    function launch() {
-        const url = document.getElementById('ytUrl').value.trim();
-        const key = document.getElementById('apiKey').value.trim();
-        
-        if(!url || !key) return alert("請填寫資料");
-
-        // 存入 localStorage
-        localStorage.setItem('yt_api_key', key);
-        
-        const vidMatch = url.match(/(?:v=|\/live\/|youtu\.be\/)([^"&?\/\s]{11})/);
-        if(!vidMatch) return alert("網址無效");
-        
-        const domain = window.location.hostname;
-        // 確保 iframe 載入
-        const chatUrl = `https://www.youtube.com/live_chat?v=${vidMatch[1]}&embed_domain=${domain}`;
-        document.getElementById('chat-container').innerHTML = `<iframe src="${chatUrl}"></iframe>`;
-        document.getElementById('setup-ui').style.display = 'none';
-    }
-</script>
-
+        setInterval(refresh, 5000); // 5秒自動更新一次
+        refresh();
+    </script>
 </body>
 </html>
