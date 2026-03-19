@@ -1,38 +1,103 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>手機實名觀測站</title>
+    <title>手機實名觀測站 - 自動解析版</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; }
-        .msg { padding: 10px; border-bottom: 1px solid #222; }
-        .name { color: #ffca28; font-weight: bold; }
-        .handle { color: #3ea6ff; font-size: 12px; }
+        :root { --bg: #000; --text: #eee; --gold: #ffca28; --blue: #3ea6ff; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        
+        /* 輸入區 */
+        #setup { background: #1a1a1a; padding: 15px; border-bottom: 1px solid #333; display: flex; flex-direction: column; gap: 10px; }
+        input { background: #222; border: 1px solid #444; color: #fff; padding: 12px; border-radius: 6px; outline: none; font-size: 14px; }
+        button { background: var(--blue); color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        
+        /* 聊天顯示區 */
+        #chat-box { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; }
+        .msg { margin-bottom: 10px; font-size: 15px; line-height: 1.4; border-bottom: 1px solid #111; padding-bottom: 5px; }
+        .name { color: var(--gold); font-weight: bold; }
+        .handle { color: var(--blue); font-size: 12px; margin-left: 4px; }
+        .content { margin-left: 5px; word-break: break-all; }
+        .status { font-size: 12px; color: #666; text-align: center; margin: 5px; }
     </style>
 </head>
 <body>
-    <div id="chat-box">載入中...</div>
 
-    <script>
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzTjapDkTE3WM8i5qS8ROEAdVVcS2ehBIs-iRXWdaj6Cnl3Zcx9qT-nn3aMZDl-XUxdXg/exec';
-        const VIDEO_ID = '你的_直播_ID';
+<div id="setup">
+    <input type="text" id="ytUrl" placeholder="請貼上直播網址或聊天室網址">
+    <button onclick="startMonitoring()">開始自動監控</button>
+</div>
 
-        async function refresh() {
-            try {
-                const res = await fetch(`${GAS_URL}?vid=${VIDEO_ID}`);
-                const data = await res.json();
-                const box = document.getElementById('chat-box');
-                box.innerHTML = '';
-                data.forEach(m => {
-                    box.innerHTML += `<div class="msg"><span class="name">${m.name}</span> <span class="handle">(@${m.handle})</span>: ${m.text}</div>`;
-                });
-                window.scrollTo(0, document.body.scrollHeight);
-            } catch (e) { console.error(e); }
+<div id="status-msg" class="status">尚未啟動</div>
+<div id="chat-box"></div>
+
+<script>
+    // ⚠️ 請在此填入你部署好的 GAS 網址
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzTjapDkTE3WM8i5qS8ROEAdVVcS2ehBIs-iRXWdaj6Cnl3Zcx9qT-nn3aMZDl-XUxdXg/exec'; 
+    
+    let monitorTimer = null;
+    let lastVideoId = "";
+
+    // 從網址解析 Video ID 的函式
+    function parseVideoId(url) {
+        // 支援 watch?v=, live/, live_chat?v=, youtu.be/ 等多種格式
+        const regex = /(?:v=|\/live\/|\/live_chat\?v=|youtu\.be\/)([^"&?\/\s]{11})/;
+        const match = url.match(regex);
+        return match ? match[1] : null;
+    }
+
+    async function startMonitoring() {
+        const url = document.getElementById('ytUrl').value.trim();
+        const vid = parseVideoId(url);
+
+        if (!vid) {
+            alert("網址格式錯誤，請確認包含 11 位元的影片 ID");
+            return;
         }
 
-        setInterval(refresh, 5000); // 5秒自動更新一次
-        refresh();
-    </script>
+        // 清除舊的計時器
+        if (monitorTimer) clearInterval(monitorTimer);
+        
+        document.getElementById('status-msg').innerText = `正在監控 ID: ${vid}`;
+        document.getElementById('chat-box').innerHTML = ""; // 清空舊留言
+        
+        // 立即執行一次，之後每 5 秒執行一次
+        fetchData(vid);
+        monitorTimer = setInterval(() => fetchData(vid), 5000);
+    }
+
+    async function fetchData(vid) {
+        try {
+            // 向 GAS 發送請求
+            const response = await fetch(`${GAS_URL}?vid=${vid}`);
+            const data = await response.json();
+
+            const chatBox = document.getElementById('chat-box');
+            
+            // 為了簡化，這裡每次都重新刷新顯示最新的一批留言
+            // 如果要更進階，可以加上 ID 判斷避免重覆顯示
+            chatBox.innerHTML = ""; 
+            
+            data.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'msg';
+                div.innerHTML = `
+                    <span class="name">${m.name}</span>
+                    <span class="handle">(@${m.handle})</span>:
+                    <span class="content">${m.text}</span>
+                `;
+                chatBox.appendChild(div);
+            });
+
+            // 自動捲到底部
+            chatBox.scrollTop = chatBox.scrollHeight;
+            document.getElementById('status-msg').innerText = `最後更新: ${new Date().toLocaleTimeString()} (ID: ${vid})`;
+        } catch (e) {
+            console.error("Fetch Error:", e);
+            document.getElementById('status-msg').innerText = "連線失敗，正在重試...";
+        }
+    }
+</script>
 </body>
 </html>
