@@ -1,84 +1,141 @@
-// ==UserScript==
-// @name         YouTube 聊天室實名修正 (安全連動版)
-// @namespace    http://tampermonkey.net/
-// @version      2.1
-// @description  從父視窗安全獲取 API Key，不將 Key 上傳至 GitHub
-// @author       Anshaer
-// @match        https://www.youtube.com/live_chat*
-// @grant        GM_xmlhttpRequest
-// @connect      www.googleapis.com
-// ==/UserScript==
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { VRMLoaderPlugin, VRMUtils } from '@pixiv/three-vrm';
+import { FaceLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
 
-(function() {
-    'use strict';
+// --- 全域變數 ---
+let scene, camera, renderer, currentVrm, faceLandmarker;
+const video = document.getElementById("video");
 
-    let API_KEY = "";
-    const nameCache = new Map();
+// --- 1. 初始化 Three.js 場景 ---
+function initScene() {
+    scene = new THREE.Scene();
+    
+    // 相機：放在大約人臉的高度 (1.4m - 1.6m)
+    camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 20);
+    camera.position.set(0, 1.4, 2.5);
 
-    // 關鍵：嘗試從父視窗抓取 Key
-    function getApiKey() {
-        try {
-            // 嘗試讀取父視窗存放在 localStorage 的 Key
-            // 如果瀏覽器報 CORS 錯誤，則需手動在網頁輸入
-            return window.parent.localStorage.getItem('yt_api_key') || "";
-        } catch (e) {
-            console.warn("無法存取父視窗記憶體，請檢查網域設定");
-            return "";
-        }
-    }
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
 
-    function fetchRealName(handle, element) {
-        if (!API_KEY) API_KEY = getApiKey();
-        if (!API_KEY) return; // 沒 Key 就不動
+    // 燈光
+    const light = new THREE.DirectionalLight(0xffffff, 1.0);
+    light.position.set(1, 1, 1).normalize();
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
-        if (nameCache.has(handle)) {
-            applyName(element, handle, nameCache.get(handle));
-            return;
-        }
+    window.addEventListener('resize', onWindowResize);
+}
 
-        const cleanHandle = handle.replace('@', '');
-        GM_xmlhttpRequest({
-            method: "GET",
-            url: `https://www.googleapis.com/youtube/v3/channels?part=snippet&forHandle=${cleanHandle}&key=${API_KEY}`,
-            onload: function(res) {
-                const data = JSON.parse(res.responseText);
-                if (data.items && data.items.length > 0) {
-                    const realName = data.items[0].snippet.title;
-                    nameCache.set(handle, realName);
-                    applyName(element, handle, realName);
-                }
-            }
-        });
-    }
-
-    function applyName(el, handle, name) {
-        if (!el.dataset.renamed) {
-            el.innerText = `${name} (${handle})`;
-            el.style.color = "#ffca28"; 
-            el.dataset.renamed = "true";
-        }
-    }
-
-    const observer = new MutationObserver((mutations) => {
-        for (let m of mutations) {
-            for (let node of m.addedNodes) {
-                if (node.nodeType === 1) {
-                    const author = node.querySelector('#author-name');
-                    if (author && author.innerText.startsWith('@')) {
-                        fetchRealName(author.innerText.trim(), author);
-                    }
-                }
-            }
-        }
+// --- 2. 初始化 MediaPipe Face Landmarker ---
+async function initFaceTracking() {
+    const vision = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+    );
+    
+    faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+        baseOptions: {
+            // 這就是你提到的關鍵 API 模型路徑
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+            delegate: "GPU"
+        },
+        outputFaceBlendshapes: true,
+        runningMode: "VIDEO",
+        numFaces: 1
     });
 
-    const init = () => {
-        const container = document.querySelector('#items.yt-live-chat-item-list-renderer');
-        if (container) {
-            observer.observe(container, { childList: true, subtree: true });
-        } else {
-            setTimeout(init, 1000);
+    console.log("AI 模型載入完畢");
+    startCamera();
+}
+
+// --- 3. 啟動攝影機 ---
+function startCamera() {
+    navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } })
+        .then((stream) => {
+            video.srcObject = stream;
+            video.addEventListener("loadeddata", predictWebcam);
+        })
+        .catch(err => console.error("鏡頭啟動失敗:", err));
+}
+
+// --- 4. 處理 VRM 模型上傳 ---
+const loader = new GLTFLoader();
+loader.register((parser) => new VRMLoaderPlugin(parser));
+
+document.getElementById('vrm_input').addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+    if (currentVrm) {
+        scene.remove(currentVrm.scene);
+        VRMUtils.deepDispose(currentVrm.scene);
+    }
+
+    loader.load(url, (gltf) => {
+        const vrm = gltf.userData.vrm;
+        currentVrm = vrm;
+        scene.add(vrm.scene);
+        VRMUtils.rotateVRM0(vrm); // 修正部分模型背對問題
+        console.log("VRM 載入成功");
+    });
+});
+
+// --- 5. 每幀更新：驅動模型 ---
+async function predictWebcam() {
+    if (faceLandmarker && video.readyState >= 2) {
+        const startTimeMs = performance.now();
+        const results = faceLandmarker.detectForVideo(video, startTimeMs);
+
+        if (results.faceBlendshapes && results.faceBlendshapes.length > 0 && currentVrm) {
+            const shapes = results.faceBlendshapes[0].categories;
+            const exp = currentVrm.expressionManager;
+
+            // 映射 MediaPipe 數據到 VRM 表情
+            // 這裡使用了幾種常見的表情對應
+            shapes.forEach(s => {
+                switch(s.categoryName) {
+                    case "eyeBlinkLeft": exp.setValue("blinkLeft", s.score); break;
+                    case "eyeBlinkRight": exp.setValue("blinkRight", s.score); break;
+                    case "jawOpen": exp.setValue("aa", s.score); break; // 阿
+                    case "mouthSmileLeft": exp.setValue("surprised", s.score * 0.5); break; 
+                    // 你可以繼續增加如 eyeLookIn, mouthPucker 等
+                }
+            });
+            
+            // 讓頭部跟著轉動 (選配邏輯)
+            const head = currentVrm.humanoid.getRawBoneNode("head");
+            if (results.faceLandmarks) {
+                // 簡單示範：利用面部中心點位置移動
+                const face = results.faceLandmarks[0];
+                head.rotation.y = -(face[1].x - 0.5); // 左右轉
+                head.rotation.x = (face[1].y - 0.5);  // 上下看
+            }
         }
-    };
-    init();
-})();
+    }
+    requestAnimationFrame(predictWebcam);
+}
+
+// --- 6. 渲染迴圈 ---
+const clock = new THREE.Clock();
+function animate() {
+    requestAnimationFrame(animate);
+    const delta = clock.getDelta();
+    if (currentVrm) {
+        currentVrm.update(delta);
+    }
+    renderer.render(scene, camera);
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+// 啟動程式
+initScene();
+initFaceTracking();
+animate();
