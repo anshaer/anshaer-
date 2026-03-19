@@ -1,5 +1,5 @@
 async function uploadToCloud(vrmData) {
-  const scriptUrl = "你的GAS部署網址"; // 記得要部署為 Web App
+  const scriptUrl = "https://script.google.com/macros/s/AKfycbx9y6ts9MZ2HAqQAdN0m8sspELGtfHaEKv3OepeTKhcs_wlwU_RtmPYCYm369T7Cj8iWQ/exec"; // 記得要部署為 Web App
 
   const payload = {
     userId: "Anshaer_01",
