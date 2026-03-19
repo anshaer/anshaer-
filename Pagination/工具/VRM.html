@@ -10,7 +10,9 @@
 <body>
     <div id="ui">
     <input type="file" id="vrm_input" accept=".vrm">
-    <video id="video" style="width: 240px; height: 180px; display: block; transform: scaleX(-1); border-radius: 8px; margin-top: 10px;" autoplay playsinline></video>
+    <button id="start_camera">1. 開啟鏡頭並啟動捕捉</button>
+    <p id="status" style="color: yellow;">等待點擊啟動...</p>
+    <video id="video" style="width: 240px; height: 180px; display: none;" autoplay playsinline></video>
 </div>
 
 <script type="importmap">
