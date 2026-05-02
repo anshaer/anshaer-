@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Neon Previewer</title>
+    <style>
+        :root {
+            --bg-color: #0f1016;
+            --card-bg: #1a1c24;
+            --accent-color: #00ffcc;
+            --accent-glow: rgba(0, 255, 204, 0.4);
+            --text-color: #e2e8f0;
+            --text-muted: #64748b;
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 24px;
+            color: var(--text-color);
+            text-shadow: 0 0 12px var(--accent-glow);
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            background-color: var(--card-bg);
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--border-color);
+            margin-bottom: 32px;
+            align-items: center;
+            max-width: 850px;
+            width: 100%;
+        }
+
+        .url-input {
+            flex: 1;
+            min-width: 240px;
+            padding: 11px 16px;
+            background-color: #08090d;
+            border: 1px solid var(--text-muted);
+            border-radius: 8px;
+            color: var(--text-color);
+            outline: none;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .url-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        button {
+            padding: 11px 20px;
+            background-color: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        button:hover, button.active {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            box-shadow: 0 0 16px var(--accent-glow);
+        }
+
+        .device-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .preview-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .frame-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+            border: 3px solid #2d3142;
+            transition: max-width 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .device-desktop {
+            max-width: 100%;
+        }
+
+        .device-tablet {
+            max-width: 768px;
+        }
+
+        .device-mobile {
+            max-width: 390px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: #ffffff;
+        }
+
+        .warning {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 16px;
+            text-align: center;
+            max-width: 800px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>💻 Responsive Neon Previewer</h1>
+
+    <div class="controls">
+        <input type="text" class="url-input" id="urlInput" placeholder="請輸入網址 (如: https://example.com)" value="https://example.com">
+        <button onclick="loadUrl()">載入</button>
+        <div class="device-group">
+            <button class="active" id="btn-desktop" onclick="setDevice('desktop')">💻 電腦</button>
+            <button id="btn-tablet" onclick="setDevice('tablet')">📱 平板</button>
+            <button id="btn-mobile" onclick="setDevice('mobile')">📱 手機</button>
+        </div>
+    </div>
+
+    <div class="preview-wrapper">
+        <div class="frame-container device-desktop" id="frameContainer">
+            <iframe id="previewFrame" src="https://example.com"></iframe>
+        </div>
+    </div>
+
+    <div class="warning">
+        ⚠️ <strong>提示</strong>：部分網站（如 Google、Facebook 等）出於安全性考量，會開啟跨來源保護並拒絕被嵌入預覽。若載入失敗，請嘗試測試允許 iframe 嵌入的網站。
+    </div>
+
+    <script>
+        function loadUrl() {
+            const urlInput = document.getElementById('urlInput').value;
+            const frame = document.getElementById('previewFrame');
+            let formattedUrl = urlInput.trim();
+            
+            // 自動補上協定
+            if (!/^https?:\/\//i.test(formattedUrl)) {
+                formattedUrl = 'https://' + formattedUrl;
+            }
+            
+            frame.src = formattedUrl;
+        }
+
+        function setDevice(type) {
+            const container = document.getElementById('frameContainer');
+            
+            // 重置所有按鈕的 active 狀態
+            document.getElementById('btn-desktop').classList.remove('active');
+            document.getElementById('btn-tablet').classList.remove('active');
+            document.getElementById('btn-mobile').classList.remove('active');
+            
+            // 切換尺寸並套用 active 樣式
+            if (type === 'desktop') {
+                container.className = 'frame-container device-desktop';
+                document.getElementById('btn-desktop').classList.add('active');
+            } else if (type === 'tablet') {
+                container.className = 'frame-container device-tablet';
+                document.getElementById('btn-tablet').classList.add('active');
+            } else if (type === 'mobile') {
+                container.className = 'frame-container device-mobile';
+                document.getElementById('btn-mobile').classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
