@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>整合式網頁編輯器 (升級版)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #9cf6c7;
+            --text-color: #69350F;
+            --box-bg: rgba(255, 255, 255, 0.5);
+            --border-color: #69350F;
+        }
+        body { margin: 0; height: 100vh; display: flex; flex-direction: column; background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; }
+        
+        #toolbar { display: flex; padding: 10px; gap: 8px; background-color: var(--bg-color); border-bottom: 2px solid var(--border-color); flex-wrap: wrap; }
+        button { padding: 6px 12px; border-radius: 20px; border: none; background: var(--text-color); color: var(--bg-color); cursor: pointer; font-size: 13px; }
+        button:hover { background: #5e300d; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        #main { display: flex; flex: 1; overflow: hidden; }
+        
+        #display-area { flex: 1; border-right: 2px solid var(--border-color); padding: 10px; display: flex; flex-direction: column; position: relative;}
+        
+        #editor-text { width: 100%; height: 100%; resize: none; background: var(--box-bg); border: none; padding: 10px; color: var(--text-color); font-family: monospace; display: block; box-sizing: border-box; overflow-x: hidden; }
+        #image-preview { width: 100%; height: 100%; object-fit: contain; background: white; display: none; }
+        
+        /* 預覽容器設定 */
+        #preview-container { width: 100%; height: 100%; display: none; background: #eee; transition: width 0.3s ease; display: flex; justify-content: center; }
+        #preview-iframe { width: 100%; height: 100%; border: none; background: white; transition: width 0.3s ease; }
+
+        #sidebar { width: 280px; display: flex; flex-direction: column; border-left: 2px solid var(--border-color); }
+        #file-list-container { flex: 1; padding: 10px; overflow-y: auto; border-bottom: 2px solid var(--border-color); }
+        .file-item { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-bottom: 1px solid var(--border-color); cursor: pointer; }
+        .file-item:hover { background: rgba(255, 255, 255, 0.3); }
+        .file-actions { display: flex; gap: 10px; margin-left: 10px; }
+
+        #console { height: 160px; background: rgba(255, 255, 255, 0.4); color: var(--text-color); padding: 10px; font-family: monospace; font-size: 13px; overflow-y: auto; border-top: 2px solid var(--border-color); }
+    </style>
+</head>
+<body>
+
+<div id="toolbar">
+    <button id="save-btn" onclick="saveCurrentFile()">儲存</button>
+    <button onclick="runCode()">運行</button>
+    <button onclick="stopCode()">暫停</button>
+    <button onclick="downloadAll()">下載全部(.zip)</button>
+    <button onclick="document.getElementById('file-input').click()">檔案上傳</button>
+    <input type="file" id="file-input" multiple style="display:none" onchange="handleFiles(this.files)">
+    <span style="border-left: 1px solid #69350F; margin: 0 10px;"></span>
+    <button onclick="setDevice('desktop')">電腦模式</button>
+    <button onclick="setDevice('mobile')">手機模式</button>
+</div>
+
+<div id="main">
+    <div id="display-area">
+        <textarea id="editor-text" placeholder="請點選右側檔案進行編輯"></textarea>
+        <img id="image-preview" src="" alt="圖片預覽">
+        <div id="preview-container"><iframe id="preview-iframe"></iframe></div>
+    </div>
+    
+    <div id="sidebar">
+        <div id="file-list-container">
+            <h3>檔案列表</h3>
+            <ul id="files" style="list-style: none; padding: 0;"></ul>
+        </div>
+        <div id="console">
+            <div>> System Ready.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let files = {}; 
+    let currentFile = null;
+    let isRunning = false;
+
+    function log(message, type = 'info') {
+        const consoleEl = document.getElementById('console');
+        const time = new Date().toLocaleTimeString();
+        const color = type === 'error' ? '#8B0000' : '#69350F';
+        consoleEl.innerHTML += `<div style="color: ${color}; margin-bottom: 4px;">[${time}] ${message}</div>`;
+        consoleEl.scrollTop = consoleEl.scrollHeight; 
+    }
+
+    // 下載全部功能
+    async function downloadAll() {
+        if (Object.keys(files).length === 0) {
+            log('沒有檔案可下載', 'error');
+            return;
+        }
+        const zip = new JSZip();
+        for (const filename in files) {
+            // 移除 Base64 前綴，只保留原始資料
+            const content = files[filename].content;
+            if (files[filename].type === 'image') {
+                const base64Data = content.split(',')[1];
+                zip.file(filename, base64Data, {base64: true});
+            } else {
+                zip.file(filename, content);
+            }
+        }
+        const blob = await zip.generateAsync({type: 'blob'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'project_files.zip';
+        a.click();
+        log('所有檔案已打包下載');
+    }
+
+    // 裝置切換
+    function setDevice(mode) {
+        const iframe = document.getElementById('preview-iframe');
+        if (mode === 'mobile') {
+            iframe.style.width = '375px';
+            log('已切換至手機模式 (375px)');
+        } else {
+            iframe.style.width = '100%';
+            log('已切換至電腦模式');
+        }
+    }
+
+    function handleFiles(fileList) {
+        Array.from(fileList).forEach(file => {
+            const reader = new FileReader();
+            const isImage = file.type.startsWith('image/') || file.name.endsWith('.svg');
+            
+            reader.onload = (e) => {
+                files[file.name] = { type: isImage ? 'image' : 'text', content: e.target.result };
+                log(`已載入: ${file.name}`);
+                renderFileList();
+            };
+            if (isImage) reader.readAsDataURL(file);
+            else reader.readAsText(file);
+        });
+    }
+
+    function renderFileList() {
+        const list = document.getElementById('files');
+        list.innerHTML = '';
+        Object.keys(files).forEach(filename => {
+            const li = document.createElement('li');
+            li.className = 'file-item';
+            li.innerHTML = `
+                <span onclick="selectFile('${filename}')">${filename}</span>
+                <div class="file-actions">
+                    <span onclick="downloadFile('${filename}')" style="cursor:pointer" title="下載">↓</span>
+                    <span onclick="deleteFile('${filename}')" style="cursor:pointer; color:#8B0000" title="刪除">×</span>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    function selectFile(filename) {
+        if(isRunning) return;
+        currentFile = filename;
+        const fileData = files[filename];
+        const editor = document.getElementById('editor-text');
+        const img = document.getElementById('image-preview');
+        const saveBtn = document.getElementById('save-btn');
+
+        if (fileData.type === 'image') {
+            editor.style.display = 'none';
+            img.style.display = 'block';
+            img.src = fileData.content;
+            saveBtn.disabled = true;
+            log(`展示: ${filename}`);
+        } else {
+            editor.style.display = 'block';
+            img.style.display = 'none';
+            editor.value = fileData.content;
+            saveBtn.disabled = false;
+            log(`編輯: ${filename}`);
+        }
+    }
+
+    function saveCurrentFile() {
+        if(currentFile && files[currentFile].type === 'text') {
+            files[currentFile].content = document.getElementById('editor-text').value;
+            log(`已儲存: ${currentFile}`);
+        }
+    }
+
+    function deleteFile(filename) {
+        delete files[filename];
+        log(`已刪除: ${filename}`, 'error');
+        if(currentFile === filename) {
+            currentFile = null;
+            document.getElementById('editor-text').value = '';
+            document.getElementById('image-preview').style.display = 'none';
+            document.getElementById('editor-text').style.display = 'block';
+        }
+        renderFileList();
+    }
+
+    function downloadFile(filename) {
+        const fileData = files[filename];
+        const a = document.createElement('a');
+        a.href = fileData.content;
+        a.download = filename;
+        a.click();
+        log(`下載: ${filename}`);
+    }
+
+    function runCode() {
+        if (!files['index.html']) {
+            log('錯誤: 未找到 index.html', 'error');
+            return;
+        }
+        isRunning = true;
+        document.getElementById('editor-text').style.display = 'none';
+        document.getElementById('image-preview').style.display = 'none';
+        document.getElementById('preview-container').style.display = 'flex';
+
+        const iframe = document.getElementById('preview-iframe');
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        let htmlContent = files['index.html'].content;
+        
+        Object.keys(files).forEach(f => {
+            if(files[f].type === 'image') htmlContent = htmlContent.replaceAll(f, files[f].content);
+        });
+
+        doc.open();
+        doc.write(htmlContent);
+        Object.keys(files).forEach(f => {
+             if(f.endsWith('.css')) doc.head.innerHTML += `<style>${files[f].content}</style>`;
+             if(f.endsWith('.js')) doc.body.innerHTML += `<script>${files[f].content}<\/script>`;
+        });
+        doc.close();
+        log('執行完成');
+    }
+
+    function stopCode() {
+        isRunning = false;
+        document.getElementById('preview-container').style.display = 'none';
+        if(currentFile && files[currentFile].type === 'image') {
+            document.getElementById('image-preview').style.display = 'block';
+        } else {
+            document.getElementById('editor-text').style.display = 'block';
+        }
+        log('執行已停止');
+    }
+</script>
+
+</body>
+</html>
