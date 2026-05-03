@@ -1,16 +1,4 @@
 [
-    {
-        "title": "內容與創作者推廣",
-        "desc": "協助創作者推廣並讓作品被更多人看見。",
-        "imgUrl": "images/promo1.jpg",
-        "xLink": "https://twitter.com",
-        "ytLink": "https://youtube.com"
-    },
-    {
-        "title": "互動網頁專案",
-        "desc": "運用輕量化前端技術開發的專案與網站。",
-        "imgUrl": "images/promo2.jpg",
-        "xLink": "https://twitter.com",
-        "ytLink": "https://youtube.com"
-    }
+    { "file": "promotions/promotions1.json" },
+    { "file": "promotions/promotions2.json" }
 ]
