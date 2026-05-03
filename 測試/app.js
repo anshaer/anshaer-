@@ -1,120 +1,50 @@
-let galleryData = [];
 let currentIndex = 0;
+const galleryData = [
+    { title: '視覺開發與角色設計', desc: '與創作者共同設計的精緻圖像、3D 模型與美術規格書展示。', imgUrl: 'images/gallery1.jpg', tag: '角色與視覺' },
+    { title: '簡約 UI 介面視覺', desc: '霓虹未來感與暗黑極簡風格的介面設計展示與色系搭配。', imgUrl: 'images/gallery2.jpg', tag: '介面設計' },
+    { title: '動態捕捉與虛擬互動', desc: '將 3D 模型無縫整合，提供更具沉浸感的視覺體驗效果。', imgUrl: 'images/gallery3.jpg', tag: '虛擬互動' },
+    { title: '互動式網頁專案', desc: '運用輕量化前端技術開發的專案，提供粉絲更具沉浸感的線上微型網站。', imgUrl: 'images/gallery4.jpg', tag: '互動網頁' },
+    { title: '硬體與物聯網應用', desc: '結合微控制器與前端感測器的技術支援與客製化程式開發。', imgUrl: 'images/gallery5.jpg', tag: '物聯網支援' },
+    { title: '數位創作與推廣', desc: '協助創作者打造專屬視覺推廣素材，讓創作被更多人看見。', imgUrl: 'images/gallery6.jpg', tag: '創作者推廣' },
+    { title: '專案實例七', desc: '第七個專案的詳細說明與資料展示。', imgUrl: 'images/gallery7.jpg', tag: '專案實例七' },
+    { title: '專案實例八', desc: '第八個專案的詳細說明與資料展示。', imgUrl: 'images/gallery8.jpg', tag: '專案实例八' },
+    { title: '專案-實例九', desc: '第九個專案的詳細說明與資料展示。', imgUrl: 'images/gallery9.jpg', tag: '專案-實例九' },
+    { title: '專案實例十', desc: '第十個專案的詳細說明與資料展示。', imgUrl: 'images/gallery10.jpg', tag: '專案實例十' }
+];
 
 function toggleMenu() {
     const navLinks = document.getElementById('navLinks');
     navLinks.classList.toggle('active');
 }
 
-document.addEventListener("DOMContentLoaded", async function() {
-    // 網域驗證
-    const allowedDomains = ["www.anshaer.com", "anshaer.github.io", "localhost", "127.0.0.1"];
-    if (!allowedDomains.includes(window.location.hostname)) {
-        document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:50px;'>存取被拒：未授權的網域</h1>";
-        return;
-    }
+document.addEventListener("DOMContentLoaded", function() {
+    updateGallery(0, galleryData[0].title, galleryData[0].desc, galleryData[0].imgUrl);
 
-    try {
-        const [promotions, gallery, support, social] = await Promise.all([
-            fetch('promotions.json').then(res => res.json()),
-            fetch('gallery.json').then(res => res.json()),
-            fetch('support.json').then(res => res.json()),
-            fetch('social.json').then(res => res.json())
-        ]);
+    // 手機版觸控滑動切換
+    const largeDisplay = document.getElementById('largeDisplay');
+    let startX = 0;
 
-        galleryData = gallery;
+    largeDisplay.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+    }, { passive: true });
 
-        // 讀取 promotions 資料夾的子項目
-        const promoGrid = document.getElementById('promotionGrid');
-        let promoHTML = '';
-        
-        for(const item of promotions) {
-            try {
-                // 讀取子資料夾 promotions/ 中的檔案
-                const response = await fetch(item.file);
-                if (response.ok) {
-                    const promoObj = await response.json();
-                    promoHTML += `
-                        <div class="promotion-card">
-                            <div class="promotion-img" style="background-image: url('${promoObj.imgUrl}');"></div>
-                            <div class="promotion-content">
-                                <h3>${promoObj.title}</h3>
-                                <p>${promoObj.desc}</p>
-                                <div class="promo-links">
-                                    <a href="${promoObj.xLink}" target="_blank" title="X"><i class="fab fa-x-twitter"></i></a>
-                                    <a href="${promoObj.ytLink}" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
-            } catch(e) {
-                console.warn(`無法讀取檔案 ${item.file}:`, e);
-            }
+    largeDisplay.addEventListener('touchend', (e) => {
+        let endX = e.changedTouches[0].clientX;
+        if (startX - endX > 40) {
+            nextImage();
+        } else if (endX - startX > 40) {
+            prevImage();
         }
-        promoGrid.innerHTML = promoHTML;
-
-        // 渲染圖片集縮圖
-        const thumbnails = document.getElementById('thumbnails');
-        thumbnails.innerHTML = gallery.map((item, index) => `
-            <div class="thumb-card ${index === 0 ? 'active' : ''}" onclick="updateGallery(${index})">
-                <div class="thumb-placeholder" style="background-image: url('${item.data || item.imgUrl}');"></div>
-                <span>${item.tag}</span>
-            </div>
-        `).join('');
-
-        if (galleryData.length > 0) {
-            updateGallery(0);
-        }
-
-        // 渲染技術支持區塊
-        const supportGrid = document.getElementById('supportGrid');
-        supportGrid.innerHTML = support.map(item => `
-            <a href="${item.link}" class="support-card">
-                <h3>${item.title}</h3>
-            </a>
-        `).join('');
-
-        // 渲染社群連結區塊
-        const socialRow = document.getElementById('socialRow');
-        socialRow.innerHTML = social.map(item => `
-            <a href="${item.url}" target="_blank" class="social-icon-link" title="${item.name}">
-                <i class="${item.icon}"></i>
-            </a>
-        `).join('');
-
-        // 手機版左右觸控滑動
-        const largeDisplay = document.getElementById('largeDisplay');
-        let startX = 0;
-
-        largeDisplay.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-        }, { passive: true });
-
-        largeDisplay.addEventListener('touchend', (e) => {
-            let endX = e.changedTouches[0].clientX;
-            if (startX - endX > 40) {
-                nextImage(); // 向左滑動
-            } else if (endX - startX > 40) {
-                prevImage(); // 向右滑動
-            }
-        }, { passive: true });
-
-    } catch (error) {
-        console.error("載入設定失敗：", error);
-    }
+    }, { passive: true });
 });
 
-function updateGallery(index) {
+function updateGallery(index, title, desc, imgUrl) {
     currentIndex = index;
-    const item = galleryData[index];
     const placeholder = document.getElementById('largePlaceholder');
-    
-    // 優先讀取 Data 欄位中的 Base64 內容，若無則讀取 imgUrl 實體圖
-    placeholder.style.backgroundImage = `url('${item.data || item.imgUrl}')`;
+    placeholder.style.backgroundImage = `url('${imgUrl}')`;
 
-    document.getElementById('largeTitle').innerText = item.title;
-    document.getElementById('largeDesc').innerText = item.desc;
+    document.getElementById('largeTitle').innerText = title;
+    document.getElementById('largeDesc').innerText = desc;
 
     const thumbs = document.querySelectorAll('.thumb-card');
     thumbs.forEach((thumb, i) => {
@@ -127,13 +57,11 @@ function updateGallery(index) {
 }
 
 function prevImage() {
-    if (galleryData.length === 0) return;
     currentIndex = (currentIndex - 1 + galleryData.length) % galleryData.length;
-    updateGallery(currentIndex);
+    updateGallery(currentIndex, galleryData[currentIndex].title, galleryData[currentIndex].desc, galleryData[currentIndex].imgUrl);
 }
 
 function nextImage() {
-    if (galleryData.length === 0) return;
     currentIndex = (currentIndex + 1) % galleryData.length;
-    updateGallery(currentIndex);
+    updateGallery(currentIndex, galleryData[currentIndex].title, galleryData[currentIndex].desc, galleryData[currentIndex].imgUrl);
 }
