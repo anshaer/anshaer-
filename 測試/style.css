@@ -1,10 +1,10 @@
 :root {
-    --bg-color: #f8fafc;
-    --card-bg: #ffffff;
-    --text-main: #0f172a;
-    --text-muted: #64748b;
-    --accent-neon: #0d9488;
-    --accent-mint: #14b8a6;
+    --bg-color: #f8fafc; /* 清爽淺灰底色 */
+    --card-bg: #ffffff;   /* 純白卡片 */
+    --text-main: #0f172a; /* 深色文字，確保高對比易讀 */
+    --text-muted: #64748b;/* 柔和的次要文字 */
+    --accent-neon: #0d9488; /* 清新青綠色強調色 */
+    --accent-mint: #14b8a6; /* 明亮薄荷綠 */
     --glow-color: rgba(13, 148, 136, 0.12);
 }
 
@@ -22,6 +22,7 @@ body {
     overflow-x: hidden;
 }
 
+/* 導覽列 */
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -61,6 +62,7 @@ body {
     color: var(--accent-neon);
 }
 
+/* 漢堡選單按鈕 */
 .nav-toggle {
     display: none;
     background: none;
@@ -70,6 +72,7 @@ body {
     cursor: pointer;
 }
 
+/* 主視覺區 */
 .hero {
     width: 100%;
     padding: 0;
@@ -77,10 +80,12 @@ body {
     background-color: var(--bg-color);
 }
 
+/* 貫通式滿版橫幅 */
 .hero-banner {
     width: 100%;
     min-height: 500px;
     background-color: #e2e8f0;
+    background-image: url('images/hero.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -115,6 +120,7 @@ body {
     font-weight: 500;
 }
 
+/* 區塊樣式 */
 .section {
     padding: 5rem 5%;
 }
@@ -137,6 +143,7 @@ body {
     border-radius: 2px;
 }
 
+/* 推廣區塊 */
 .promotion-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -201,6 +208,7 @@ body {
     color: var(--accent-neon);
 }
 
+/* 圖片集區塊：電腦版左右分割 */
 .gallery-layout {
     max-width: 1100px;
     margin: 0 auto;
@@ -229,6 +237,7 @@ body {
     height: 360px;
     font-size: 1.3rem;
     letter-spacing: 1px;
+    background-image: url('images/gallery1.jpg');
     background-color: #f1f5f9;
     background-size: contain;
     background-position: center;
@@ -236,6 +245,7 @@ body {
     color: var(--text-main);
 }
 
+/* 圖片切換按鈕面板（展示下方） */
 .gallery-controls {
     display: flex;
     justify-content: space-between;
@@ -282,6 +292,7 @@ body {
     font-size: 0.85rem;
 }
 
+/* 縮圖網格：不限制兩欄 */
 .thumbnails {
     width: 40%;
     display: grid;
@@ -318,6 +329,17 @@ body {
     margin-bottom: 0.5rem;
 }
 
+.thumb1 { background-image: url('images/gallery1.jpg'); }
+.thumb2 { background-image: url('images/gallery2.jpg'); }
+.thumb3 { background-image: url('images/gallery3.jpg'); }
+.thumb4 { background-image: url('images/gallery4.jpg'); }
+.thumb5 { background-image: url('images/gallery5.jpg'); }
+.thumb6 { background-image: url('images/gallery6.jpg'); }
+.thumb7 { background-image: url('images/gallery7.jpg'); }
+.thumb8 { background-image: url('images/gallery8.jpg'); }
+.thumb9 { background-image: url('images/gallery9.jpg'); }
+.thumb10 { background-image: url('images/gallery10.jpg'); }
+
 .thumb-card span {
     color: var(--text-main);
     font-size: 0.8rem;
@@ -326,6 +348,7 @@ body {
     word-wrap: break-word;
 }
 
+/* 技術支持區塊 */
 .support-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -362,6 +385,7 @@ body {
     transition: color 0.3s ease;
 }
 
+/* 社群連結區塊 */
 .social-row {
     display: flex;
     justify-content: center;
@@ -393,9 +417,16 @@ footer {
     font-size: 0.85rem;
 }
 
+/* 手機版適配媒體查詢 */
 @media (max-width: 768px) {
-    .navbar { padding: 1.5rem 1rem; }
-    .nav-toggle { display: block; }
+    .navbar {
+        padding: 1.5rem 1rem;
+    }
+
+    .nav-toggle {
+        display: block;
+    }
+
     .nav-links {
         display: none;
         width: 100%;
@@ -409,22 +440,102 @@ footer {
         gap: 1.2rem;
         z-index: 100;
     }
-    .nav-links.active { display: flex; }
-    .hero { min-height: 50vh; padding: 0; margin-bottom: 2.5rem; }
-    .hero-banner { height: 320px; padding: 1rem; border-radius: 0; box-shadow: none; border: none; background-color: transparent; }
-    .hero-content { padding: 1.2rem; background: transparent; backdrop-filter: none; border: none; box-shadow: none; text-shadow: none; }
-    .hero-content h1 { font-size: 1.6rem; margin-bottom: 0.5rem; background: none; -webkit-background-clip: initial; -webkit-text-fill-color: initial; color: var(--accent-neon); text-shadow: none; }
-    .hero-content p { font-size: 0.8rem; color: var(--text-muted); text-shadow: none; }
-    .section { padding: 3.5rem 1.5rem; }
-    .gallery-layout { flex-direction: column; gap: 2rem; }
-    .large-display { width: 100%; }
-    .large-display .card-placeholder { height: 200px; }
-    .thumbnails { display: none; }
-    .promotion-grid { grid-template-columns: 1fr; }
-    .promotion-card { flex-direction: row; text-align: left; align-items: center; padding: 0.8rem; gap: 0.8rem; }
-    .promotion-img { width: 80px; height: 60px; }
-    .promotion-content h3 { font-size: 0.95rem; }
-    .promotion-content p { font-size: 0.75rem; }
-    .social-row { gap: 2.5rem; }
-    .social-icon-link { font-size: 1.8rem; }
+
+    .nav-links.active {
+        display: flex;
+    }
+
+    .hero {
+        min-height: 50vh;
+        padding: 0;
+        margin-bottom: 2.5rem;
+    }
+
+    .hero-banner {
+        height: 320px;
+        padding: 1rem;
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
+        background-color: transparent;
+    }
+
+    .hero-content {
+        padding: 1.2rem;
+        background: transparent;
+        backdrop-filter: none;
+        border: none;
+        box-shadow: none;
+        text-shadow: none;
+    }
+
+    .hero-content h1 {
+        font-size: 1.6rem;
+        margin-bottom: 0.5rem;
+        background: none;
+        -webkit-background-clip: initial;
+        -webkit-text-fill-color: initial;
+        color: var(--accent-neon);
+        text-shadow: none;
+    }
+
+    .hero-content p {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-shadow: none;
+    }
+
+    .section {
+        padding: 3.5rem 1.5rem;
+    }
+
+    .gallery-layout {
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .large-display {
+        width: 100%;
+    }
+
+    .large-display .card-placeholder {
+        height: 200px;
+    }
+
+    .thumbnails {
+        display: none; 
+    }
+
+    .promotion-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .promotion-card {
+        flex-direction: row; 
+        text-align: left;
+        align-items: center;
+        padding: 0.8rem;
+        gap: 0.8rem;
+    }
+
+    .promotion-img {
+        width: 80px;
+        height: 60px;
+    }
+
+    .promotion-content h3 {
+        font-size: 0.95rem;
+    }
+
+    .promotion-content p {
+        font-size: 0.75rem;
+    }
+
+    .social-row {
+        gap: 2.5rem;
+    }
+
+    .social-icon-link {
+        font-size: 1.8rem;
+    }
 }
