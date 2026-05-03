@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio Anshaer | 數位創作與互動工作室</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="#" class="logo">ANSHAER</a>
+
+        <button class="nav-toggle" id="navToggle" onclick="toggleMenu()" aria-label="切換選單">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <ul class="nav-links" id="navLinks">
+            <li><a href="#promotion">推廣</a></li>
+            <li><a href="#gallery">圖片集</a></li>
+            <li><a href="#support">技術支持</a></li>
+            <li><a href="#social">社群連結</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-banner" title="Anshaer Studio 形象視覺">
+            <div class="hero-content">
+                <h1>創新視覺與互動體驗</h1>
+                <p>專注於二次元美術與 3D 模型整合，支持跨平台即時渲染與數位體驗開發。</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="promotion" class="section">
+        <h2 class="section-title">數位推廣與創作</h2>
+        <div class="promotion-grid" id="promotionGrid"></div>
+    </section>
+
+    <section id="gallery" class="section">
+        <h2 class="section-title">圖片集</h2>
+        <div class="gallery-layout">
+            
+            <div class="large-display" id="largeDisplay">
+                <div class="card-placeholder" id="largePlaceholder"></div>
+
+                <div class="gallery-controls">
+                    <button class="nav-arrow prev-arrow" onclick="prevImage()" aria-label="上一張">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="nav-arrow next-arrow" onclick="nextImage()" aria-label="下一張">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <div class="card-content" id="largeContent">
+                    <h3 id="largeTitle">讀取中...</h3>
+                    <p id="largeDesc">正在讀取圖片資料集。</p>
+                </div>
+            </div>
+
+            <div class="thumbnails" id="thumbnails"></div>
+        </div>
+    </section>
+
+    <section id="support" class="section">
+        <h2 class="section-title">技術支持</h2>
+        <div class="support-grid" id="supportGrid"></div>
+    </section>
+
+    <section id="social" class="section">
+        <h2 class="section-title">社群連結</h2>
+        <div class="social-row" id="socialRow"></div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Studio Anshaer. All rights reserved.</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
