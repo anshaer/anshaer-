@@ -93,19 +93,17 @@
         }
     </style>
     <script>
-        // 限制只在授權網域下顯示，排除 localhost 與 127.0.0.1 阻擋
+        // 授權網域，封鎖 localhost 與 127.0.0.1 以外的未授權來源
         const allowedDomains = ["www.anshaer.com", "anshaer.github.io"];
         
         window.onload = function() {
             const currentHost = window.location.hostname;
-            // 如果不在授權網域清單內，直接拒絕
-            if (!allowedDomains.includes(currentHost)) {
+            if (!allowedDomains.includes(constHost) && constHost !== "localhost" && constHost !== "127.0.0.1") {
                 document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:50px;'>存取被拒：未授權的網域</h1>";
                 return;
             }
         };
 
-        // 圖片轉換為 JSON
         function convertToJson() {
             const fileInput = document.getElementById('imageInput').files[0];
             if (!fileInput) {
@@ -120,20 +118,17 @@
                     uploaded_at: new Date().toISOString(),
                     data: base64String
                 };
-                
                 document.getElementById('jsonOutput').value = JSON.stringify(jsonObject, null, 2);
             };
             reader.readAsDataURL(fileInput);
         }
 
-        // 下載產生的 JSON
         function downloadJson() {
             const jsonText = document.getElementById('jsonOutput').value;
             if (!jsonText) {
                 alert('沒有 JSON 資料可以下載。');
                 return;
             }
-            
             const blob = new Blob([jsonText], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -143,7 +138,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // 將 JSON 還原為圖片預覽
         function convertToImage() {
             const jsonText = document.getElementById('jsonInput').value;
             if (!jsonText) {
@@ -166,19 +160,16 @@
 </head>
 <body>
     <h1>網頁圖片加密測試工具</h1>
-    <p style="text-align: center; color: #666; margin-bottom: 10px;">（僅限在授權網域中執行）</p>
+    <p style="text-align: center; color: #666; margin-bottom: 10px;">（僅限在授權網域中使用）</p>
     
     <div class="container">
         <div class="panel">
             <h2>步驟一：圖片轉換為 JSON</h2>
             <label for="imageInput">選擇您要保護的圖片：</label>
             <input type="file" id="imageInput" accept="image/*">
-            
             <button onclick="convertToJson()">轉換為 JSON</button>
-            
             <label for="jsonOutput">產生的 JSON 內容：</label>
             <textarea id="jsonOutput" readonly placeholder="轉換後的內容會顯示在這裡..."></textarea>
-            
             <button onclick="downloadJson()" style="background-color: #28a745;">下載為 JSON 檔案</button>
         </div>
 
@@ -186,9 +177,7 @@
             <h2>步驟二：JSON 還原為圖片</h2>
             <label for="jsonInput">請貼上您的 JSON 資料：</label>
             <textarea id="jsonInput" placeholder='{"uploaded_at": "2026-...", "data": "data:image/png;base64,..."}'></textarea>
-            
             <button onclick="convertToImage()">載入並顯示圖片</button>
-            
             <label>圖片預覽：</label>
             <div class="result-preview">
                 <img id="outputImage" src="" alt="還原後的圖片會顯示在這裡">
