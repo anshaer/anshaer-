@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>整合式網頁編輯器 (內嵌修改版)</title>
+    <title>整合式網頁編輯器 (主題切換版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
@@ -13,7 +13,7 @@
         }
         body { margin: 0; height: 100vh; display: flex; flex-direction: column; background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; }
         
-        #toolbar { display: flex; padding: 10px; gap: 8px; background-color: var(--bg-color); border-bottom: 2px solid var(--border-color); flex-wrap: wrap; }
+        #toolbar { display: flex; padding: 10px 16px; gap: 8px; background-color: var(--bg-color); border-bottom: 2px solid var(--border-color); flex-wrap: wrap; align-items: center; }
         button { padding: 6px 12px; border-radius: 20px; border: none; background: var(--text-color); color: var(--bg-color); cursor: pointer; font-size: 13px; }
         button:hover { background: #5e300d; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -29,7 +29,7 @@
         #preview-container { width: 100%; height: 100%; display: none; background: #eee; transition: width 0.3s ease; display: flex; justify-content: center; }
         #preview-iframe { width: 100%; height: 100%; border: none; background: white; transition: width 0.3s ease; }
 
-        #sidebar { width: 280px; display: flex; flex-direction: column; border-left: 2px solid var(--border-color); }
+        #sidebar { width: 280px; display: flex; flex-direction: column; border-left: 2px solid var(--border-color); background-color: var(--bg-color); }
         #file-list-container { flex: 1; padding: 10px; overflow-y: auto; border-bottom: 2px solid var(--border-color); }
         
         /* 擴大點擊範圍與觸控友善間距 */
@@ -61,6 +61,17 @@
     <span style="border-left: 1px solid #69350F; margin: 0 10px;"></span>
     <button onclick="setDevice('desktop')">電腦模式</button>
     <button onclick="setDevice('mobile')">手機模式</button>
+
+    <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+        <span style="font-size: 12px; font-weight: bold; margin-right: 4px; color: var(--text-color);">主題:</span>
+        <button onclick="setTheme('mint')" style="background: #9cf6c7; border: 2px solid #69350F; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="薄荷巧克力"></button>
+        <button onclick="setTheme('dark-contrast')" style="background: #121212; border: 2px solid #FFFFFF; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="深色高對比"></button>
+        <button onclick="setTheme('light-contrast')" style="background: #FFFFFF; border: 2px solid #000000; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="淺色高對比"></button>
+        <button onclick="setTheme('pink-lolita')" style="background: #ffb3c6; border: 1px solid #883355; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="粉色蘿莉塔"></button>
+        <button onclick="setTheme('blue-lolita')" style="background: #b3d1ff; border: 1px solid #2b5c8f; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="藍色蘿莉塔"></button>
+        <button onclick="setTheme('harmonic-dark')" style="background: #1e1e24; border: 1px solid #3f3f46; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="和諧深配色"></button>
+        <button onclick="setTheme('harmonic-light')" style="background: #f4f4f5; border: 1px solid #a1a1aa; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="和諧淺配色"></button>
+    </div>
 </div>
 
 <div id="main">
@@ -86,10 +97,47 @@
 </div>
 
 <script>
-    let files = {}; 
-    let currentFile = null;
+    // 預設檔案內容
+    let files = {
+        'index.html': { 
+            type: 'text', 
+            content: `<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello World</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            font-size: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello World</h1>
+</body>
+</html>` 
+        }
+    }; 
+
+    let currentFile = 'index.html';
     let isRunning = false;
-    let editingFile = null; // 紀錄目前正在修改路徑/檔名的檔案
+    let editingFile = null;
+
+    // 初始化自動選取與載入檔案列表
+    window.onload = () => {
+        selectFile(currentFile);
+        renderFileList();
+    };
 
     function log(message, type = 'info') {
         const consoleEl = document.getElementById('console');
@@ -97,6 +145,56 @@
         const color = type === 'error' ? '#8B0000' : '#69350F';
         consoleEl.innerHTML += `<div style="color: ${color}; margin-bottom: 4px;">[${time}] ${message}</div>`;
         consoleEl.scrollTop = consoleEl.scrollHeight; 
+    }
+
+    // 切換佈景主題
+    function setTheme(theme) {
+        const root = document.documentElement;
+        switch(theme) {
+            case 'mint':
+                root.style.setProperty('--bg-color', '#9cf6c7');
+                root.style.setProperty('--text-color', '#69350F');
+                root.style.setProperty('--box-bg', 'rgba(255, 255, 255, 0.5)');
+                root.style.setProperty('--border-color', '#69350F');
+                break;
+            case 'dark-contrast':
+                root.style.setProperty('--bg-color', '#121212');
+                root.style.setProperty('--text-color', '#FFFFFF');
+                root.style.setProperty('--box-bg', 'rgba(255, 255, 255, 0.1)');
+                root.style.setProperty('--border-color', '#00FFFF');
+                break;
+            case 'light-contrast':
+                root.style.setProperty('--bg-color', '#FFFFFF');
+                root.style.setProperty('--text-color', '#000000');
+                root.style.setProperty('--box-bg', 'rgba(0, 0, 0, 0.05)');
+                root.style.setProperty('--border-color', '#000000');
+                break;
+            case 'pink-lolita':
+                root.style.setProperty('--bg-color', '#ffe6f0');
+                root.style.setProperty('--text-color', '#883355');
+                root.style.setProperty('--box-bg', 'rgba(255, 255, 255, 0.6)');
+                root.style.setProperty('--border-color', '#883355');
+                break;
+            case 'blue-lolita':
+                root.style.setProperty('--bg-color', '#e6f2ff');
+                root.style.setProperty('--text-color', '#2b5c8f');
+                root.style.setProperty('--box-bg', 'rgba(255, 255, 255, 0.6)');
+                root.style.setProperty('--border-color', '#2b5c8f');
+                break;
+            case 'harmonic-dark':
+                root.style.setProperty('--bg-color', '#1e1e24');
+                root.style.setProperty('--text-color', '#d4d4d8');
+                root.style.setProperty('--box-bg', 'rgba(255, 255, 255, 0.05)');
+                root.style.setProperty('--border-color', '#3f3f46');
+                break;
+            case 'harmonic-light':
+                root.style.setProperty('--bg-color', '#f4f4f5');
+                root.style.setProperty('--text-color', '#18181b');
+                root.style.setProperty('--box-bg', 'rgba(0, 0, 0, 0.03)');
+                root.style.setProperty('--border-color', '#a1a1aa');
+                break;
+        }
+        log(`已切換主題設定`);
     }
 
     function createNewFile() {
@@ -120,20 +218,17 @@
         selectFile(filename);
     }
 
-    // 觸發修改名稱模式
     function toggleRename(filename) {
         if (isRunning) return;
         editingFile = filename;
         renderFileList();
     }
 
-    // 取消修改
     function cancelRename() {
         editingFile = null;
         renderFileList();
     }
 
-    // 儲存修改後的名稱/路徑
     function saveRename(oldName) {
         const input = document.getElementById('rename-input');
         const newName = input.value.trim().replace(/^\/+/, '');
@@ -148,7 +243,6 @@
             return;
         }
         
-        // 遷移檔案資料
         files[newName] = files[oldName];
         if (newName !== oldName) {
             delete files[oldName];
@@ -236,7 +330,6 @@
             li.className = 'file-item';
             
             if (editingFile === filename) {
-                // 進入編輯狀態，顯示輸入框
                 li.style.flexDirection = 'column';
                 li.style.alignItems = 'flex-start';
                 li.style.gap = '6px';
@@ -264,9 +357,9 @@
                         ${markerHtml}
                     </div>
                     <div class="file-actions">
-                        <span onclick="toggleRename('${filename}')" class="file-action-btn" style="cursor:pointer" title="重新命名">📝</span>
-                        <span onclick="downloadFile('${filename}')" class="file-action-btn" style="cursor:pointer" title="下載">💾</span>
-                        <span onclick="deleteFile('${filename}')" class="file-action-btn" style="cursor:pointer; color:#8B0000" title="刪除">❌</span>
+                        <span onclick="toggleRename('${filename}')" class="file-action-btn" style="cursor:pointer" title="重新命名">✏️</span>
+                        <span onclick="downloadFile('${filename}')" class="file-action-btn" style="cursor:pointer" title="下載">↓</span>
+                        <span onclick="deleteFile('${filename}')" class="file-action-btn" style="cursor:pointer; color:#8B0000" title="刪除">×</span>
                     </div>
                 `;
             }
@@ -282,7 +375,7 @@
             folderHeader.style.color = 'var(--text-color)';
             folderHeader.style.borderBottom = '1px dashed var(--border-color)';
             folderHeader.style.marginTop = '4px';
-            folderHeader.innerHTML = `📂 ${folder}`;
+            folderHeader.innerHTML = `📁 ${folder}`;
             list.appendChild(folderHeader);
 
             folders[folder].forEach(filename => {
@@ -334,7 +427,7 @@
     function selectFile(filename) {
         if (isRunning) return;
         currentFile = filename;
-        editingFile = null; // 切換檔案時自動關閉其他編輯狀態
+        editingFile = null;
         
         const fileData = files[filename];
         const editor = document.getElementById('editor-text');
