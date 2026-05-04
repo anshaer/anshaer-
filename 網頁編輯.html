@@ -53,8 +53,16 @@
     <button onclick="runCode()">運行▶️</button>
     <button onclick="stopCode()">暫停⏸️</button>
     <button onclick="downloadAll()">下載全部📥</button>
-    <button onclick="document.getElementById('file-input').click()">上傳檔案/資料夾📤</button>
-    <input type="file" id="file-input" multiple webkitdirectory directory style="display:none" onchange="handleFiles(this.files)">
+    
+    <!-- 分開成兩個按鈕 -->
+    <button onclick="document.getElementById('file-input').click()">📄 上傳檔案</button>
+    <button onclick="document.getElementById('folder-input').click()">📁 上傳資料夾</button>
+    
+    <!-- 一般檔案上傳 -->
+    <input type="file" id="file-input" multiple style="display:none" onchange="handleFiles(this.files, false)">
+    <!-- 資料夾上傳 -->
+    <input type="file" id="folder-input" multiple webkitdirectory directory style="display:none" onchange="handleFiles(this.files, true)">
+    
     <span style="border-left: 1px solid #69350F; margin: 0 10px;"></span>
     <button onclick="setDevice('desktop')">電腦模式🖥️</button>
     <button onclick="setDevice('mobile')">手機模式📱</button>
@@ -148,15 +156,15 @@
         selectFile(filename);
     }
 
-    // === 重點修改：支援上傳資料夾 ===
-    function handleFiles(fileList) {
+    // === 修改重點：區分檔案與資料夾上傳 ===
+    function handleFiles(fileList, isFolder) {
         let count = 0;
         Array.from(fileList).forEach(file => {
             const reader = new FileReader();
             const isImage = file.type.startsWith('image/') || file.name.endsWith('.svg');
             
-            // 使用 webkitRelativePath 保留資料夾結構
-            const path = file.webkitRelativePath || file.name;
+            // 資料夾模式使用 webkitRelativePath，否則只用檔名
+            const path = (isFolder && file.webkitRelativePath) ? file.webkitRelativePath : file.name;
 
             reader.onload = (e) => {
                 files[path] = { 
@@ -174,7 +182,7 @@
         
         if (fileList.length > 0) {
             setTimeout(() => {
-                log(`✅ 共上傳 ${fileList.length} 個檔案/資料夾`, 'info');
+                log(`✅ 成功上傳 ${fileList.length} 個${isFolder ? '資料夾檔案' : '檔案'}`, 'info');
             }, 300);
         }
     }
@@ -183,9 +191,7 @@
         const fileData = files[filename];
         if (!fileData) return;
 
-        if (currentFile === filename && fileData.type === 'text') {
-            saveCurrentFile();
-        }
+        if (currentFile === filename && fileData.type === 'text') saveCurrentFile();
 
         const fileName = filename.substring(filename.lastIndexOf('/') + 1);
         let downloadUrl = fileData.type === 'image' 
@@ -242,7 +248,7 @@
         });
     }
 
-    // 以下函數保持不變（為保持完整性全部保留）
+    // 其餘函數（保持不變）
     function toggleRename(filename) {
         if (isRunning) return;
         editingFile = filename;
