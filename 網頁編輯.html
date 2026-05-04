@@ -358,8 +358,8 @@
                     </div>
                     <div class="file-actions">
                         <span onclick="toggleRename('${filename}')" class="file-action-btn" style="cursor:pointer" title="重新命名">✏️</span>
-                        <span onclick="downloadFile('${filename}')" class="file-action-btn" style="cursor:pointer" title="下載">↓</span>
-                        <span onclick="deleteFile('${filename}')" class="file-action-btn" style="cursor:pointer; color:#8B0000" title="刪除">×</span>
+                        <span onclick="downloadFile('${filename}')" class="file-action-btn" style="cursor:pointer" title="下載">💾</span>
+                        <span onclick="deleteFile('${filename}')" class="file-action-btn" style="cursor:pointer; color:#8B0000" title="刪除">❌</span>
                     </div>
                 `;
             }
@@ -375,7 +375,7 @@
             folderHeader.style.color = 'var(--text-color)';
             folderHeader.style.borderBottom = '1px dashed var(--border-color)';
             folderHeader.style.marginTop = '4px';
-            folderHeader.innerHTML = `📁 ${folder}`;
+            folderHeader.innerHTML = `📂 ${folder}`;
             list.appendChild(folderHeader);
 
             folders[folder].forEach(filename => {
