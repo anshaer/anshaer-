@@ -19,7 +19,6 @@
         button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         #main { display: flex; flex: 1; overflow: hidden; }
-        
         #display-area { flex: 1; border-right: 2px solid var(--border-color); padding: 10px; display: flex; flex-direction: column; position: relative;}
         
         #editor-text { width: 100%; height: 100%; resize: none; background: var(--box-bg); border: none; padding: 10px; color: var(--text-color); font-family: monospace; display: block; box-sizing: border-box; overflow-x: hidden; }
@@ -54,8 +53,8 @@
     <button onclick="runCode()">運行▶️</button>
     <button onclick="stopCode()">暫停⏸️</button>
     <button onclick="downloadAll()">下載全部📥</button>
-    <button onclick="document.getElementById('file-input').click()">檔案上傳📤</button>
-    <input type="file" id="file-input" multiple style="display:none" onchange="handleFiles(this.files)">
+    <button onclick="document.getElementById('file-input').click()">上傳檔案/資料夾📤</button>
+    <input type="file" id="file-input" multiple webkitdirectory directory style="display:none" onchange="handleFiles(this.files)">
     <span style="border-left: 1px solid #69350F; margin: 0 10px;"></span>
     <button onclick="setDevice('desktop')">電腦模式🖥️</button>
     <button onclick="setDevice('mobile')">手機模式📱</button>
@@ -95,33 +94,13 @@
 </div>
 
 <script>
-    // 預設檔案
     let files = {
         'index.html': { 
             type: 'text', 
             content: `<!DOCTYPE html>
 <html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
-    <title>Hello World</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-        }
-        h1 { font-size: 3rem; }
-    </style>
-</head>
-<body>
-    <h1>Hello World</h1>
-</body>
-</html>` 
+<head><meta charset="UTF-8"><title>Hello World</title></head>
+<body><h1>Hello World</h1></body></html>` 
         }
     }; 
 
@@ -145,48 +124,13 @@
     function setTheme(theme) {
         const root = document.documentElement;
         switch(theme) {
-            case 'mint':
-                root.style.setProperty('--bg-color', '#9cf6c7');
-                root.style.setProperty('--text-color', '#69350F');
-                root.style.setProperty('--box-bg', 'rgba(255, 255, 255, 0.5)');
-                root.style.setProperty('--border-color', '#69350F');
-                break;
-            case 'dark-contrast':
-                root.style.setProperty('--bg-color', '#121212');
-                root.style.setProperty('--text-color', '#FFFFFF');
-                root.style.setProperty('--box-bg', 'rgba(255, 255, 255, 0.1)');
-                root.style.setProperty('--border-color', '#00FFFF');
-                break;
-            case 'light-contrast':
-                root.style.setProperty('--bg-color', '#FFFFFF');
-                root.style.setProperty('--text-color', '#000000');
-                root.style.setProperty('--box-bg', 'rgba(0, 0, 0, 0.05)');
-                root.style.setProperty('--border-color', '#000000');
-                break;
-            case 'pink-lolita':
-                root.style.setProperty('--bg-color', '#ffe6f0');
-                root.style.setProperty('--text-color', '#883355');
-                root.style.setProperty('--box-bg', 'rgba(255, 255, 255, 0.6)');
-                root.style.setProperty('--border-color', '#883355');
-                break;
-            case 'blue-lolita':
-                root.style.setProperty('--bg-color', '#e6f2ff');
-                root.style.setProperty('--text-color', '#2b5c8f');
-                root.style.setProperty('--box-bg', 'rgba(255, 255, 255, 0.6)');
-                root.style.setProperty('--border-color', '#2b5c8f');
-                break;
-            case 'harmonic-dark':
-                root.style.setProperty('--bg-color', '#1e1e24');
-                root.style.setProperty('--text-color', '#d4d4d8');
-                root.style.setProperty('--box-bg', 'rgba(255, 255, 255, 0.05)');
-                root.style.setProperty('--border-color', '#3f3f46');
-                break;
-            case 'harmonic-light':
-                root.style.setProperty('--bg-color', '#f4f4f5');
-                root.style.setProperty('--text-color', '#18181b');
-                root.style.setProperty('--box-bg', 'rgba(0, 0, 0, 0.03)');
-                root.style.setProperty('--border-color', '#a1a1aa');
-                break;
+            case 'mint': root.style.setProperty('--bg-color', '#9cf6c7'); root.style.setProperty('--text-color', '#69350F'); root.style.setProperty('--box-bg', 'rgba(255,255,255,0.5)'); root.style.setProperty('--border-color', '#69350F'); break;
+            case 'dark-contrast': root.style.setProperty('--bg-color', '#121212'); root.style.setProperty('--text-color', '#FFFFFF'); root.style.setProperty('--box-bg', 'rgba(255,255,255,0.1)'); root.style.setProperty('--border-color', '#00FFFF'); break;
+            case 'light-contrast': root.style.setProperty('--bg-color', '#FFFFFF'); root.style.setProperty('--text-color', '#000000'); root.style.setProperty('--box-bg', 'rgba(0,0,0,0.05)'); root.style.setProperty('--border-color', '#000000'); break;
+            case 'pink-lolita': root.style.setProperty('--bg-color', '#ffe6f0'); root.style.setProperty('--text-color', '#883355'); root.style.setProperty('--box-bg', 'rgba(255,255,255,0.6)'); root.style.setProperty('--border-color', '#883355'); break;
+            case 'blue-lolita': root.style.setProperty('--bg-color', '#e6f2ff'); root.style.setProperty('--text-color', '#2b5c8f'); root.style.setProperty('--box-bg', 'rgba(255,255,255,0.6)'); root.style.setProperty('--border-color', '#2b5c8f'); break;
+            case 'harmonic-dark': root.style.setProperty('--bg-color', '#1e1e24'); root.style.setProperty('--text-color', '#d4d4d8'); root.style.setProperty('--box-bg', 'rgba(255,255,255,0.05)'); root.style.setProperty('--border-color', '#3f3f46'); break;
+            case 'harmonic-light': root.style.setProperty('--bg-color', '#f4f4f5'); root.style.setProperty('--text-color', '#18181b'); root.style.setProperty('--box-bg', 'rgba(0,0,0,0.03)'); root.style.setProperty('--border-color', '#a1a1aa'); break;
         }
         log(`已切換主題`);
     }
@@ -194,71 +138,59 @@
     function createNewFile() {
         const input = document.getElementById('new-file-name');
         const filename = input.value.trim().replace(/^\/+/, '');
-        if (!filename) {
-            log('錯誤: 請輸入檔案名稱或路徑', 'error');
-            return;
-        }
-        if (files[filename]) {
-            log('錯誤: 檔案已存在', 'error');
-            return;
-        }
+        if (!filename) return log('錯誤: 請輸入檔案名稱', 'error');
+        if (files[filename]) return log('錯誤: 檔案已存在', 'error');
+        
         files[filename] = { type: 'text', content: '' };
-        log(`已建立檔案: ${filename}`);
+        log(`已建立: ${filename}`);
         input.value = '';
         renderFileList();
         selectFile(filename);
     }
 
-    function toggleRename(filename) {
-        if (isRunning) return;
-        editingFile = filename;
-        renderFileList();
-    }
+    // === 重點修改：支援上傳資料夾 ===
+    function handleFiles(fileList) {
+        let count = 0;
+        Array.from(fileList).forEach(file => {
+            const reader = new FileReader();
+            const isImage = file.type.startsWith('image/') || file.name.endsWith('.svg');
+            
+            // 使用 webkitRelativePath 保留資料夾結構
+            const path = file.webkitRelativePath || file.name;
 
-    function cancelRename() {
-        editingFile = null;
-        renderFileList();
-    }
-
-    function saveRename(oldName) {
-        const input = document.getElementById('rename-input');
-        const newName = input.value.trim().replace(/^\/+/, '');
-        if (!newName) {
-            log('錯誤: 檔案名稱不能為空', 'error');
-            return;
+            reader.onload = (e) => {
+                files[path] = { 
+                    type: isImage ? 'image' : 'text', 
+                    content: e.target.result 
+                };
+                count++;
+                log(`已載入: ${path}`);
+                renderFileList();
+            };
+            
+            if (isImage) reader.readAsDataURL(file);
+            else reader.readAsText(file);
+        });
+        
+        if (fileList.length > 0) {
+            setTimeout(() => {
+                log(`✅ 共上傳 ${fileList.length} 個檔案/資料夾`, 'info');
+            }, 300);
         }
-        if (newName !== oldName && files[newName]) {
-            log(`錯誤: 檔案已存在 (${newName})`, 'error');
-            return;
-        }
-        files[newName] = files[oldName];
-        if (newName !== oldName) delete files[oldName];
-        if (currentFile === oldName) currentFile = newName;
-        editingFile = null;
-        log(`已重新命名：${oldName} → ${newName}`);
-        renderFileList();
-        selectFile(currentFile);
     }
 
-    // === 修正重點：下載單一檔案 ===
     function downloadFile(filename) {
         const fileData = files[filename];
         if (!fileData) return;
 
-        // 如果是目前正在編輯的文字檔，先自動儲存最新內容
         if (currentFile === filename && fileData.type === 'text') {
             saveCurrentFile();
         }
 
         const fileName = filename.substring(filename.lastIndexOf('/') + 1);
-        let downloadUrl;
-
-        if (fileData.type === 'image') {
-            downloadUrl = fileData.content;
-        } else {
-            const blob = new Blob([fileData.content], { type: 'text/plain;charset=utf-8' });
-            downloadUrl = URL.createObjectURL(blob);
-        }
+        let downloadUrl = fileData.type === 'image' 
+            ? fileData.content 
+            : URL.createObjectURL(new Blob([fileData.content], { type: 'text/plain;charset=utf-8' }));
 
         const a = document.createElement('a');
         a.href = downloadUrl;
@@ -267,10 +199,7 @@
         a.click();
         document.body.removeChild(a);
 
-        if (fileData.type !== 'image') {
-            setTimeout(() => URL.revokeObjectURL(downloadUrl), 150);
-        }
-
+        if (fileData.type !== 'image') setTimeout(() => URL.revokeObjectURL(downloadUrl), 150);
         log(`✅ 已下載: ${filename}`);
     }
 
@@ -293,15 +222,13 @@
     }
 
     function downloadAll() {
-        if (Object.keys(files).length === 0) {
-            log('沒有檔案可下載', 'error');
-            return;
-        }
+        if (Object.keys(files).length === 0) return log('沒有檔案可下載', 'error');
+        
         const zip = new JSZip();
         for (const filename in files) {
             if (files[filename].type === 'image') {
-                const base64Data = files[filename].content.split(',')[1];
-                zip.file(filename, base64Data, {base64: true});
+                const base64 = files[filename].content.split(',')[1];
+                zip.file(filename, base64, {base64: true});
             } else {
                 zip.file(filename, files[filename].content);
             }
@@ -315,33 +242,37 @@
         });
     }
 
-    function setDevice(mode) {
-        const iframe = document.getElementById('preview-iframe');
-        if (mode === 'mobile') {
-            iframe.style.width = '375px';
-            log('已切換至手機模式 (375px)');
-        } else {
-            iframe.style.width = '100%';
-            log('已切換至電腦模式');
-        }
+    // 以下函數保持不變（為保持完整性全部保留）
+    function toggleRename(filename) {
+        if (isRunning) return;
+        editingFile = filename;
+        renderFileList();
     }
 
-    function handleFiles(fileList) {
-        Array.from(fileList).forEach(file => {
-            const reader = new FileReader();
-            const isImage = file.type.startsWith('image/') || file.name.endsWith('.svg');
-            
-            reader.onload = (e) => {
-                files[file.name] = { 
-                    type: isImage ? 'image' : 'text', 
-                    content: e.target.result 
-                };
-                log(`已載入: ${file.name}`);
-                renderFileList();
-            };
-            if (isImage) reader.readAsDataURL(file);
-            else reader.readAsText(file);
-        });
+    function cancelRename() {
+        editingFile = null;
+        renderFileList();
+    }
+
+    function saveRename(oldName) {
+        const input = document.getElementById('rename-input');
+        const newName = input.value.trim().replace(/^\/+/, '');
+        if (!newName) return log('錯誤: 檔案名稱不能為空', 'error');
+        if (newName !== oldName && files[newName]) return log(`錯誤: 檔案已存在`, 'error');
+        
+        files[newName] = files[oldName];
+        if (newName !== oldName) delete files[oldName];
+        if (currentFile === oldName) currentFile = newName;
+        editingFile = null;
+        log(`已重新命名：${oldName} → ${newName}`);
+        renderFileList();
+        selectFile(currentFile);
+    }
+
+    function setDevice(mode) {
+        const iframe = document.getElementById('preview-iframe');
+        iframe.style.width = mode === 'mobile' ? '375px' : '100%';
+        log(mode === 'mobile' ? '已切換至手機模式 (375px)' : '已切換至電腦模式');
     }
 
     function renderFileList() {
@@ -353,30 +284,20 @@
 
         Object.keys(files).forEach(filename => {
             if (filename.includes('/')) {
-                const folderName = filename.substring(0, filename.lastIndexOf('/'));
-                if (!folders[folderName]) folders[folderName] = [];
-                folders[folderName].push(filename);
-            } else {
-                rootFiles.push(filename);
-            }
+                const folder = filename.substring(0, filename.lastIndexOf('/'));
+                if (!folders[folder]) folders[folder] = [];
+                folders[folder].push(filename);
+            } else rootFiles.push(filename);
         });
 
-        // 根目錄檔案
-        rootFiles.forEach(filename => addFileItem(filename, list));
-
-        // 資料夾內檔案
+        rootFiles.forEach(f => addFileItem(f, list));
         Object.keys(folders).forEach(folder => {
-            const folderHeader = document.createElement('div');
-            folderHeader.style.padding = '8px';
-            folderHeader.style.fontWeight = 'bold';
-            folderHeader.style.fontSize = '12px';
-            folderHeader.style.color = 'var(--text-color)';
-            folderHeader.style.borderBottom = '1px dashed var(--border-color)';
-            folderHeader.style.marginTop = '4px';
-            folderHeader.innerHTML = `📂 ${folder}`;
-            list.appendChild(folderHeader);
-
-            folders[folder].forEach(filename => addFileItem(filename, list, true));
+            const h = document.createElement('div');
+            h.style.padding = '8px'; h.style.fontWeight = 'bold'; h.style.fontSize = '12px';
+            h.style.borderBottom = '1px dashed var(--border-color)'; h.style.marginTop = '4px';
+            h.textContent = `📂 ${folder}`;
+            list.appendChild(h);
+            folders[folder].forEach(f => addFileItem(f, list, true));
         });
     }
 
@@ -386,39 +307,30 @@
         if (isSub) li.style.paddingLeft = '24px';
 
         if (editingFile === filename) {
-            li.style.flexDirection = 'column';
-            li.style.alignItems = 'flex-start';
-            li.style.gap = '6px';
+            li.style.flexDirection = 'column'; li.style.alignItems = 'flex-start'; li.style.gap = '6px';
             li.innerHTML = `
                 <div style="display: flex; align-items: center; width: 100%; justify-content: space-between;">
-                    <input type="text" id="rename-input" value="${filename}" style="padding: 4px; font-size: 12px; width: 65%; border: 1px solid var(--border-color); border-radius: 4px; background: var(--box-bg); color: var(--text-color);">
-                    <div style="display: flex; gap: 4px;">
-                        <button onclick="saveRename('${filename}')" style="font-size: 10px; padding: 2px 6px;">確定</button>
-                        <button onclick="cancelRename()" style="font-size: 10px; padding: 2px 6px; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--text-color);">取消</button>
+                    <input type="text" id="rename-input" value="${filename}" style="padding:4px;font-size:12px;width:65%;border:1px solid var(--border-color);border-radius:4px;background:var(--box-bg);color:var(--text-color);">
+                    <div style="display:flex;gap:4px;">
+                        <button onclick="saveRename('${filename}')" style="font-size:10px;padding:2px 6px;">確定</button>
+                        <button onclick="cancelRename()" style="font-size:10px;padding:2px 6px;background:var(--bg-color);color:var(--text-color);border:1px solid var(--text-color);">取消</button>
                     </div>
-                </div>
-            `;
+                </div>`;
         } else {
-            li.onclick = (e) => {
-                if (e.target.closest('.file-actions')) return;
-                selectFile(filename);
-            };
-
+            li.onclick = (e) => { if (!e.target.closest('.file-actions')) selectFile(filename); };
             const isCurrent = (filename === currentFile) && !isRunning;
-            const marker = isCurrent ? `<span style="color: var(--text-color); font-size: 10px; font-weight: bold; margin-left: 6px;">(編輯中)</span>` : '';
+            const marker = isCurrent ? `<span style="color:var(--text-color);font-size:10px;font-weight:bold;margin-left:6px;">(編輯中)</span>` : '';
             const shortName = filename.substring(filename.lastIndexOf('/') + 1);
 
             li.innerHTML = `
-                <div style="display: flex; align-items: center;">
-                    <span>${isSub ? shortName : filename}</span>
-                    ${marker}
+                <div style="display:flex;align-items:center;">
+                    <span>${isSub ? shortName : filename}</span>${marker}
                 </div>
                 <div class="file-actions">
                     <span onclick="toggleRename('${filename}')" class="file-action-btn" title="重新命名">📝</span>
                     <span onclick="downloadFile('${filename}')" class="file-action-btn" title="下載">📥</span>
                     <span onclick="deleteFile('${filename}')" class="file-action-btn" style="color:#8B0000" title="刪除">❌</span>
-                </div>
-            `;
+                </div>`;
         }
         container.appendChild(li);
     }
@@ -444,35 +356,26 @@
             document.getElementById('save-btn').disabled = false;
         }
         renderFileList();
-        log(`已載入: ${filename}`);
     }
 
     function runCode() {
-        if (!files['index.html']) {
-            log('錯誤: 未找到 index.html', 'error');
-            return;
-        }
+        if (!files['index.html']) return log('錯誤: 未找到 index.html', 'error');
         isRunning = true;
         renderFileList();
-
         document.getElementById('editor-text').style.display = 'none';
         document.getElementById('image-preview').style.display = 'none';
         document.getElementById('preview-container').style.display = 'flex';
 
         const iframe = document.getElementById('preview-iframe');
         const doc = iframe.contentDocument || iframe.contentWindow.document;
-        let htmlContent = files['index.html'].content;
+        let html = files['index.html'].content;
 
-        // 替換圖片路徑
         Object.keys(files).forEach(f => {
-            if (files[f].type === 'image') {
-                htmlContent = htmlContent.replaceAll(f, files[f].content);
-            }
+            if (files[f].type === 'image') html = html.replaceAll(f, files[f].content);
         });
 
         doc.open();
-        doc.write(htmlContent);
-        
+        doc.write(html);
         Object.keys(files).forEach(f => {
             if (f.endsWith('.css')) doc.head.innerHTML += `<style>${files[f].content}</style>`;
             if (f.endsWith('.js')) doc.body.innerHTML += `<script>${files[f].content}<\/script>`;
@@ -485,13 +388,9 @@
         isRunning = false;
         renderFileList();
         document.getElementById('preview-container').style.display = 'none';
-        
-        const fileData = files[currentFile];
-        if (fileData && fileData.type === 'image') {
-            document.getElementById('image-preview').style.display = 'block';
-        } else {
-            document.getElementById('editor-text').style.display = 'block';
-        }
+        const fd = files[currentFile];
+        if (fd?.type === 'image') document.getElementById('image-preview').style.display = 'block';
+        else document.getElementById('editor-text').style.display = 'block';
         log('已停止預覽');
     }
 </script>
