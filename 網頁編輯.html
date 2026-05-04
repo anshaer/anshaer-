@@ -95,6 +95,7 @@
 </div>
 
 <script>
+    // 預設檔案
     let files = {
         'index.html': { 
             type: 'text', 
@@ -104,7 +105,16 @@
     <meta charset="UTF-8">
     <title>Hello World</title>
     <style>
-        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; font-family: sans-serif; background-color: #f4f4f9; color: #333; }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+        }
         h1 { font-size: 3rem; }
     </style>
 </head>
@@ -134,7 +144,6 @@
 
     function setTheme(theme) {
         const root = document.documentElement;
-        // ... (主題切換程式碼保持不變)
         switch(theme) {
             case 'mint':
                 root.style.setProperty('--bg-color', '#9cf6c7');
@@ -185,21 +194,58 @@
     function createNewFile() {
         const input = document.getElementById('new-file-name');
         const filename = input.value.trim().replace(/^\/+/, '');
-        if (!filename) { log('錯誤: 請輸入檔案名稱', 'error'); return; }
-        if (files[filename]) { log('錯誤: 檔案已存在', 'error'); return; }
-
+        if (!filename) {
+            log('錯誤: 請輸入檔案名稱或路徑', 'error');
+            return;
+        }
+        if (files[filename]) {
+            log('錯誤: 檔案已存在', 'error');
+            return;
+        }
         files[filename] = { type: 'text', content: '' };
-        log(`已建立: ${filename}`);
+        log(`已建立檔案: ${filename}`);
         input.value = '';
         renderFileList();
         selectFile(filename);
     }
 
+    function toggleRename(filename) {
+        if (isRunning) return;
+        editingFile = filename;
+        renderFileList();
+    }
+
+    function cancelRename() {
+        editingFile = null;
+        renderFileList();
+    }
+
+    function saveRename(oldName) {
+        const input = document.getElementById('rename-input');
+        const newName = input.value.trim().replace(/^\/+/, '');
+        if (!newName) {
+            log('錯誤: 檔案名稱不能為空', 'error');
+            return;
+        }
+        if (newName !== oldName && files[newName]) {
+            log(`錯誤: 檔案已存在 (${newName})`, 'error');
+            return;
+        }
+        files[newName] = files[oldName];
+        if (newName !== oldName) delete files[oldName];
+        if (currentFile === oldName) currentFile = newName;
+        editingFile = null;
+        log(`已重新命名：${oldName} → ${newName}`);
+        renderFileList();
+        selectFile(currentFile);
+    }
+
+    // === 修正重點：下載單一檔案 ===
     function downloadFile(filename) {
         const fileData = files[filename];
         if (!fileData) return;
 
-        // 如果是目前正在編輯的文字檔，先自動儲存
+        // 如果是目前正在編輯的文字檔，先自動儲存最新內容
         if (currentFile === filename && fileData.type === 'text') {
             saveCurrentFile();
         }
@@ -235,16 +281,12 @@
         }
     }
 
-    // 其他函數（renderFileList、selectFile、deleteFile 等）保持不變
-    // 為了減少篇幅，這裡省略未修改的部分，你可以直接把上面替換進去即可
-
-    // ...（其餘程式碼與你原本提供的一樣，僅替換 downloadFile 和 saveCurrentFile）
-
     function deleteFile(filename) {
         delete files[filename];
         log(`已刪除: ${filename}`, 'error');
         if (currentFile === filename) {
-            currentFile = Object.keys(files)[0] || null;
+            const remaining = Object.keys(files);
+            currentFile = remaining.length > 0 ? remaining[0] : null;
             if (currentFile) selectFile(currentFile);
         }
         renderFileList();
@@ -257,12 +299,11 @@
         }
         const zip = new JSZip();
         for (const filename in files) {
-            const content = files[filename].content;
             if (files[filename].type === 'image') {
-                const base64Data = content.split(',')[1];
+                const base64Data = files[filename].content.split(',')[1];
                 zip.file(filename, base64Data, {base64: true});
             } else {
-                zip.file(filename, content);
+                zip.file(filename, files[filename].content);
             }
         }
         zip.generateAsync({type: 'blob'}).then(blob => {
@@ -274,5 +315,185 @@
         });
     }
 
-    // 其餘函數請保留你原本的（setDevice、handleFiles、renderFileList、selectFile、runCode、stopCode 等）
-    // 如果你需要我把「完整無缺版」一次貼出來，請再告訴我，我會直接給你最完整的單一檔案。
+    function setDevice(mode) {
+        const iframe = document.getElementById('preview-iframe');
+        if (mode === 'mobile') {
+            iframe.style.width = '375px';
+            log('已切換至手機模式 (375px)');
+        } else {
+            iframe.style.width = '100%';
+            log('已切換至電腦模式');
+        }
+    }
+
+    function handleFiles(fileList) {
+        Array.from(fileList).forEach(file => {
+            const reader = new FileReader();
+            const isImage = file.type.startsWith('image/') || file.name.endsWith('.svg');
+            
+            reader.onload = (e) => {
+                files[file.name] = { 
+                    type: isImage ? 'image' : 'text', 
+                    content: e.target.result 
+                };
+                log(`已載入: ${file.name}`);
+                renderFileList();
+            };
+            if (isImage) reader.readAsDataURL(file);
+            else reader.readAsText(file);
+        });
+    }
+
+    function renderFileList() {
+        const list = document.getElementById('files');
+        list.innerHTML = '';
+
+        const rootFiles = [];
+        const folders = {};
+
+        Object.keys(files).forEach(filename => {
+            if (filename.includes('/')) {
+                const folderName = filename.substring(0, filename.lastIndexOf('/'));
+                if (!folders[folderName]) folders[folderName] = [];
+                folders[folderName].push(filename);
+            } else {
+                rootFiles.push(filename);
+            }
+        });
+
+        // 根目錄檔案
+        rootFiles.forEach(filename => addFileItem(filename, list));
+
+        // 資料夾內檔案
+        Object.keys(folders).forEach(folder => {
+            const folderHeader = document.createElement('div');
+            folderHeader.style.padding = '8px';
+            folderHeader.style.fontWeight = 'bold';
+            folderHeader.style.fontSize = '12px';
+            folderHeader.style.color = 'var(--text-color)';
+            folderHeader.style.borderBottom = '1px dashed var(--border-color)';
+            folderHeader.style.marginTop = '4px';
+            folderHeader.innerHTML = `📂 ${folder}`;
+            list.appendChild(folderHeader);
+
+            folders[folder].forEach(filename => addFileItem(filename, list, true));
+        });
+    }
+
+    function addFileItem(filename, container, isSub = false) {
+        const li = document.createElement('li');
+        li.className = 'file-item';
+        if (isSub) li.style.paddingLeft = '24px';
+
+        if (editingFile === filename) {
+            li.style.flexDirection = 'column';
+            li.style.alignItems = 'flex-start';
+            li.style.gap = '6px';
+            li.innerHTML = `
+                <div style="display: flex; align-items: center; width: 100%; justify-content: space-between;">
+                    <input type="text" id="rename-input" value="${filename}" style="padding: 4px; font-size: 12px; width: 65%; border: 1px solid var(--border-color); border-radius: 4px; background: var(--box-bg); color: var(--text-color);">
+                    <div style="display: flex; gap: 4px;">
+                        <button onclick="saveRename('${filename}')" style="font-size: 10px; padding: 2px 6px;">確定</button>
+                        <button onclick="cancelRename()" style="font-size: 10px; padding: 2px 6px; background: var(--bg-color); color: var(--text-color); border: 1px solid var(--text-color);">取消</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            li.onclick = (e) => {
+                if (e.target.closest('.file-actions')) return;
+                selectFile(filename);
+            };
+
+            const isCurrent = (filename === currentFile) && !isRunning;
+            const marker = isCurrent ? `<span style="color: var(--text-color); font-size: 10px; font-weight: bold; margin-left: 6px;">(編輯中)</span>` : '';
+            const shortName = filename.substring(filename.lastIndexOf('/') + 1);
+
+            li.innerHTML = `
+                <div style="display: flex; align-items: center;">
+                    <span>${isSub ? shortName : filename}</span>
+                    ${marker}
+                </div>
+                <div class="file-actions">
+                    <span onclick="toggleRename('${filename}')" class="file-action-btn" title="重新命名">📝</span>
+                    <span onclick="downloadFile('${filename}')" class="file-action-btn" title="下載">📥</span>
+                    <span onclick="deleteFile('${filename}')" class="file-action-btn" style="color:#8B0000" title="刪除">❌</span>
+                </div>
+            `;
+        }
+        container.appendChild(li);
+    }
+
+    function selectFile(filename) {
+        if (isRunning) return;
+        currentFile = filename;
+        editingFile = null;
+        
+        const fileData = files[filename];
+        const editor = document.getElementById('editor-text');
+        const img = document.getElementById('image-preview');
+
+        if (fileData.type === 'image') {
+            editor.style.display = 'none';
+            img.style.display = 'block';
+            img.src = fileData.content;
+            document.getElementById('save-btn').disabled = true;
+        } else {
+            editor.style.display = 'block';
+            img.style.display = 'none';
+            editor.value = fileData.content;
+            document.getElementById('save-btn').disabled = false;
+        }
+        renderFileList();
+        log(`已載入: ${filename}`);
+    }
+
+    function runCode() {
+        if (!files['index.html']) {
+            log('錯誤: 未找到 index.html', 'error');
+            return;
+        }
+        isRunning = true;
+        renderFileList();
+
+        document.getElementById('editor-text').style.display = 'none';
+        document.getElementById('image-preview').style.display = 'none';
+        document.getElementById('preview-container').style.display = 'flex';
+
+        const iframe = document.getElementById('preview-iframe');
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        let htmlContent = files['index.html'].content;
+
+        // 替換圖片路徑
+        Object.keys(files).forEach(f => {
+            if (files[f].type === 'image') {
+                htmlContent = htmlContent.replaceAll(f, files[f].content);
+            }
+        });
+
+        doc.open();
+        doc.write(htmlContent);
+        
+        Object.keys(files).forEach(f => {
+            if (f.endsWith('.css')) doc.head.innerHTML += `<style>${files[f].content}</style>`;
+            if (f.endsWith('.js')) doc.body.innerHTML += `<script>${files[f].content}<\/script>`;
+        });
+        doc.close();
+        log('✅ 專案已運行');
+    }
+
+    function stopCode() {
+        isRunning = false;
+        renderFileList();
+        document.getElementById('preview-container').style.display = 'none';
+        
+        const fileData = files[currentFile];
+        if (fileData && fileData.type === 'image') {
+            document.getElementById('image-preview').style.display = 'block';
+        } else {
+            document.getElementById('editor-text').style.display = 'block';
+        }
+        log('已停止預覽');
+    }
+</script>
+</body>
+</html>
