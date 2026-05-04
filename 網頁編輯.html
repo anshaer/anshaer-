@@ -52,18 +52,18 @@
 <body>
 
 <div id="toolbar">
-    <button id="save-btn" onclick="saveCurrentFile()">儲存</button>
-    <button onclick="runCode()">運行</button>
-    <button onclick="stopCode()">暫停</button>
-    <button onclick="downloadAll()">下載全部(.zip)</button>
-    <button onclick="document.getElementById('file-input').click()">檔案上傳</button>
+    <button id="save-btn" onclick="saveCurrentFile()">儲存💾</button>
+    <button onclick="runCode()">運行▶️</button>
+    <button onclick="stopCode()">暫停⏸️</button>
+    <button onclick="downloadAll()">下載全部📥</button>
+    <button onclick="document.getElementById('file-input').click()">檔案上傳📤</button>
     <input type="file" id="file-input" multiple style="display:none" onchange="handleFiles(this.files)">
     <span style="border-left: 1px solid #69350F; margin: 0 10px;"></span>
-    <button onclick="setDevice('desktop')">電腦模式</button>
-    <button onclick="setDevice('mobile')">手機模式</button>
+    <button onclick="setDevice('desktop')">電腦模式🖥️</button>
+    <button onclick="setDevice('mobile')">手機模式📱</button>
 
     <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
-        <span style="font-size: 12px; font-weight: bold; margin-right: 4px; color: var(--text-color);">主題:</span>
+        <span style="font-size: 12px; font-weight: bold; margin-right: 4px; color: var(--text-color);">主題🧬:</span>
         <button onclick="setTheme('mint')" style="background: #9cf6c7; border: 2px solid #69350F; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="薄荷巧克力"></button>
         <button onclick="setTheme('dark-contrast')" style="background: #121212; border: 2px solid #FFFFFF; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="深色高對比"></button>
         <button onclick="setTheme('light-contrast')" style="background: #FFFFFF; border: 2px solid #000000; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="淺色高對比"></button>
@@ -83,10 +83,10 @@
     
     <div id="sidebar">
         <div id="file-list-container">
-            <h3>檔案列表</h3>
+            <h3>檔案列表🗃️</h3>
             <div style="display: flex; gap: 6px; margin-bottom: 10px;">
                 <input type="text" id="new-file-name" placeholder="包含路徑 (如: css/main.css)" style="flex:1; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--box-bg); color: var(--text-color); font-size: 12px;">
-                <button onclick="createNewFile()" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;">建立</button>
+                <button onclick="createNewFile()" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;">建立➕</button>
             </div>
             <ul id="files" style="list-style: none; padding: 0;"></ul>
         </div>
@@ -357,8 +357,8 @@
                         ${markerHtml}
                     </div>
                     <div class="file-actions">
-                        <span onclick="toggleRename('${filename}')" class="file-action-btn" style="cursor:pointer" title="重新命名">✏️</span>
-                        <span onclick="downloadFile('${filename}')" class="file-action-btn" style="cursor:pointer" title="下載">💾</span>
+                        <span onclick="toggleRename('${filename}')" class="file-action-btn" style="cursor:pointer" title="重新命名">📝</span>
+                        <span onclick="downloadFile('${filename}')" class="file-action-btn" style="cursor:pointer" title="下載">📥</span>
                         <span onclick="deleteFile('${filename}')" class="file-action-btn" style="cursor:pointer; color:#8B0000" title="刪除">❌</span>
                     </div>
                 `;
@@ -413,9 +413,9 @@
                             ${markerHtml}
                         </div>
                         <div class="file-actions">
-                            <span onclick="toggleRename('${filename}')" class="file-action-btn" style="cursor:pointer" title="重新命名">✏️</span>
-                            <span onclick="downloadFile('${filename}')" class="file-action-btn" style="cursor:pointer" title="下載">↓</span>
-                            <span onclick="deleteFile('${filename}')" class="file-action-btn" style="cursor:pointer; color:#8B0000" title="刪除">×</span>
+                            <span onclick="toggleRename('${filename}')" class="file-action-btn" style="cursor:pointer" title="重新命名">📝</span>
+                            <span onclick="downloadFile('${filename}')" class="file-action-btn" style="cursor:pointer" title="下載">📥</span>
+                            <span onclick="deleteFile('${filename}')" class="file-action-btn" style="cursor:pointer; color:#8B0000" title="刪除">❌</span>
                         </div>
                     `;
                 }
