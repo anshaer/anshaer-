@@ -1,61 +1,42 @@
 {
-    "title": "創作者專屬平台",
-    "promo": [
+    "title": "探索專屬專案世界",
+    "promo": {
+        "title": "限時專案推廣",
+        "description": "歡迎探索我們的全新功能與專案內容。現在加入即可享有專屬的資源與優惠，千萬不要錯過！",
+        "linkText": "前往了解更多",
+        "linkUrl": "#"
+    },
+    "gallery": [
         {
-            "title": "測試標題1",
-            "description": "測試敘述1",
-            "imageUrl": "1.png",
-            "ytUrl": "https://youtube.com",
-            "xUrl": "https://x.com",
-            "channel1Name": "YT 連結",
-            "channel2Name": "X 連結"
+            "title": "精選預覽圖 A",
+            "url": "https://picsum.photos/400/300?random=1"
         },
         {
-            "title": "測試標題2",
-            "description": "測試敘述2",
-            "imageUrl": "2.png",
-            "ytUrl": "https://youtube.com",
-            "xUrl": "https://x.com",
-            "channel1Name": "YT 連結",
-            "channel2Name": "X 連結"
+            "title": "精選預覽圖 B",
+            "url": "https://picsum.photos/400/300?random=2"
         },
         {
-            "title": "測試標題3",
-            "description": "測試敘述3",
-            "imageUrl": "3.png",
-            "ytUrl": "https://youtube.com",
-            "xUrl": "https://x.com",
-            "channel1Name": "YT 連結",
-            "channel2Name": "X 連結"
+            "title": "精選預覽圖 C",
+            "url": "https://picsum.photos/400/300?random=3"
         }
     ],
-    "gallery": [
-        { "title": "視覺作品預覽 01", "url": "1.jpg" },
-        { "title": "視覺作品預覽 02", "url": "2.jpg" },
-        { "title": "視覺作品預覽 03", "url": "3.jpg" },
-        { "title": "視覺作品預覽 04", "url": "4.jpg" },
-        { "title": "視覺作品預覽 05", "url": "5.jpg" },
-        { "title": "視覺作品預覽 06", "url": "6.jpg" },
-        { "title": "視覺作品預覽 07", "url": "7.jpg" },
-        { "title": "視覺作品預覽 08", "url": "8.jpg" },
-        { "title": "視覺作品預覽 09", "url": "9.jpg" }
-    ],
-    "support": [
-        { "title": "A1", "url": "A1.html" },
-        { "title": "A2", "url": "A2.html" },
-        { "title": "A3", "url": "A3.html" },
-        { "title": "A4", "url": "A4.html" },
-        { "title": "A5", "url": "A5.html" },
-        { "title": "B1", "url": "B1.html" },
-        { "title": "B2", "url": "B2.html" },
-        { "title": "B3", "url": "B3.html" },
-        { "title": "C1", "url": "C1.html" },
-        { "title": "C2", "url": "C2.html" }
-    ],
-    "social": {
-        "x": "https://x.com/Anshaer_TW_TYC",
-        "yt": "https://www.youtube.com/@Mutsu-Anshaer",
-        "twitch": "https://www.twitch.tv/anshaer",
-        "email": "ggh19950808@gmail.com"
-    }
+    "support": {
+        "title": "尋求技術支援",
+        "description": "如在使用上有任何技術疑問、遇到 Bug 或是需要進一步的開發支援，歡迎透過電子郵件或社群管道與我們聯繫。",
+        "email": "support@example.com"
+    },
+    "community": [
+        {
+            "name": "加入 Discord 討論區",
+            "url": "https://discord.com"
+        },
+        {
+            "name": "追蹤我們的 Twitter/X",
+            "url": "https://twitter.com"
+        },
+        {
+            "name": "查看 GitHub 開發專案",
+            "url": "https://github.com"
+        }
+    ]
 }
