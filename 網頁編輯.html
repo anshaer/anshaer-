@@ -2,201 +2,394 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>整合式網頁編輯器 - 圖片強化版</title>
+    <title>整合式網頁編輯器 (主題切換版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root { --bg-color: #9cf6c7; --text-color: #69350F; --box-bg: rgba(255,255,255,0.5); --border-color: #69350F; }
-        body { margin: 0; height: 100vh; display: flex; flex-direction: column; background: var(--bg-color); color: var(--text-color); font-family: sans-serif; }
-        #toolbar { padding: 10px; gap: 8px; display: flex; flex-wrap: wrap; background: var(--bg-color); border-bottom: 2px solid var(--border-color); }
-        button { padding: 8px 14px; border: none; border-radius: 20px; background: var(--text-color); color: var(--bg-color); cursor: pointer; }
+        :root {
+            --bg-color: #9cf6c7;
+            --text-color: #69350F;
+            --box-bg: rgba(255, 255, 255, 0.5);
+            --border-color: #69350F;
+        }
+        body { margin: 0; height: 100vh; display: flex; flex-direction: column; background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; }
+        
+        #toolbar { display: flex; padding: 10px 16px; gap: 8px; background-color: var(--bg-color); border-bottom: 2px solid var(--border-color); flex-wrap: wrap; align-items: center; }
+        button { padding: 6px 12px; border-radius: 20px; border: none; background: var(--text-color); color: var(--bg-color); cursor: pointer; font-size: 13px; }
+        button:hover { background: #5e300d; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
         #main { display: flex; flex: 1; overflow: hidden; }
-        #display-area { flex: 1; padding: 10px; position: relative; }
-        #editor-text, #image-preview { width: 100%; height: 100%; }
-        #editor-text { resize: none; background: var(--box-bg); font-family: monospace; }
-        #image-preview { object-fit: contain; background: white; display: none; }
-        #preview-container { display: none; width: 100%; height: 100%; background: #eee; }
-        #preview-iframe { width: 100%; height: 100%; border: none; background: white; }
-        #sidebar { width: 280px; border-left: 2px solid var(--border-color); background: var(--bg-color); display: flex; flex-direction: column; }
-        #console { height: 180px; background: rgba(255,255,255,0.4); padding: 10px; font-family: monospace; overflow-y: auto; border-top: 2px solid var(--border-color); }
+        #display-area { flex: 1; border-right: 2px solid var(--border-color); padding: 10px; display: flex; flex-direction: column; position: relative;}
+        
+        #editor-text { width: 100%; height: 100%; resize: none; background: var(--box-bg); border: none; padding: 10px; color: var(--text-color); font-family: monospace; display: block; box-sizing: border-box; overflow-x: hidden; }
+        #image-preview { width: 100%; height: 100%; object-fit: contain; background: white; display: none; }
+        
+        #preview-container { width: 100%; height: 100%; display: none; background: #eee; transition: width 0.3s ease; display: flex; justify-content: center; }
+        #preview-iframe { width: 100%; height: 100%; border: none; background: white; transition: width 0.3s ease; }
+
+        #sidebar { width: 280px; display: flex; flex-direction: column; border-left: 2px solid var(--border-color); background-color: var(--bg-color); }
+        #file-list-container { flex: 1; padding: 10px; overflow-y: auto; border-bottom: 2px solid var(--border-color); }
+        
+        .file-item { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 12px 10px; 
+            border-bottom: 1px solid var(--border-color); 
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .file-item:hover { background: rgba(255, 255, 255, 0.4); }
+        .file-actions { display: flex; gap: 12px; margin-left: 10px; font-size: 15px; }
+        .file-action-btn { padding: 4px 6px; border-radius: 4px; }
+        
+        #console { height: 160px; background: rgba(255, 255, 255, 0.4); color: var(--text-color); padding: 10px; font-family: monospace; font-size: 13px; overflow-y: auto; border-top: 2px solid var(--border-color); }
     </style>
 </head>
 <body>
 
 <div id="toolbar">
-    <button onclick="saveCurrentFile()">💾 儲存</button>
-    <button onclick="runCode()">▶️ 運行</button>
-    <button onclick="stopCode()">⏹️ 停止</button>
+    <button id="save-btn" onclick="saveCurrentFile()">儲存💾</button>
+    <button onclick="runCode()">運行▶️</button>
+    <button onclick="stopCode()">暫停⏸️</button>
+    <button onclick="downloadAll()">下載全部📥</button>
+    
     <button onclick="document.getElementById('file-input').click()">📄 上傳檔案</button>
+    <button onclick="document.getElementById('folder-input').click()">📁 上傳資料夾</button>
+    
     <input type="file" id="file-input" multiple style="display:none" onchange="handleFiles(this.files, false)">
-    <button onclick="downloadAll()">📥 下載全部</button>
+    <input type="file" id="folder-input" multiple webkitdirectory directory style="display:none" onchange="handleFiles(this.files, true)">
+    
+    <span style="border-left: 1px solid #69350F; margin: 0 10px;"></span>
+    <button onclick="setDevice('desktop')">電腦模式🖥️</button>
+    <button onclick="setDevice('mobile')">手機模式📱</button>
+
+    <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+        <span style="font-size: 12px; font-weight: bold; margin-right: 4px; color: var(--text-color);">主題🧬:</span>
+        <button onclick="setTheme('mint')" style="background: #9cf6c7; border: 2px solid #69350F; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="薄荷巧克力"></button>
+        <button onclick="setTheme('dark-contrast')" style="background: #121212; border: 2px solid #FFFFFF; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="深色高對比"></button>
+        <button onclick="setTheme('light-contrast')" style="background: #FFFFFF; border: 2px solid #000000; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="淺色高對比"></button>
+        <button onclick="setTheme('pink-lolita')" style="background: #ffb3c6; border: 1px solid #883355; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="粉色蘿莉塔"></button>
+        <button onclick="setTheme('blue-lolita')" style="background: #b3d1ff; border: 1px solid #2b5c8f; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="藍色蘿莉塔"></button>
+    </div>
 </div>
 
 <div id="main">
     <div id="display-area">
-        <textarea id="editor-text"></textarea>
-        <img id="image-preview" alt="預覽">
+        <textarea id="editor-text" placeholder="請點選右側檔案進行編輯"></textarea>
+        <img id="image-preview" src="" alt="圖片預覽">
         <div id="preview-container"><iframe id="preview-iframe"></iframe></div>
     </div>
     
     <div id="sidebar">
-        <div style="padding:10px; flex:1; overflow:auto;">
-            <h3>檔案列表</h3>
-            <ul id="files" style="list-style:none; padding:0;"></ul>
+        <div id="file-list-container">
+            <h3>檔案列表🗃️</h3>
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                <input type="text" id="new-file-name" placeholder="如: images/photo.jpg" style="flex:1; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--box-bg); color: var(--text-color); font-size: 12px;">
+                <button onclick="createNewFile()" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;">建立➕</button>
+            </div>
+            <ul id="files" style="list-style: none; padding: 0;"></ul>
         </div>
-        <div id="console">> Ready</div>
+        <div id="console">
+            <div>> System Ready.</div>
+        </div>
     </div>
 </div>
 
 <script>
     let files = {
-        'index.html': { 
-            type: 'text', 
-            content: `<!DOCTYPE html>
-<html lang="zh-Hant">
-<head><meta charset="UTF-8"><title>圖片測試</title></head>
-<body>
-    <h1>同一層圖片測試</h1>
-    <img src="test.jpg" width="400" alt="應該要顯示">
-    <p>如果看到圖片就成功了</p>
-</body></html>` 
-        }
+        'index.html': { type: 'text', content: `<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><title>Test</title></head><body><h1>圖片測試</h1><img src="test.jpg" alt="test"><p id="status"></p></body></html>` }
     };
 
     let currentFile = 'index.html';
     let isRunning = false;
+    let editingFile = null;
 
-    window.onload = () => { selectFile(currentFile); renderFileList(); };
+    window.onload = () => {
+        selectFile(currentFile);
+        renderFileList();
+    };
 
-    function log(msg, type='info') {
-        const c = document.getElementById('console');
-        c.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
-        c.scrollTop = c.scrollHeight;
+    function log(message, type = 'info') {
+        const consoleEl = document.getElementById('console');
+        const time = new Date().toLocaleTimeString();
+        const color = type === 'error' ? '#8B0000' : '#69350F';
+        consoleEl.innerHTML += `<div style="color: ${color}; margin-bottom: 4px;">[${time}] ${message}</div>`;
+        consoleEl.scrollTop = consoleEl.scrollHeight;
     }
 
-    function handleFiles(fileList) {
+    function setTheme(theme) {
+        const root = document.documentElement;
+        switch(theme) {
+            case 'mint': root.style.setProperty('--bg-color', '#9cf6c7'); root.style.setProperty('--text-color', '#69350F'); root.style.setProperty('--box-bg', 'rgba(255,255,255,0.5)'); root.style.setProperty('--border-color', '#69350F'); break;
+            case 'dark-contrast': root.style.setProperty('--bg-color', '#121212'); root.style.setProperty('--text-color', '#FFFFFF'); root.style.setProperty('--box-bg', 'rgba(255,255,255,0.1)'); root.style.setProperty('--border-color', '#00FFFF'); break;
+            case 'light-contrast': root.style.setProperty('--bg-color', '#FFFFFF'); root.style.setProperty('--text-color', '#000000'); root.style.setProperty('--box-bg', 'rgba(0,0,0,0.05)'); root.style.setProperty('--border-color', '#000000'); break;
+            case 'pink-lolita': root.style.setProperty('--bg-color', '#ffe6f0'); root.style.setProperty('--text-color', '#883355'); root.style.setProperty('--box-bg', 'rgba(255,255,255,0.6)'); root.style.setProperty('--border-color', '#883355'); break;
+            case 'blue-lolita': root.style.setProperty('--bg-color', '#e6f2ff'); root.style.setProperty('--text-color', '#2b5c8f'); root.style.setProperty('--box-bg', 'rgba(255,255,255,0.6)'); root.style.setProperty('--border-color', '#2b5c8f'); break;
+        }
+        log(`已切換主題`);
+    }
+
+    // 其他函數（createNewFile, handleFiles, saveCurrentFile, downloadFile, deleteFile, downloadAll, renderFileList 等）與之前相同
+    function createNewFile() {
+        const input = document.getElementById('new-file-name');
+        const filename = input.value.trim().replace(/^\/+/, '');
+        if (!filename) return log('錯誤: 請輸入檔案名稱', 'error');
+        if (files[filename]) return log('錯誤: 檔案已存在', 'error');
+        files[filename] = { type: 'text', content: '' };
+        log(`已建立: ${filename}`);
+        input.value = '';
+        renderFileList();
+        selectFile(filename);
+    }
+
+    function handleFiles(fileList, isFolder) {
         Array.from(fileList).forEach(file => {
             const reader = new FileReader();
-            const isImage = file.type.startsWith('image/');
-            const path = file.name;   // 同一層就只取檔名
+            const isImage = file.type.startsWith('image/') || file.name.endsWith('.svg');
+            const path = (isFolder && file.webkitRelativePath) ? file.webkitRelativePath : file.name;
 
-            reader.onload = e => {
+            reader.onload = (e) => {
                 files[path] = { type: isImage ? 'image' : 'text', content: e.target.result };
                 log(`已載入: ${path}`);
                 renderFileList();
             };
-            isImage ? reader.readAsDataURL(file) : reader.readAsText(file);
-        });
-    }
-
-    function selectFile(name) {
-        currentFile = name;
-        const data = files[name];
-        if (data.type === 'image') {
-            document.getElementById('editor-text').style.display = 'none';
-            document.getElementById('image-preview').style.display = 'block';
-            document.getElementById('image-preview').src = data.content;
-        } else {
-            document.getElementById('image-preview').style.display = 'none';
-            document.getElementById('editor-text').style.display = 'block';
-            document.getElementById('editor-text').value = data.content;
-        }
-        renderFileList();
-    }
-
-    function renderFileList() {
-        const ul = document.getElementById('files');
-        ul.innerHTML = '';
-        Object.keys(files).forEach(f => {
-            const li = document.createElement('li');
-            li.style.padding = '8px';
-            li.style.cursor = 'pointer';
-            li.style.background = (f === currentFile) ? 'rgba(255,255,255,0.6)' : '';
-            li.textContent = f;
-            li.onclick = () => selectFile(f);
-            ul.appendChild(li);
+            if (isImage) reader.readAsDataURL(file);
+            else reader.readAsText(file);
         });
     }
 
     function saveCurrentFile() {
-        if (files[currentFile].type === 'text') {
+        if (currentFile && files[currentFile]?.type === 'text') {
             files[currentFile].content = document.getElementById('editor-text').value;
-            log('已儲存');
+            log(`💾 已儲存: ${currentFile}`);
         }
     }
 
+    function downloadFile(filename) { /* 省略，與之前版本相同 */ 
+        const fileData = files[filename];
+        if (!fileData) return;
+        if (currentFile === filename && fileData.type === 'text') saveCurrentFile();
+        const fileName = filename.substring(filename.lastIndexOf('/') + 1);
+        let downloadUrl = fileData.type === 'image' ? fileData.content : URL.createObjectURL(new Blob([fileData.content]));
+        const a = document.createElement('a');
+        a.href = downloadUrl; a.download = fileName;
+        a.click();
+        log(`✅ 已下載: ${filename}`);
+    }
+
+    function deleteFile(filename) {
+        delete files[filename];
+        log(`已刪除: ${filename}`);
+        if (currentFile === filename) {
+            const keys = Object.keys(files);
+            currentFile = keys.length > 0 ? keys[0] : null;
+            if (currentFile) selectFile(currentFile);
+        }
+        renderFileList();
+    }
+
+    function downloadAll() { /* 省略，與之前相同 */ 
+        const zip = new JSZip();
+        for (const filename in files) {
+            if (files[filename].type === 'image') {
+                const base64 = files[filename].content.split(',')[1];
+                zip.file(filename, base64, {base64: true});
+            } else {
+                zip.file(filename, files[filename].content);
+            }
+        }
+        zip.generateAsync({type: 'blob'}).then(blob => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'project_files.zip';
+            a.click();
+            log('所有檔案已打包下載');
+        });
+    }
+
+    function toggleRename(filename) { if (isRunning) return; editingFile = filename; renderFileList(); }
+    function cancelRename() { editingFile = null; renderFileList(); }
+    function saveRename(oldName) { /* 省略，與之前相同 */ 
+        const input = document.getElementById('rename-input');
+        const newName = input.value.trim().replace(/^\/+/, '');
+        if (!newName || (newName !== oldName && files[newName])) return log('錯誤: 名稱無效', 'error');
+        files[newName] = files[oldName];
+        if (newName !== oldName) delete files[oldName];
+        if (currentFile === oldName) currentFile = newName;
+        editingFile = null;
+        log(`已重新命名：${oldName} → ${newName}`);
+        renderFileList();
+        selectFile(currentFile);
+    }
+
+    function setDevice(mode) {
+        const iframe = document.getElementById('preview-iframe');
+        iframe.style.width = mode === 'mobile' ? '375px' : '100%';
+        log(mode === 'mobile' ? '已切換至手機模式' : '已切換至電腦模式');
+    }
+
+    function renderFileList() { /* 與之前版本相同 */ 
+        const list = document.getElementById('files');
+        list.innerHTML = '';
+        const rootFiles = [], folders = {};
+        Object.keys(files).forEach(filename => {
+            if (filename.includes('/')) {
+                const folder = filename.substring(0, filename.lastIndexOf('/'));
+                if (!folders[folder]) folders[folder] = [];
+                folders[folder].push(filename);
+            } else rootFiles.push(filename);
+        });
+        rootFiles.forEach(f => addFileItem(f, list));
+        Object.keys(folders).forEach(folder => {
+            const h = document.createElement('div');
+            h.style.padding = '8px'; h.style.fontWeight = 'bold'; h.style.fontSize = '12px';
+            h.textContent = `📂 ${folder}`;
+            list.appendChild(h);
+            folders[folder].forEach(f => addFileItem(f, list, true));
+        });
+    }
+
+    function addFileItem(filename, container, isSub = false) { /* 與之前版本相同，省略以節省篇幅 */ 
+        const li = document.createElement('li');
+        li.className = 'file-item';
+        if (isSub) li.style.paddingLeft = '24px';
+        if (editingFile === filename) {
+            // rename UI...
+            li.innerHTML = `<input type="text" id="rename-input" value="${filename}" style="width:70%"> <button onclick="saveRename('${filename}')">確定</button>`;
+        } else {
+            li.innerHTML = `
+                <div><span>${isSub ? filename.substring(filename.lastIndexOf('/')+1) : filename}</span></div>
+                <div class="file-actions">
+                    <span onclick="toggleRename('${filename}')" title="重新命名">📝</span>
+                    <span onclick="downloadFile('${filename}')" title="下載">📥</span>
+                    <span onclick="deleteFile('${filename}')" style="color:#8B0000" title="刪除">❌</span>
+                </div>`;
+            li.onclick = (e) => { if (!e.target.closest('.file-actions')) selectFile(filename); };
+        }
+        container.appendChild(li);
+    }
+
+    function selectFile(filename) {
+        if (isRunning) return;
+        currentFile = filename;
+        editingFile = null;
+        const fileData = files[filename];
+        const editor = document.getElementById('editor-text');
+        const img = document.getElementById('image-preview');
+
+        if (fileData.type === 'image') {
+            editor.style.display = 'none';
+            img.style.display = 'block';
+            img.src = fileData.content;
+            document.getElementById('save-btn').disabled = true;
+        } else {
+            editor.style.display = 'block';
+            img.style.display = 'none';
+            editor.value = fileData.content;
+            document.getElementById('save-btn').disabled = false;
+        }
+        renderFileList();
+    }
+
+    // ==================== 重點強化版 runCode ====================
     function runCode() {
-        if (!files['index.html']) return log('缺少 index.html', 'error');
+        if (!files['index.html']) return log('錯誤: 未找到 index.html', 'error');
 
         isRunning = true;
-        const iframe = document.getElementById('preview-iframe');
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        renderFileList();
 
         document.getElementById('editor-text').style.display = 'none';
         document.getElementById('image-preview').style.display = 'none';
         document.getElementById('preview-container').style.display = 'flex';
 
+        const iframe = document.getElementById('preview-iframe');
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        
         let html = files['index.html'].content;
 
-        // === 超強圖片替換（針對同一層）===
-        Object.keys(files).forEach(filename => {
-            if (files[filename].type === 'image') {
-                const b64 = files[filename].content;
-                const escaped = filename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                
-                // 各種可能寫法一次替換
-                html = html.replace(new RegExp(`src=["']${escaped}["']`, 'gi'), `src="${b64}"`)
-                           .replace(new RegExp(`src=["']./${escaped}["']`, 'gi'), `src="${b64}"`)
-                           .replace(new RegExp(`url\\(["']?${escaped}["']?\\)`, 'gi'), `url(${b64})`);
+        // 1. 強力替換 HTML 中的圖片路徑
+        Object.keys(files).forEach(f => {
+            if (files[f].type === 'image') {
+                const b64 = files[f].content;
+                html = html.replace(new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), b64)
+                           .replace(new RegExp('./' + f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), b64)
+                           .replace(new RegExp('/' + f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), b64);
             }
         });
 
         doc.open();
         doc.write(html);
 
-        // 注入虛擬 fetch（保險用）
-        const script = doc.createElement('script');
-        script.textContent = `
-            const images = ${JSON.stringify(Object.fromEntries(
-                Object.entries(files).filter(([k,v]) => v.type === 'image').map(([k,v]) => [k, v.content])
-            ))};
-            
-            const oldFetch = fetch;
-            fetch = async (url) => {
-                let name = url.replace(/^\\.\\/|^\\/+/, '');
-                if (images[name]) return fetch(images[name]);
-                return oldFetch(url);
-            };
-            console.log('圖片載入系統已啟動');
-        `;
-        doc.head.appendChild(script);
+        // 2. 注入 CSS 並替換 url()
+        Object.keys(files).forEach(f => {
+            if (f.endsWith('.css')) {
+                let css = files[f].content;
+                Object.keys(files).forEach(img => {
+                    if (files[img].type === 'image') {
+                        css = css.replace(new RegExp(`url\\(\\s*["']?${img}["']?\\s*\\)`, 'gi'), `url(${files[img].content})`)
+                                 .replace(new RegExp(`url\\(\\s*["']?./${img}["']?\\s*\\)`, 'gi'), `url(${files[img].content})`);
+                    }
+                });
+                const style = doc.createElement('style');
+                style.textContent = css;
+                doc.head.appendChild(style);
+            }
+        });
+
+        // 3. 注入 JS
+        Object.keys(files).forEach(f => {
+            if (f.endsWith('.js')) {
+                const script = doc.createElement('script');
+                script.textContent = files[f].content;
+                doc.body.appendChild(script);
+            }
+        });
+
+        // 4. 注入虛擬檔案系統
+        injectVirtualFileSystem(doc);
 
         doc.close();
-        log('✅ 已運行（已強力替換同一層圖片）');
+        log('✅ 專案運行中（圖片強化版）');
+    }
+
+    function injectVirtualFileSystem(doc) {
+        const virtualFiles = {}, imageFiles = {};
+        Object.keys(files).forEach(fn => {
+            if (files[fn].type === 'text') virtualFiles[fn] = files[fn].content;
+            else if (files[fn].type === 'image') imageFiles[fn] = files[fn].content;
+        });
+
+        const script = doc.createElement('script');
+        script.textContent = `
+            window.__virtualFiles = ${JSON.stringify(virtualFiles)};
+            window.__imageFiles = ${JSON.stringify(imageFiles)};
+
+            const origFetch = window.fetch;
+            window.fetch = async (url, opt) => {
+                let clean = url.replace(/^\\.\\/|^\\/+/, '');
+                if (window.__virtualFiles[clean]) {
+                    return new Response(window.__virtualFiles[clean], {headers: {'Content-Type': clean.endsWith('.json') ? 'application/json' : 'text/plain'}});
+                }
+                if (window.__imageFiles[clean]) {
+                    return fetch(window.__imageFiles[clean]);   // 轉成真正的 Response
+                }
+                return origFetch(url, opt);
+            };
+
+            console.log('虛擬檔案系統載入完成', Object.keys(window.__imageFiles).length + ' 個圖片');
+        `;
+        doc.head.appendChild(script);
     }
 
     function stopCode() {
         isRunning = false;
+        renderFileList();
         document.getElementById('preview-container').style.display = 'none';
-        selectFile(currentFile);
-        log('已停止');
-    }
-
-    function downloadAll() {
-        // 簡化版下載
-        const zip = new JSZip();
-        Object.keys(files).forEach(name => {
-            if (files[name].type === 'image') {
-                zip.file(name, files[name].content.split(',')[1], {base64:true});
-            } else {
-                zip.file(name, files[name].content);
-            }
-        });
-        zip.generateAsync({type:"blob"}).then(b => {
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(b);
-            a.download = "project.zip";
-            a.click();
-        });
+        const fd = files[currentFile];
+        if (fd?.type === 'image') document.getElementById('image-preview').style.display = 'block';
+        else document.getElementById('editor-text').style.display = 'block';
+        log('已停止預覽');
     }
 </script>
 </body>
