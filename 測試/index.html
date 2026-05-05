@@ -1,164 +1,54 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Studio Anshaer | 數位創作與互動工作室</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>創作者專屬平台</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <header class="page-header">
+        <h1 id="page-title">載入中...</h1>
+    </header>
 
-    <nav class="navbar">
-        <a href="#" class="logo">ANSHAER</a>
-
-        <button class="nav-toggle" id="navToggle" aria-label="切換選單">
-            <i class="fas fa-bars"></i>
-        </button>
-
-        <ul class="nav-links" id="navLinks">
-            <li><a href="#promotion">推廣</a></li>
-            <li><a href="#gallery">圖片集</a></li>
-            <li><a href="#support">技術支持</a></li>
-            <li><a href="#social">社群連結</a></li>
-        </ul>
-    </nav>
-
-    <section class="hero">
-        <div class="hero-banner" title="Anshaer Studio 形象視覺">
-            <div class="hero-content">
-                <h1>創新視覺與互動體驗</h1>
-                <p>專注於二次元美術與 3D 模型整合，支持跨平台即時渲染與數位體驗開發。</p>
+    <section id="gallery" class="full-width-section gallery-section">
+        <div class="carousel-container">
+            <button id="prev-btn" class="carousel-btn"><i class="fas fa-chevron-left"></i></button>
+            <div class="carousel-display">
+                <img id="gallery-img" src="" alt="">
+                <div id="gallery-caption" class="carousel-caption"></div>
             </div>
+            <button id="next-btn" class="carousel-btn"><i class="fas fa-chevron-right"></i></button>
         </div>
     </section>
 
-    <section id="promotion" class="section">
-        <h2 class="section-title">數位推廣與創作</h2>
-        <div class="promotion-grid">
-            <div class="promotion-card">
-                <div class="promotion-img" style="background-image: url('promo1.jpg');"></div>
-                <div class="promotion-content">
-                    <h3>內容與創作者推廣</h3>
-                    <p>協助創作者推廣並讓作品被更多人看見。</p>
-                    <div class="promo-links">
-                        <a href="https://twitter.com" target="_blank" title="X"><i class="fab fa-x-twitter"></i></a>
-                        <a href="https://youtube.com" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
-                    </div>
+    <section class="full-width-section promo-section">
+        <div class="main-container">
+            <div class="section-title">推廣</div>
+            <div id="promo-list" class="promo-list-container">
                 </div>
-            </div>
-
-            <div class="promotion-card">
-                <div class="promotion-img" style="background-image: url('promo2.jpg');"></div>
-                <div class="promotion-content">
-                    <h3>互動網頁專案</h3>
-                    <p>運用輕量化前端技術開發的專案與網站。</p>
-                    <div class="promo-links">
-                        <a href="https://twitter.com" target="_blank" title="X"><i class="fab fa-x-twitter"></i></a>
-                        <a href="https://youtube.com" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>
-                    </div>
-                </div>
-            </div>
         </div>
     </section>
 
-    <section id="gallery" class="section">
-        <h2 class="section-title">圖片集</h2>
-        <div class="gallery-layout">
-            
-            <div class="large-display" id="largeDisplay">
-                <div class="card-placeholder" id="largePlaceholder"></div>
-                
-                <div class="gallery-controls">
-                    <button class="nav-arrow prev-arrow" onclick="prevImage()" aria-label="上一張">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <button class="nav-arrow next-arrow" onclick="nextImage()" aria-label="下一張">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
+    <section class="full-width-section support-section">
+        <div class="main-container">
+            <div class="section-title">技術支持</div>
+            <div id="support-grid" class="support-grid-container">
                 </div>
-                
-                <div class="card-content" id="largeContent">
-                    <h3 id="largeTitle">視覺開發與角色設計</h3>
-                    <p id="largeDesc">與創作者共同設計的精緻圖像、3D 模型與美術規格書展示。</p>
-                </div>
-            </div>
-
-            <!-- === 縮圖區塊（改回原本的寫法，比較穩定）=== -->
-            <div class="thumbnails" id="thumbnails">
-                <div class="thumb-card active" onclick="updateGallery(0)">
-                    <div class="thumb-placeholder thumb1"></div>
-                    <span>角色與視覺</span>
-                </div>
-                <div class="thumb-card" onclick="updateGallery(1)">
-                    <div class="thumb-placeholder thumb2"></div>
-                    <span>介面設計</span>
-                </div>
-                <div class="thumb-card" onclick="updateGallery(2)">
-                    <div class="thumb-placeholder thumb3"></div>
-                    <span>虛擬互動</span>
-                </div>
-                <div class="thumb-card" onclick="updateGallery(3)">
-                    <div class="thumb-placeholder thumb4"></div>
-                    <span>互動網頁</span>
-                </div>
-                <div class="thumb-card" onclick="updateGallery(4)">
-                    <div class="thumb-placeholder thumb5"></div>
-                    <span>物聯網支援</span>
-                </div>
-                <div class="thumb-card" onclick="updateGallery(5)">
-                    <div class="thumb-placeholder thumb6"></div>
-                    <span>創作者推廣</span>
-                </div>
-                <div class="thumb-card" onclick="updateGallery(6)">
-                    <div class="thumb-placeholder thumb7"></div>
-                    <span>專案實例七</span>
-                </div>
-                <div class="thumb-card" onclick="updateGallery(7)">
-                    <div class="thumb-placeholder thumb8"></div>
-                    <span>專案實例八</span>
-                </div>
-                <div class="thumb-card" onclick="updateGallery(8)">
-                    <div class="thumb-placeholder thumb9"></div>
-                    <span>專案-實例九</span>
-                </div>
-                <div class="thumb-card" onclick="updateGallery(9)">
-                    <div class="thumb-placeholder thumb10"></div>
-                    <span>專案實例十</span>
-                </div>
-            </div>
         </div>
     </section>
 
-    <section id="support" class="section">
-        <h2 class="section-title">技術支持</h2>
-        <div class="support-grid">
-            <a href="support_subpage_1.html" class="support-card">
-                <h3>動捕技術支持與VRM整合</h3>
-            </a>
-            <a href="support_subpage_2.html" class="support-card">
-                <h3>硬體與物聯網應用開發</h3>
-            </a>
+    <section class="full-width-section social-section">
+        <div class="social-links-container">
+            <span class="social-label">社群連結</span>
+            <div id="social-icons" class="social-icons">
+                </div>
         </div>
     </section>
 
-    <section id="social" class="section">
-        <h2 class="section-title">社群連結</h2>
-        <div class="social-row">
-            <a href="https://twitter.com" target="_blank" class="social-icon-link" title="Twitter / X">
-                <i class="fab fa-x-twitter"></i>
-            </a>
-            <a href="https://youtube.com" target="_blank" class="social-icon-link" title="YouTube">
-                <i class="fab fa-youtube"></i>
-            </a>
-            <a href="mailto:contact@anshaer.com" class="social-icon-link" title="Email">
-                <i class="fas fa-envelope"></i>
-            </a>
-        </div>
-    </section>
-
-    <footer>
-        <p>&copy; 2026 Studio Anshaer. All rights reserved.</p>
+    <footer class="page-footer">
+        <p>&copy; 2026 Web Project. All rights reserved.</p>
     </footer>
 
     <script src="script.js"></script>
