@@ -1,0 +1,61 @@
+{
+    "title": "創作者專屬平台",
+    "promo": [
+        {
+            "title": "測試標題1",
+            "description": "測試敘述1",
+            "imageUrl": "1.png",
+            "ytUrl": "https://youtube.com",
+            "xUrl": "https://x.com",
+            "channel1Name": "YT 連結",
+            "channel2Name": "X 連結"
+        },
+        {
+            "title": "測試標題2",
+            "description": "測試敘述2",
+            "imageUrl": "2.png",
+            "ytUrl": "https://youtube.com",
+            "xUrl": "https://x.com",
+            "channel1Name": "YT 連結",
+            "channel2Name": "X 連結"
+        },
+        {
+            "title": "測試標題3",
+            "description": "測試敘述3",
+            "imageUrl": "3.png",
+            "ytUrl": "https://youtube.com",
+            "xUrl": "https://x.com",
+            "channel1Name": "YT 連結",
+            "channel2Name": "X 連結"
+        }
+    ],
+    "gallery": [
+        { "title": "視覺作品預覽 01", "url": "1.jpg" },
+        { "title": "視覺作品預覽 02", "url": "2.jpg" },
+        { "title": "視覺作品預覽 03", "url": "3.jpg" },
+        { "title": "視覺作品預覽 04", "url": "4.jpg" },
+        { "title": "視覺作品預覽 05", "url": "5.jpg" },
+        { "title": "視覺作品預覽 06", "url": "6.jpg" },
+        { "title": "視覺作品預覽 07", "url": "7.jpg" },
+        { "title": "視覺作品預覽 08", "url": "8.jpg" },
+        { "title": "視覺作品預覽 09", "url": "9.jpg" }
+    ],
+    "support": [
+        { "title": "A1", "url": "A1.html" },
+        { "title": "A2", "url": "A2.html" },
+        { "title": "A3", "url": "A3.html" },
+        { "title": "A4", "url": "A4.html" },
+        { "title": "A5", "url": "A5.html" },
+        { "title": "B1", "url": "B1.html" },
+        { "title": "B2", "url": "B2.html" },
+        { "title": "B3", "url": "B3.html" },
+        { "title": "C1", "url": "C1.html" },
+        { "title": "C2", "url": "C2.html" }
+    ],
+    "social": {
+        "x": "https://x.com/Anshaer_TW_TYC",
+        "yt": "https://www.youtube.com/@Mutsu-Anshaer",
+        "twitch": "https://www.twitch.tv/anshaer",
+        "email": "ggh19950808@gmail.com"
+    }
+}
