@@ -145,7 +145,7 @@
             </div>
             <div class="control-group">
                 <label for="prefixName">統一檔案名稱：</label>
-                <input type="text" id="prefixName" value="image" placeholder="例如：photo">
+                <input type="text" id="prefixName" value="image" placeholder="留空則只用數字">
             </div>
             <div class="control-group">
                 <label for="startNumber">開始編號：</label>
@@ -198,17 +198,13 @@
             const files = Array.from(fileInput.files);
             if (files.length === 0) return;
 
-            const prefix = prefixName.value.trim() || 'image';
-            
-            // 修正變數重複宣告問題
+            const prefix = prefixName.value;
             const startVal = parseInt(startNumber.value, 10);
             let currentNum = isNaN(startVal) || startVal < 1 ? 1 : startVal;
-
-            const selectExt = targetExtension.value; // ex: "image/png"
+            const selectExt = targetExtension.value;
 
             uploadedFiles = [];
             for (const file of files) {
-                // 取得副檔名
                 let finalExtStr = '';
                 if (selectExt === 'original') {
                     const lastDotIndex = file.name.lastIndexOf('.');
@@ -220,10 +216,9 @@
                 const newName = `${prefix}${currentNum}.${finalExtStr}`;
                 currentNum++;
 
-                let finalFile = file; // 預設使用原檔案
+                let finalFile = file;
 
                 if (selectExt !== 'original') {
-                    // 如果與原檔案格式不同，進行畫布轉換
                     try {
                         finalFile = await convertFile(file, selectExt, newName);
                     } catch (err) {
@@ -234,14 +229,13 @@
                 uploadedFiles.push({
                     originalName: file.name,
                     newName: newName,
-                    file: finalFile, // 包含轉檔後或原檔案之 Blob
+                    file: finalFile,
                     url: URL.createObjectURL(finalFile)
                 });
             }
             render();
         }
 
-        // 利用 Canvas 進行真實的檔案轉碼處理
         function convertFile(file, mimeType, newName) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
@@ -254,7 +248,6 @@
                     canvas.height = img.height;
                     const ctx = canvas.getContext('2d');
 
-                    // 若轉成 JPG，預設加上白色背景以避免透明度轉黑色
                     if (mimeType === 'image/jpeg') {
                         ctx.fillStyle = '#FFFFFF';
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -263,13 +256,12 @@
                     ctx.drawImage(img, 0, 0);
                     canvas.toBlob((blob) => {
                         if (blob) {
-                            // 將 blob 封裝成 File 物件
                             const convertedFile = new File([blob], newName, { type: mimeType });
                             resolve(convertedFile);
                         } else {
                             reject(new Error('Canvas toBlob 失敗'));
                         }
-                    }, mimeType, 0.9); // 品質設定為 90%
+                    }, mimeType, 0.9);
                 };
 
                 img.onerror = () => {
