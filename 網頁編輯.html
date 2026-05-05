@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>整合式網頁編輯器 (主題切換版)</title>
+    <title>整合式網頁編輯器 (升級防護版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
@@ -14,8 +14,18 @@
         body { margin: 0; height: 100vh; display: flex; flex-direction: column; background-color: var(--bg-color); color: var(--text-color); font-family: sans-serif; }
         
         #toolbar { display: flex; padding: 10px 16px; gap: 8px; background-color: var(--bg-color); border-bottom: 2px solid var(--border-color); flex-wrap: wrap; align-items: center; }
-        button { padding: 6px 12px; border-radius: 20px; border: none; background: var(--text-color); color: var(--bg-color); cursor: pointer; font-size: 13px; }
-        button:hover { background: #5e300d; }
+        button, .upload-label { 
+            padding: 6px 12px; 
+            border-radius: 20px; 
+            border: none; 
+            background: var(--text-color); 
+            color: var(--bg-color); 
+            cursor: pointer; 
+            font-size: 13px; 
+            text-align: center;
+            display: inline-block;
+        }
+        button:hover, .upload-label:hover { background: #5e300d; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         #main { display: flex; flex: 1; overflow: hidden; }
@@ -24,7 +34,7 @@
         #editor-text { width: 100%; height: 100%; resize: none; background: var(--box-bg); border: none; padding: 10px; color: var(--text-color); font-family: monospace; display: block; box-sizing: border-box; overflow-x: hidden; }
         #image-preview { width: 100%; height: 100%; object-fit: contain; background: white; display: none; }
         
-        #preview-container { width: 100%; height: 100%; display: none; background: #eee; transition: width 0.3s ease; display: flex; justify-content: center; }
+        #preview-container { width: 100%; height: 100%; display: none; background: #eee; transition: width 0.3s ease; justify-content: center; }
         #preview-iframe { width: 100%; height: 100%; border: none; background: white; transition: width 0.3s ease; }
 
         #sidebar { width: 280px; display: flex; flex-direction: column; border-left: 2px solid var(--border-color); background-color: var(--bg-color); }
@@ -54,8 +64,8 @@
     <button onclick="stopCode()">暫停⏸️</button>
     <button onclick="downloadAll()">下載全部📥</button>
     
-    <button onclick="document.getElementById('file-input').click()">📄 上傳檔案</button>
-    <button onclick="document.getElementById('folder-input').click()">📁 上傳資料夾</button>
+    <label for="file-input" class="upload-label">📄 上傳檔案</label>
+    <label for="folder-input" class="upload-label">📁 上傳資料夾</label>
     
     <input type="file" id="file-input" multiple style="display:none" onchange="handleFiles(this.files, false)">
     <input type="file" id="folder-input" multiple webkitdirectory directory style="display:none" onchange="handleFiles(this.files, true)">
@@ -69,7 +79,7 @@
         <button onclick="setTheme('mint')" style="background: #9cf6c7; border: 2px solid #69350F; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="薄荷巧克力"></button>
         <button onclick="setTheme('dark-contrast')" style="background: #121212; border: 2px solid #FFFFFF; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="深色高對比"></button>
         <button onclick="setTheme('light-contrast')" style="background: #FFFFFF; border: 2px solid #000000; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="淺色高對比"></button>
-        <button onclick="setTheme('pink-lolita')" style="background: #ffb3c6; border: 1px solid #883355; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="粉色蘿莉塔"></button>
+        <button onclick="setTheme('pink-lolita')" style="background: #ffe6f0; border: 1px solid #883355; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="粉色蘿莉塔"></button>
         <button onclick="setTheme('blue-lolita')" style="background: #b3d1ff; border: 1px solid #2b5c8f; width: 20px; height: 20px; border-radius: 50%; padding: 0;" title="藍色蘿莉塔"></button>
     </div>
 </div>
@@ -130,7 +140,6 @@
         log(`已切換主題`);
     }
 
-    // 其他函數（createNewFile, handleFiles, saveCurrentFile, downloadFile, deleteFile, downloadAll, renderFileList 等）與之前相同
     function createNewFile() {
         const input = document.getElementById('new-file-name');
         const filename = input.value.trim().replace(/^\/+/, '');
@@ -144,15 +153,20 @@
     }
 
     function handleFiles(fileList, isFolder) {
+        if (!fileList || fileList.length === 0) return;
+        
         Array.from(fileList).forEach(file => {
             const reader = new FileReader();
-            const isImage = file.type.startsWith('image/') || file.name.endsWith('.svg');
+            
+            // 增強型判定：不管是 MIME 或是副檔名皆可識別
+            const isImage = file.type.startsWith('image/') || /\.(jpg|jpeg|png|gif|bmp|svg|webp)$/i.test(file.name);
             const path = (isFolder && file.webkitRelativePath) ? file.webkitRelativePath : file.name;
 
             reader.onload = (e) => {
                 files[path] = { type: isImage ? 'image' : 'text', content: e.target.result };
                 log(`已載入: ${path}`);
                 renderFileList();
+                selectFile(path); // 上傳後自動切換至該檔案以便預覽
             };
             if (isImage) reader.readAsDataURL(file);
             else reader.readAsText(file);
@@ -166,7 +180,7 @@
         }
     }
 
-    function downloadFile(filename) { /* 省略，與之前版本相同 */ 
+    function downloadFile(filename) { 
         const fileData = files[filename];
         if (!fileData) return;
         if (currentFile === filename && fileData.type === 'text') saveCurrentFile();
@@ -189,7 +203,7 @@
         renderFileList();
     }
 
-    function downloadAll() { /* 省略，與之前相同 */ 
+    function downloadAll() { 
         const zip = new JSZip();
         for (const filename in files) {
             if (files[filename].type === 'image') {
@@ -208,9 +222,18 @@
         });
     }
 
-    function toggleRename(filename) { if (isRunning) return; editingFile = filename; renderFileList(); }
-    function cancelRename() { editingFile = null; renderFileList(); }
-    function saveRename(oldName) { /* 省略，與之前相同 */ 
+    function toggleRename(filename) { 
+        if (isRunning) return; 
+        editingFile = filename; 
+        renderFileList(); 
+    }
+
+    function cancelRename() { 
+        editingFile = null; 
+        renderFileList(); 
+    }
+    
+    function saveRename(oldName) {
         const input = document.getElementById('rename-input');
         const newName = input.value.trim().replace(/^\/+/, '');
         if (!newName || (newName !== oldName && files[newName])) return log('錯誤: 名稱無效', 'error');
@@ -229,7 +252,7 @@
         log(mode === 'mobile' ? '已切換至手機模式' : '已切換至電腦模式');
     }
 
-    function renderFileList() { /* 與之前版本相同 */ 
+    function renderFileList() { 
         const list = document.getElementById('files');
         list.innerHTML = '';
         const rootFiles = [], folders = {};
@@ -250,13 +273,12 @@
         });
     }
 
-    function addFileItem(filename, container, isSub = false) { /* 與之前版本相同，省略以節省篇幅 */ 
+    function addFileItem(filename, container, isSub = false) { 
         const li = document.createElement('li');
         li.className = 'file-item';
         if (isSub) li.style.paddingLeft = '24px';
         if (editingFile === filename) {
-            // rename UI...
-            li.innerHTML = `<input type="text" id="rename-input" value="${filename}" style="width:70%"> <button onclick="saveRename('${filename}')">確定</button>`;
+            li.innerHTML = `<input type="text" id="rename-input" value="${filename}" style="width:70%"> <button onclick="saveRename('${filename}')">確定</button> <button onclick="cancelRename()">取消</button>`;
         } else {
             li.innerHTML = `
                 <div><span>${isSub ? filename.substring(filename.lastIndexOf('/')+1) : filename}</span></div>
@@ -308,13 +330,22 @@
         
         let html = files['index.html'].content;
 
-        // 1. 強力替換 HTML 中的圖片路徑
+        // 強力替換 HTML 中的圖片路徑，支援完整路徑與純檔名
         Object.keys(files).forEach(f => {
             if (files[f].type === 'image') {
                 const b64 = files[f].content;
-                html = html.replace(new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), b64)
-                           .replace(new RegExp('./' + f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), b64)
-                           .replace(new RegExp('/' + f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), b64);
+                const baseName = f.substring(f.lastIndexOf('/') + 1);
+                
+                const escapedFull = f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const escapedBase = baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+                // 比對完整路徑與純檔名
+                [escapedFull, escapedBase].forEach(name => {
+                    html = html.replace(new RegExp(name, 'g'), () => b64)
+                               .replace(new RegExp('./' + name, 'g'), () => b64)
+                               .replace(new RegExp('/' + name, 'g'), () => b64)
+                               .replace(new RegExp('../' + name, 'g'), () => b64);
+                });
             }
         });
 
@@ -327,8 +358,14 @@
                 let css = files[f].content;
                 Object.keys(files).forEach(img => {
                     if (files[img].type === 'image') {
-                        css = css.replace(new RegExp(`url\\(\\s*["']?${img}["']?\\s*\\)`, 'gi'), `url(${files[img].content})`)
-                                 .replace(new RegExp(`url\\(\\s*["']?./${img}["']?\\s*\\)`, 'gi'), `url(${files[img].content})`);
+                        const baseName = img.substring(img.lastIndexOf('/') + 1);
+                        const escapedFull = img.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const escapedBase = baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+                        [escapedFull, escapedBase].forEach(name => {
+                            css = css.replace(new RegExp(`url\\(\\s*["']?${name}["']?\\s*\\)`, 'gi'), `url(${files[img].content})`)
+                                     .replace(new RegExp(`url\\(\\s*["']?\\.?\\.?\\/?${name}["']?\\s*\\)`, 'gi'), `url(${files[img].content})`);
+                        });
                     }
                 });
                 const style = doc.createElement('style');
@@ -372,7 +409,7 @@
                     return new Response(window.__virtualFiles[clean], {headers: {'Content-Type': clean.endsWith('.json') ? 'application/json' : 'text/plain'}});
                 }
                 if (window.__imageFiles[clean]) {
-                    return fetch(window.__imageFiles[clean]);   // 轉成真正的 Response
+                    return origFetch(window.__imageFiles[clean]);
                 }
                 return origFetch(url, opt);
             };
