@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多圖片上傳與真實轉檔工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            background-color: #fafafa;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            align-items: flex-end;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+            min-width: 160px;
+        }
+        label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input[type="text"], input[type="number"], input[type="file"], select {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        select {
+            cursor: pointer;
+            background: #fff;
+        }
+        .btn {
+            padding: 9px 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .btn-success {
+            background-color: #2ecc71;
+        }
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .preview-item {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .preview-item img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .file-name {
+            font-size: 11px;
+            color: #777;
+            margin-bottom: 4px;
+            text-align: center;
+            word-break: break-all;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .new-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 12px;
+            margin-bottom: 10px;
+            text-align: center;
+            word-break: break-all;
+            width: 100%;
+        }
+        .bulk-actions {
+            margin-top: 25px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>多圖片上傳與真實轉檔工具</h1>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="files">選擇圖片 (可多選)：</label>
+                <input type="file" id="files" multiple accept="image/*">
+            </div>
+            <div class="control-group">
+                <label for="prefixName">統一檔案名稱：</label>
+                <input type="text" id="prefixName" value="image" placeholder="例如：photo">
+            </div>
+            <div class="control-group">
+                <label for="startNumber">開始編號：</label>
+                <input type="number" id="startNumber" value="1" min="1">
+            </div>
+            <div class="control-group">
+                <label for="targetExtension">統一轉為格式：</label>
+                <select id="targetExtension">
+                    <option value="original">保持原格式 (不轉檔)</option>
+                    <option value="image/jpeg">.jpg</option>
+                    <option value="image/png">.png</option>
+                    <option value="image/webp">.webp</option>
+                </select>
+            </div>
+            <div>
+                <button class="btn" id="updateNamesBtn">更新預覽名稱</button>
+            </div>
+        </div>
+
+        <div class="preview-grid" id="previewGrid"></div>
+
+        <div class="bulk-actions" id="bulkActions" style="display: none;">
+            <button class="btn btn-success" id="downloadAllBtn">下載全部 (ZIP)</button>
+            <button class="btn btn-danger" id="clearAllBtn">清空全部</button>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('files');
+        const prefixName = document.getElementById('prefixName');
+        const startNumber = document.getElementById('startNumber');
+        const targetExtension = document.getElementById('targetExtension');
+        const updateNamesBtn = document.getElementById('updateNamesBtn');
+        const previewGrid = document.getElementById('previewGrid');
+        const bulkActions = document.getElementById('bulkActions');
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
+        const clearAllBtn = document.getElementById('clearAllBtn');
+
+        let uploadedFiles = []; 
+
+        fileInput.addEventListener('change', () => {
+            generateData();
+        });
+
+        updateNamesBtn.addEventListener('click', () => {
+            generateData();
+        });
+
+        async function generateData() {
+            const files = Array.from(fileInput.files);
+            if (files.length === 0) return;
+
+            const prefix = prefixName.value.trim() || 'image';
+            
+            // 修正變數重複宣告問題
+            const startVal = parseInt(startNumber.value, 10);
+            let currentNum = isNaN(startVal) || startVal < 1 ? 1 : startVal;
+
+            const selectExt = targetExtension.value; // ex: "image/png"
+
+            uploadedFiles = [];
+            for (const file of files) {
+                // 取得副檔名
+                let finalExtStr = '';
+                if (selectExt === 'original') {
+                    const lastDotIndex = file.name.lastIndexOf('.');
+                    finalExtStr = lastDotIndex !== -1 ? file.name.substring(lastDotIndex + 1) : '';
+                } else {
+                    finalExtStr = selectExt.split('/')[1];
+                }
+
+                const newName = `${prefix}${currentNum}.${finalExtStr}`;
+                currentNum++;
+
+                let finalFile = file; // 預設使用原檔案
+
+                if (selectExt !== 'original') {
+                    // 如果與原檔案格式不同，進行畫布轉換
+                    try {
+                        finalFile = await convertFile(file, selectExt, newName);
+                    } catch (err) {
+                        console.error('轉檔失敗，保留原檔案:', err);
+                    }
+                }
+
+                uploadedFiles.push({
+                    originalName: file.name,
+                    newName: newName,
+                    file: finalFile, // 包含轉檔後或原檔案之 Blob
+                    url: URL.createObjectURL(finalFile)
+                });
+            }
+            render();
+        }
+
+        // 利用 Canvas 進行真實的檔案轉碼處理
+        function convertFile(file, mimeType, newName) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+
+                    // 若轉成 JPG，預設加上白色背景以避免透明度轉黑色
+                    if (mimeType === 'image/jpeg') {
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    }
+
+                    ctx.drawImage(img, 0, 0);
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            // 將 blob 封裝成 File 物件
+                            const convertedFile = new File([blob], newName, { type: mimeType });
+                            resolve(convertedFile);
+                        } else {
+                            reject(new Error('Canvas toBlob 失敗'));
+                        }
+                    }, mimeType, 0.9); // 品質設定為 90%
+                };
+
+                img.onerror = () => {
+                    URL.revokeObjectURL(url);
+                    reject(new Error('圖片載入失敗'));
+                };
+
+                img.src = url;
+            });
+        }
+
+        function render() {
+            previewGrid.innerHTML = '';
+            
+            if (uploadedFiles.length > 0) {
+                bulkActions.style.display = 'flex';
+            } else {
+                bulkActions.style.display = 'none';
+                return;
+            }
+
+            uploadedFiles.forEach((item) => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                
+                div.innerHTML = `
+                    <img src="${item.url}" alt="${item.newName}">
+                    <div class="file-name" title="原名稱: ${item.originalName}">原檔名: ${item.originalName}</div>
+                    <div class="new-name" title="新名稱: ${item.newName}">新檔名: ${item.newName}</div>
+                    <button class="btn" style="padding: 4px 10px; font-size: 12px; margin-top: 5px;" onclick="downloadSingle('${item.newName}', '${item.url}')">下載此圖片</button>
+                `;
+                previewGrid.appendChild(div);
+            });
+        }
+
+        window.downloadSingle = function(name, url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        downloadAllBtn.addEventListener('click', async () => {
+            if (uploadedFiles.length === 0) return;
+
+            const zip = new JSZip();
+            
+            uploadedFiles.forEach((item) => {
+                zip.file(item.newName, item.file);
+            });
+
+            try {
+                const content = await zip.generateAsync({ type: 'blob' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(content);
+                a.download = 'renamed_images.zip';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } catch (err) {
+                console.error('ZIP 壓縮失敗:', err);
+                alert('無法建立 ZIP 檔案，請稍後再試。');
+            }
+        });
+
+        clearAllBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            uploadedFiles = [];
+            previewGrid.innerHTML = '';
+            bulkActions.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
