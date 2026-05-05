@@ -1,62 +1,93 @@
-const galleryData = [
-    { title: '視覺開發與角色設計', desc: '與創作者共同設計的精緻圖像、3D 模型與美術規格書展示。', imgUrl: 'gallery1.jpg' },
-    { title: '簡約 UI 介面視覺', desc: '霓虹未來感與暗黑極簡風格的介面設計展示與色系搭配。', imgUrl: 'gallery2.jpg' },
-    { title: '動態捕捉與虛擬互動', desc: '將 3D 模型無縫整合，提供更具沉浸感的視覺體驗效果。', imgUrl: 'gallery3.jpg' },
-    { title: '互動式網頁專案', desc: '運用輕量化前端技術開發的專案，提供粉絲更具沉浸感的線上微型網站。', imgUrl: 'gallery4.jpg' },
-    { title: '硬體與物聯網應用', desc: '結合微控制器與前端感測器的技術支援與客製化程式開發。', imgUrl: 'gallery5.jpg' },
-    { title: '數位創作與推廣', desc: '協助創作者打造專屬視覺推廣素材，讓創作被更多人看見。', imgUrl: 'gallery6.jpg' },
-    { title: '專案實例七', desc: '第七個專案的詳細說明與資料展示。', imgUrl: 'gallery7.jpg' },
-    { title: '專案實例八', desc: '第八個專案的詳細說明與資料展示。', imgUrl: 'gallery8.jpg' },
-    { title: '專案-實例九', desc: '第九個專案的詳細說明與資料展示。', imgUrl: 'gallery9.jpg' },
-    { title: '專案實例十', desc: '第十個專案的詳細說明與資料展示。', imgUrl: 'gallery10.jpg' }
-];
-
-let currentIndex = 0;
-
-function toggleMenu() {
-    document.getElementById('navLinks').classList.toggle('active');
-}
-
 document.addEventListener("DOMContentLoaded", () => {
-    updateGallery(0);
-    
-    // 手機版觸控滑動
-    const largeDisplay = document.getElementById('largeDisplay');
-    let startX = 0;
+    fetch('data.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('無法讀取 JSON 資料');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // 1. 設定頁面標題
+            document.getElementById("page-title").textContent = data.title;
 
-    largeDisplay.addEventListener('touchstart', e => startX = e.touches[0].clientX, { passive: true });
-    largeDisplay.addEventListener('touchend', e => {
-        const endX = e.changedTouches[0].clientX;
-        if (startX - endX > 40) nextImage();
-        else if (endX - startX > 40) prevImage();
-    }, { passive: true });
+            // 2. 渲染多筆推廣內容
+            const promoList = document.getElementById("promo-list");
+            promoList.innerHTML = '';
+            
+            data.promo.forEach(item => {
+                const promoItem = document.createElement("div");
+                promoItem.className = "promo-flex-box";
+                promoItem.innerHTML = `
+                    <div class="promo-media">
+                        <img src="${item.imageUrl}" alt="${item.title}">
+                    </div>
+                    <div class="promo-content">
+                        <div class="promo-title-box">${item.title}</div>
+                        <div class="promo-desc-box">${item.description}</div>
+                        <div class="promo-links">
+                            <a href="${item.ytUrl}" class="promo-link-item" target="_blank">
+                                <i class="fab fa-youtube"></i> ${item.channel1Name}
+                            </a>
+                            <a href="${item.xUrl}" class="promo-link-item" target="_blank">
+                                <i class="fa-solid fa-hashtag"></i> ${item.channel2Name}
+                            </a>
+                        </div>
+                    </div>
+                `;
+                promoList.appendChild(promoItem);
+            });
+
+            // 3. 圖片集輪播邏輯
+            let currentIndex = 0;
+            const galleryImg = document.getElementById("gallery-img");
+            const galleryCaption = document.getElementById("gallery-caption");
+            const prevBtn = document.getElementById("prev-btn");
+            const nextBtn = document.getElementById("next-btn");
+
+            const updateGallery = () => {
+                if (data.gallery && data.gallery.length > 0) {
+                    const currentItem = data.gallery[currentIndex];
+                    galleryImg.src = currentItem.url;
+                    galleryImg.alt = currentItem.title;
+                    galleryCaption.textContent = currentItem.title;
+                }
+            };
+
+            if (data.gallery && data.gallery.length > 0) {
+                updateGallery();
+
+                prevBtn.addEventListener("click", () => {
+                    currentIndex = (currentIndex - 1 + data.gallery.length) % data.gallery.length;
+                    updateGallery();
+                });
+
+                nextBtn.addEventListener("click", () => {
+                    currentIndex = (currentIndex + 1) % data.gallery.length;
+                    updateGallery();
+                });
+            }
+
+            // 4. 渲染技術支援連結 (網格)
+            const supportGrid = document.getElementById("support-grid");
+            supportGrid.innerHTML = '';
+            data.support.forEach(item => {
+                const link = document.createElement("a");
+                link.href = item.url;
+                link.className = "support-link-item";
+                link.textContent = item.title;
+                supportGrid.appendChild(link);
+            });
+
+            // 5. 渲染社群 Icons
+            const socialIcons = document.getElementById("social-icons");
+            socialIcons.innerHTML = `
+                <a href="${data.social.x}" target="_blank" class="social-icon" title="X"><i class="fa-solid fa-hashtag"></i></a>
+                <a href="${data.social.yt}" target="_blank" class="social-icon" title="YouTube"><i class="fab fa-youtube"></i></a>
+                <a href="${data.social.twitch}" target="_blank" class="social-icon" title="Twitch"><i class="fab fa-twitch"></i></a>
+                <a href="mailto:${data.social.email}" class="social-icon" title="傳送 Email"><i class="fas fa-envelope"></i></a>
+            `;
+        })
+        .catch(error => {
+            console.error("載入錯誤:", error);
+        });
 });
-
-function updateGallery(index) {
-    currentIndex = index;
-    
-    document.getElementById('largePlaceholder').style.backgroundImage = `url('${galleryData[index].imgUrl}')`;
-    document.getElementById('largeTitle').textContent = galleryData[index].title;
-    document.getElementById('largeDesc').textContent = galleryData[index].desc;
-
-    // 更新縮圖 active 狀態
-    document.querySelectorAll('.thumb-card').forEach((card, i) => {
-        card.classList.toggle('active', i === index);
-    });
-}
-
-function prevImage() {
-    currentIndex = (currentIndex - 1 + galleryData.length) % galleryData.length;
-    updateGallery(currentIndex);
-}
-
-function nextImage() {
-    currentIndex = (currentIndex + 1) % galleryData.length;
-    updateGallery(currentIndex);
-}
-
-// 讓 HTML 的 onclick 可以呼叫
-window.updateGallery = updateGallery;
-window.prevImage = prevImage;
-window.nextImage = nextImage;
-window.toggleMenu = toggleMenu;
