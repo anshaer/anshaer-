@@ -54,13 +54,10 @@
     <button onclick="stopCode()">暫停⏸️</button>
     <button onclick="downloadAll()">下載全部📥</button>
     
-    <!-- 分開成兩個按鈕 -->
     <button onclick="document.getElementById('file-input').click()">📄 上傳檔案</button>
     <button onclick="document.getElementById('folder-input').click()">📁 上傳資料夾</button>
     
-    <!-- 一般檔案上傳 -->
     <input type="file" id="file-input" multiple style="display:none" onchange="handleFiles(this.files, false)">
-    <!-- 資料夾上傳 -->
     <input type="file" id="folder-input" multiple webkitdirectory directory style="display:none" onchange="handleFiles(this.files, true)">
     
     <span style="border-left: 1px solid #69350F; margin: 0 10px;"></span>
@@ -90,7 +87,7 @@
         <div id="file-list-container">
             <h3>檔案列表🗃️</h3>
             <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-                <input type="text" id="new-file-name" placeholder="包含路徑 (如: css/main.css)" style="flex:1; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--box-bg); color: var(--text-color); font-size: 12px;">
+                <input type="text" id="new-file-name" placeholder="包含路徑 (如: css/main.css 或 data.json)" style="flex:1; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--box-bg); color: var(--text-color); font-size: 12px;">
                 <button onclick="createNewFile()" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;">建立➕</button>
             </div>
             <ul id="files" style="list-style: none; padding: 0;"></ul>
@@ -156,14 +153,10 @@
         selectFile(filename);
     }
 
-    // === 修改重點：區分檔案與資料夾上傳 ===
     function handleFiles(fileList, isFolder) {
-        let count = 0;
         Array.from(fileList).forEach(file => {
             const reader = new FileReader();
             const isImage = file.type.startsWith('image/') || file.name.endsWith('.svg');
-            
-            // 資料夾模式使用 webkitRelativePath，否則只用檔名
             const path = (isFolder && file.webkitRelativePath) ? file.webkitRelativePath : file.name;
 
             reader.onload = (e) => {
@@ -171,7 +164,6 @@
                     type: isImage ? 'image' : 'text', 
                     content: e.target.result 
                 };
-                count++;
                 log(`已載入: ${path}`);
                 renderFileList();
             };
@@ -179,11 +171,12 @@
             if (isImage) reader.readAsDataURL(file);
             else reader.readAsText(file);
         });
-        
-        if (fileList.length > 0) {
-            setTimeout(() => {
-                log(`✅ 成功上傳 ${fileList.length} 個${isFolder ? '資料夾檔案' : '檔案'}`, 'info');
-            }, 300);
+    }
+
+    function saveCurrentFile() {
+        if (currentFile && files[currentFile]?.type === 'text') {
+            files[currentFile].content = document.getElementById('editor-text').value;
+            log(`💾 已儲存: ${currentFile}`);
         }
     }
 
@@ -209,16 +202,9 @@
         log(`✅ 已下載: ${filename}`);
     }
 
-    function saveCurrentFile() {
-        if (currentFile && files[currentFile]?.type === 'text') {
-            files[currentFile].content = document.getElementById('editor-text').value;
-            log(`💾 已儲存: ${currentFile}`);
-        }
-    }
-
     function deleteFile(filename) {
         delete files[filename];
-        log(`已刪除: ${filename}`, 'error');
+        log(`已刪除: ${filename}`);
         if (currentFile === filename) {
             const remaining = Object.keys(files);
             currentFile = remaining.length > 0 ? remaining[0] : null;
@@ -248,7 +234,6 @@
         });
     }
 
-    // 其餘函數（保持不變）
     function toggleRename(filename) {
         if (isRunning) return;
         editingFile = filename;
@@ -366,37 +351,100 @@
 
     function runCode() {
         if (!files['index.html']) return log('錯誤: 未找到 index.html', 'error');
+
         isRunning = true;
         renderFileList();
+
         document.getElementById('editor-text').style.display = 'none';
         document.getElementById('image-preview').style.display = 'none';
         document.getElementById('preview-container').style.display = 'flex';
 
         const iframe = document.getElementById('preview-iframe');
         const doc = iframe.contentDocument || iframe.contentWindow.document;
+        
         let html = files['index.html'].content;
 
+        // 替換圖片路徑
         Object.keys(files).forEach(f => {
-            if (files[f].type === 'image') html = html.replaceAll(f, files[f].content);
+            if (files[f].type === 'image') {
+                html = html.replaceAll(f, files[f].content);
+            }
         });
 
         doc.open();
         doc.write(html);
+
+        // 注入 CSS
         Object.keys(files).forEach(f => {
-            if (f.endsWith('.css')) doc.head.innerHTML += `<style>${files[f].content}</style>`;
-            if (f.endsWith('.js')) doc.body.innerHTML += `<script>${files[f].content}<\/script>`;
+            if (f.endsWith('.css')) {
+                const style = doc.createElement('style');
+                style.textContent = files[f].content;
+                doc.head.appendChild(style);
+            }
         });
+
+        // 注入 JS
+        Object.keys(files).forEach(f => {
+            if (f.endsWith('.js')) {
+                const script = doc.createElement('script');
+                script.textContent = files[f].content;
+                doc.body.appendChild(script);
+            }
+        });
+
+        // 注入虛擬檔案系統（支援 JSON、txt 等）
+        injectVirtualFileSystem(doc);
+
         doc.close();
-        log('✅ 專案已運行');
+        log('✅ 專案已運行（已支援 JSON 及其他檔案）');
+    }
+
+    function injectVirtualFileSystem(doc) {
+        const virtualFiles = {};
+        Object.keys(files).forEach(filename => {
+            if (files[filename].type === 'text') {
+                virtualFiles[filename] = files[filename].content;
+            }
+        });
+
+        const script = doc.createElement('script');
+        script.textContent = `
+            window.__virtualFiles = ${JSON.stringify(virtualFiles)};
+
+            const originalFetch = window.fetch;
+            window.fetch = async function(url, options) {
+                let cleanUrl = url.replace(/^\\.\\/|^\\/+/, '');
+                if (window.__virtualFiles[cleanUrl] !== undefined) {
+                    const content = window.__virtualFiles[cleanUrl];
+                    return new Response(content, {
+                        status: 200,
+                        headers: { 'Content-Type': cleanUrl.endsWith('.json') ? 'application/json' : 'text/plain' }
+                    });
+                }
+                return originalFetch(url, options);
+            };
+
+            window.getVirtualFile = function(filename) {
+                filename = filename.replace(/^\\.\\/|^\\/+/, '');
+                return window.__virtualFiles[filename];
+            };
+
+            console.log('✅ 虛擬檔案系統已載入，共 ${Object.keys(virtualFiles).length} 個檔案');
+        `;
+        doc.head.appendChild(script);
     }
 
     function stopCode() {
         isRunning = false;
         renderFileList();
         document.getElementById('preview-container').style.display = 'none';
+        
         const fd = files[currentFile];
-        if (fd?.type === 'image') document.getElementById('image-preview').style.display = 'block';
-        else document.getElementById('editor-text').style.display = 'block';
+        if (fd?.type === 'image') {
+            document.getElementById('image-preview').style.display = 'block';
+        } else {
+            document.getElementById('editor-text').style.display = 'block';
+        }
         log('已停止預覽');
     }
 </script>
