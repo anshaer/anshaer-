@@ -87,7 +87,7 @@
         <div id="file-list-container">
             <h3>檔案列表🗃️</h3>
             <div style="display: flex; gap: 6px; margin-bottom: 10px;">
-                <input type="text" id="new-file-name" placeholder="包含路徑 (如: css/main.css 或 data.json)" style="flex:1; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--box-bg); color: var(--text-color); font-size: 12px;">
+                <input type="text" id="new-file-name" placeholder="包含路徑 (如: images/photo.jpg)" style="flex:1; padding: 6px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--box-bg); color: var(--text-color); font-size: 12px;">
                 <button onclick="createNewFile()" style="font-size: 11px; padding: 4px 8px; border-radius: 4px;">建立➕</button>
             </div>
             <ul id="files" style="list-style: none; padding: 0;"></ul>
@@ -183,13 +183,11 @@
     function downloadFile(filename) {
         const fileData = files[filename];
         if (!fileData) return;
-
         if (currentFile === filename && fileData.type === 'text') saveCurrentFile();
 
         const fileName = filename.substring(filename.lastIndexOf('/') + 1);
-        let downloadUrl = fileData.type === 'image' 
-            ? fileData.content 
-            : URL.createObjectURL(new Blob([fileData.content], { type: 'text/plain;charset=utf-8' }));
+        let downloadUrl = fileData.type === 'image' ? fileData.content : 
+            URL.createObjectURL(new Blob([fileData.content], { type: 'text/plain;charset=utf-8' }));
 
         const a = document.createElement('a');
         a.href = downloadUrl;
@@ -197,7 +195,6 @@
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-
         if (fileData.type !== 'image') setTimeout(() => URL.revokeObjectURL(downloadUrl), 150);
         log(`✅ 已下載: ${filename}`);
     }
@@ -215,7 +212,6 @@
 
     function downloadAll() {
         if (Object.keys(files).length === 0) return log('沒有檔案可下載', 'error');
-        
         const zip = new JSZip();
         for (const filename in files) {
             if (files[filename].type === 'image') {
@@ -234,16 +230,8 @@
         });
     }
 
-    function toggleRename(filename) {
-        if (isRunning) return;
-        editingFile = filename;
-        renderFileList();
-    }
-
-    function cancelRename() {
-        editingFile = null;
-        renderFileList();
-    }
+    function toggleRename(filename) { if (isRunning) return; editingFile = filename; renderFileList(); }
+    function cancelRename() { editingFile = null; renderFileList(); }
 
     function saveRename(oldName) {
         const input = document.getElementById('rename-input');
@@ -349,6 +337,7 @@
         renderFileList();
     }
 
+    // ==================== 主要修正 ====================
     function runCode() {
         if (!files['index.html']) return log('錯誤: 未找到 index.html', 'error');
 
@@ -364,10 +353,14 @@
         
         let html = files['index.html'].content;
 
-        // 替換圖片路徑
+        // 強化圖片替換（處理各種常見路徑寫法）
         Object.keys(files).forEach(f => {
             if (files[f].type === 'image') {
-                html = html.replaceAll(f, files[f].content);
+                const base64 = files[f].content;
+                // 替換常見路徑寫法
+                html = html.replaceAll(f, base64)
+                          .replaceAll(`./${f}`, base64)
+                          .replaceAll(`/${f}`, base64);
             }
         });
 
@@ -392,35 +385,49 @@
             }
         });
 
-        // 注入虛擬檔案系統（支援 JSON、txt 等）
+        // 注入虛擬檔案系統（支援 JSON + 圖片 fetch）
         injectVirtualFileSystem(doc);
 
         doc.close();
-        log('✅ 專案已運行（已支援 JSON 及其他檔案）');
+        log('✅ 專案已運行（圖片 + JSON 已支援）');
     }
 
     function injectVirtualFileSystem(doc) {
         const virtualFiles = {};
+        const imageFiles = {};
+
         Object.keys(files).forEach(filename => {
             if (files[filename].type === 'text') {
                 virtualFiles[filename] = files[filename].content;
+            } else if (files[filename].type === 'image') {
+                imageFiles[filename] = files[filename].content;
             }
         });
 
         const script = doc.createElement('script');
         script.textContent = `
             window.__virtualFiles = ${JSON.stringify(virtualFiles)};
+            window.__imageFiles = ${JSON.stringify(imageFiles)};
 
             const originalFetch = window.fetch;
             window.fetch = async function(url, options) {
                 let cleanUrl = url.replace(/^\\.\\/|^\\/+/, '');
+                
+                // 文字檔案（JSON 等）
                 if (window.__virtualFiles[cleanUrl] !== undefined) {
-                    const content = window.__virtualFiles[cleanUrl];
-                    return new Response(content, {
+                    return new Response(window.__virtualFiles[cleanUrl], {
                         status: 200,
                         headers: { 'Content-Type': cleanUrl.endsWith('.json') ? 'application/json' : 'text/plain' }
                     });
                 }
+                
+                // 圖片檔案
+                if (window.__imageFiles[cleanUrl] !== undefined) {
+                    const base64 = window.__imageFiles[cleanUrl];
+                    const res = await fetch(base64);
+                    return res;
+                }
+                
                 return originalFetch(url, options);
             };
 
@@ -429,7 +436,7 @@
                 return window.__virtualFiles[filename];
             };
 
-            console.log('✅ 虛擬檔案系統已載入，共 ${Object.keys(virtualFiles).length} 個檔案');
+            console.log('✅ 虛擬檔案系統已載入');
         `;
         doc.head.appendChild(script);
     }
